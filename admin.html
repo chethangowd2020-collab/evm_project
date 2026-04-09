@@ -153,7 +153,10 @@
           <td><span class="badge badge-primary">${s.class}</span></td>
           <td>${s.isVerified ? '<span class="badge badge-success">Verified</span>' : '<span class="badge badge-danger">No</span>'}</td>
           <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button></td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(event, '${s.usn}')">Reset Password</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button>
+          </td>
         </tr>
       `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">No students registered yet.</td></tr>';
 
@@ -192,6 +195,31 @@
         loadVotingStatus();
       } else {
         alert(data.message || 'Failed to delete student');
+      }
+    }
+
+    async function resetStudentPassword(event, usn) {
+      const newPassword = prompt(`Enter a new password for ${usn}:`);
+      if (newPassword === null) return;
+
+      const trimmedPassword = newPassword.trim();
+      if (!trimmedPassword) {
+        alert('Password cannot be empty.');
+        return;
+      }
+
+      const btn = event.target;
+      setLoading(btn, true, 'Resetting...');
+      const data = await apiFetch('/api/admin/reset_student_password', {
+        usn,
+        new_password: trimmedPassword
+      });
+      setLoading(btn, false);
+
+      if (data.success) {
+        alert(`Password updated for ${usn}.`);
+      } else {
+        alert(data.message || 'Failed to reset password');
       }
     }
 

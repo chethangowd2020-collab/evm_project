@@ -68,6 +68,33 @@
     <div id="tab-students">
       <div class="card" style="padding:1.5rem;">
         <div class="section-title">👥 Registered Students</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:end;margin-bottom:1rem;">
+          <div style="min-width:220px;flex:1;">
+            <label for="studentSort" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Sort Students</label>
+            <select id="studentSort" class="form-input" onchange="renderStudents()">
+              <option value="usn_asc">USN: Low to High</option>
+              <option value="usn_desc">USN: High to Low</option>
+              <option value="voted_first">Voted First</option>
+              <option value="not_voted_first">Not Voted First</option>
+              <option value="class_asc">Class/Section: A to Z</option>
+              <option value="class_desc">Class/Section: Z to A</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
+            <label for="studentVoteFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Vote Status</label>
+            <select id="studentVoteFilter" class="form-input" onchange="renderStudents()">
+              <option value="all">All Students</option>
+              <option value="voted">Voted</option>
+              <option value="not_voted">Not Voted</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
+            <label for="studentClassFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Class / Section</label>
+            <select id="studentClassFilter" class="form-input" onchange="renderStudents()">
+              <option value="all">All Classes / Sections</option>
+            </select>
+          </div>
+        </div>
         <div class="table-wrap">
           <table id="studentsTable">
             <thead>
@@ -117,12 +144,84 @@
 
   <script src="/static/script.js"></script>
   <script>
+    let allStudents = [];
+
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
         b.classList.toggle('active', ['students','candidates'][i] === tab);
       });
       document.getElementById('tab-students').style.display = tab === 'students' ? 'block' : 'none';
       document.getElementById('tab-candidates').style.display = tab === 'candidates' ? 'block' : 'none';
+    }
+
+    function getUsnSortValue(usn) {
+      const text = (usn || '').toString().toUpperCase();
+      const match = text.match(/(\d+)$/);
+      if (!match) return Number.MAX_SAFE_INTEGER;
+      return Number(match[1]);
+    }
+
+    function compareStudents(a, b, sortBy) {
+      const usnCompare = getUsnSortValue(a.usn) - getUsnSortValue(b.usn) || a.usn.localeCompare(b.usn);
+      const classCompare = (a.class || '').localeCompare(b.class || '') || a.usn.localeCompare(b.usn);
+
+      if (sortBy === 'usn_desc') return -usnCompare;
+      if (sortBy === 'voted_first') return Number(b.hasVoted) - Number(a.hasVoted) || classCompare;
+      if (sortBy === 'not_voted_first') return Number(a.hasVoted) - Number(b.hasVoted) || classCompare;
+      if (sortBy === 'class_desc') return -classCompare;
+      if (sortBy === 'class_asc') return classCompare;
+      return usnCompare;
+    }
+
+    function populateClassFilter(students) {
+      const select = document.getElementById('studentClassFilter');
+      const currentValue = select.value || 'all';
+      const classes = [...new Set(students.map(s => s.class).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
+      select.innerHTML = `
+        <option value="all">All Classes / Sections</option>
+        ${classes.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
+      `;
+
+      if (classes.includes(currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function renderStudents() {
+      const tbody = document.getElementById('studentsBody');
+      const sortBy = document.getElementById('studentSort').value;
+      const voteFilter = document.getElementById('studentVoteFilter').value;
+      const classFilter = document.getElementById('studentClassFilter').value;
+
+      let students = [...allStudents];
+
+      if (voteFilter === 'voted') {
+        students = students.filter(student => student.hasVoted);
+      } else if (voteFilter === 'not_voted') {
+        students = students.filter(student => !student.hasVoted);
+      }
+
+      if (classFilter !== 'all') {
+        students = students.filter(student => student.class === classFilter);
+      }
+
+      students.sort((a, b) => compareStudents(a, b, sortBy));
+
+      tbody.innerHTML = students.map(s => `
+        <tr>
+          <td><strong>${s.usn}</strong></td>
+          <td>${s.name || '-'}</td>
+          <td>${s.email}</td>
+          <td><span class="badge badge-primary">${s.class}</span></td>
+          <td>${s.isVerified ? '<span class="badge badge-success">Verified</span>' : '<span class="badge badge-danger">No</span>'}</td>
+          <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(event, '${s.usn}')">Reset Password</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No students match the selected filters.</td></tr>';
     }
 
     async function loadVotingStatus() {
@@ -146,18 +245,9 @@
     async function loadStudents() {
       const d = await apiGet('/api/admin/students');
       if (!d.success) return;
-      const tbody = document.getElementById('studentsBody');
-      tbody.innerHTML = d.students.map(s => `
-        <tr>
-          <td><strong>${s.usn}</strong></td>
-          <td>${s.name || '-'}</td>
-          <td>${s.email}</td>
-          <td><span class="badge badge-primary">${s.class}</span></td>
-          <td>${s.isVerified ? '<span class="badge badge-success">Verified</span>' : '<span class="badge badge-danger">No</span>'}</td>
-          <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
-          <td><button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button></td>
-        </tr>
-      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No students registered yet.</td></tr>';
+      allStudents = d.students;
+      populateClassFilter(allStudents);
+      renderStudents();
 
       document.getElementById('totalStudents').textContent = d.students.length;
       const voted = d.students.filter(s => s.hasVoted).length;
@@ -194,6 +284,31 @@
         loadVotingStatus();
       } else {
         alert(data.message || 'Failed to delete student');
+      }
+    }
+
+    async function resetStudentPassword(event, usn) {
+      const newPassword = prompt(`Enter a new password for ${usn}:`);
+      if (newPassword === null) return;
+
+      const trimmedPassword = newPassword.trim();
+      if (!trimmedPassword) {
+        alert('Password cannot be empty.');
+        return;
+      }
+
+      const btn = event.target;
+      setLoading(btn, true, 'Resetting...');
+      const data = await apiFetch('/api/admin/reset_student_password', {
+        usn,
+        new_password: trimmedPassword
+      });
+      setLoading(btn, false);
+
+      if (data.success) {
+        alert(`Password updated for ${usn}.`);
+      } else {
+        alert(data.message || 'Failed to reset password');
       }
     }
 

@@ -430,6 +430,35 @@ def delete_student():
     conn.close()
     return jsonify({'success': True})
 
+@app.route('/api/admin/reset_student_password', methods=['POST'])
+def reset_student_password():
+    if session.get('role') != 'admin':
+        return jsonify({'success': False})
+
+    data = request.json
+    usn = (data.get('usn') or '').upper().strip()
+    new_password = data.get('new_password') or ''
+
+    if not usn:
+        return jsonify({'success': False, 'message': 'USN required'})
+
+    if len(new_password) < 6:
+        return jsonify({'success': False, 'message': 'New password must be at least 6 characters'})
+
+    conn = get_db()
+    student = conn.execute('SELECT usn FROM students WHERE usn=?', (usn,)).fetchone()
+    if not student:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Student not found'})
+
+    conn.execute(
+        'UPDATE students SET password=? WHERE usn=?',
+        (hash_password(new_password), usn)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True, 'message': 'Password reset successfully'})
+
 @app.route('/api/admin/delete_candidate', methods=['POST'])
 def delete_candidate():
     if session.get('role') != 'admin':

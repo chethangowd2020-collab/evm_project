@@ -47,6 +47,13 @@ The deployment is configured with a persistent disk mounted at `/var/data`. Poin
 3. Optionally enroll as candidate at `/candidate_register`
 4. Vote at `/vote` after admin enables voting
 
+## Admin tools
+
+- View registered students and candidates at `/admin`
+- Start or stop voting
+- Delete students or candidates
+- Reset any student's password from the admin panel
+
 ## Files
 
 - `app.py`: Flask backend
