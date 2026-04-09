@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel | ClassRep EVM</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="logo-icon">🗳️</div>
+      <span>ClassRep EVM</span>
+    </div>
+    <div class="navbar-links">
+      <a href="/results" class="nav-link">📊 Results</a>
+      <a href="/logout" class="btn-nav-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-content" style="max-width:1100px;margin:0 auto;padding:2rem 1rem;position:relative;z-index:1;">
+    <div style="margin-bottom:1.5rem;">
+      <div class="page-title">Admin Control Panel</div>
+      <div class="page-subtitle">Manage students, candidates, and election settings</div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="num" id="totalStudents">—</div>
+        <div class="lbl">Total Students</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="totalCandidates">—</div>
+        <div class="lbl">Candidates</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="totalVoters">—</div>
+        <div class="lbl">Votes Cast</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="turnoutPct">—</div>
+        <div class="lbl">Turnout %</div>
+      </div>
+    </div>
+
+    <!-- Voting Control -->
+    <div class="voting-control">
+      <div class="voting-status">
+        <div class="status-dot" id="statusDot"></div>
+        <div>
+          <div style="font-weight:700;font-size:1rem;" id="statusText">Checking...</div>
+          <div style="font-size:0.82rem;color:var(--text-soft);">Voting session status</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="toggleVotingBtn" onclick="toggleVoting()">
+        Loading...
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-nav">
+      <button class="tab-btn active" onclick="switchTab('students')">👥 All Students</button>
+      <button class="tab-btn" onclick="switchTab('candidates')">🏆 Candidates</button>
+    </div>
+
+    <!-- Students Tab -->
+    <div id="tab-students">
+      <div class="card" style="padding:1.5rem;">
+        <div class="section-title">👥 Registered Students</div>
+        <div class="table-wrap">
+          <table id="studentsTable">
+            <thead>
+              <tr>
+                <th>USN</th>
+                <th>Email</th>
+                <th>Class</th>
+                <th>Verified</th>
+                <th>Voted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="studentsBody">
+              <tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Candidates Tab -->
+    <div id="tab-candidates" style="display:none;">
+      <div class="card" style="padding:1.5rem;">
+        <div class="section-title">🏆 Enrolled Candidates</div>
+        <div class="table-wrap">
+          <table id="candidatesTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>USN</th>
+                <th>Class</th>
+                <th>Gender</th>
+                <th>Votes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="candidatesBody">
+              <tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((b, i) => {
+        b.classList.toggle('active', ['students','candidates'][i] === tab);
+      });
+      document.getElementById('tab-students').style.display = tab === 'students' ? 'block' : 'none';
+      document.getElementById('tab-candidates').style.display = tab === 'candidates' ? 'block' : 'none';
+    }
+
+    async function loadVotingStatus() {
+      const d = await apiGet('/api/admin/voting_status');
+      if (!d.success) return;
+      const enabled = d.voting_enabled;
+      document.getElementById('statusDot').className = 'status-dot' + (enabled ? ' active' : '');
+      document.getElementById('statusText').textContent = enabled ? 'Voting is ACTIVE' : 'Voting is STOPPED';
+      document.getElementById('toggleVotingBtn').textContent = enabled ? '⏹ Stop Voting' : '▶ Start Voting';
+      document.getElementById('toggleVotingBtn').className = 'btn ' + (enabled ? 'btn-danger' : 'btn-success');
+    }
+
+    async function toggleVoting() {
+      const btn = document.getElementById('toggleVotingBtn');
+      setLoading(btn, true, 'Updating...');
+      await apiFetch('/api/admin/toggle_voting', {});
+      setLoading(btn, false);
+      loadVotingStatus();
+    }
+
+    async function loadStudents() {
+      const d = await apiGet('/api/admin/students');
+      if (!d.success) return;
+      const tbody = document.getElementById('studentsBody');
+      tbody.innerHTML = d.students.map(s => `
+        <tr>
+          <td><strong>${s.usn}</strong></td>
+          <td>${s.email}</td>
+          <td><span class="badge badge-primary">${s.class}</span></td>
+          <td>${s.isVerified ? '<span class="badge badge-success">Verified</span>' : '<span class="badge badge-danger">No</span>'}</td>
+          <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">No students registered yet.</td></tr>';
+
+      document.getElementById('totalStudents').textContent = d.students.length;
+      const voted = d.students.filter(s => s.hasVoted).length;
+      document.getElementById('totalVoters').textContent = voted;
+      document.getElementById('turnoutPct').textContent = d.students.length ? Math.round(voted / d.students.length * 100) + '%' : '0%';
+    }
+
+    async function loadCandidates() {
+      const d = await apiGet('/api/admin/candidates');
+      if (!d.success) return;
+      const tbody = document.getElementById('candidatesBody');
+      tbody.innerHTML = d.candidates.map((c, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${c.name}</strong></td>
+          <td>${c.usn}</td>
+          <td><span class="badge badge-primary">${c.class}</span></td>
+          <td><span class="badge badge-${c.gender === 'Male' ? 'male' : 'female'}">${c.gender}</span></td>
+          <td><strong style="color:var(--primary)">${c.votes}</strong></td>
+          <td><button class="btn btn-danger btn-sm" onclick="deleteCandidate(event, ${c.id})">Delete</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates enrolled yet.</td></tr>';
+      document.getElementById('totalCandidates').textContent = d.candidates.length;
+    }
+
+    async function deleteStudent(event, usn) {
+      if (!confirm(`Are you sure you want to delete student ${usn}? This action cannot be undone.`)) return;
+      const btn = event.target;
+      setLoading(btn, true, 'Deleting...');
+      const data = await apiFetch('/api/admin/delete_student', { usn });
+      setLoading(btn, false);
+      if (data.success) {
+        loadStudents();
+        loadVotingStatus();
+      } else {
+        alert(data.message || 'Failed to delete student');
+      }
+    }
+
+    async function deleteCandidate(event, id) {
+      if (!confirm('Are you sure you want to delete this candidate? This action cannot be undone.')) return;
+      const btn = event.target;
+      setLoading(btn, true, 'Deleting...');
+      const data = await apiFetch('/api/admin/delete_candidate', { id });
+      setLoading(btn, false);
+      if (data.success) {
+        loadCandidates();
+        loadVotingStatus();
+      } else {
+        alert(data.message || 'Failed to delete candidate');
+      }
+    }
+
+    loadVotingStatus();
+    loadStudents();
+    loadCandidates();
+  </script>
+</body>
+</html>

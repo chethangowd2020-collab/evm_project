@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | ClassRep EVM</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="logo-icon">🗳️</div>
+      <span>ClassRep EVM</span>
+    </div>
+    <div class="navbar-links">
+      <a href="/" class="nav-link">Home</a>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div style="width:100%;max-width:460px;margin:0 auto;padding:0 1rem;">
+      <div class="auth-card">
+        <div class="auth-header" style="background: linear-gradient(135deg,#A855F7,#5B6CF9);">
+          <div class="auth-icon">🔐</div>
+          <h1>Admin Login</h1>
+          <p>Access the admin panel</p>
+        </div>
+        <div class="auth-body">
+          <div class="form-group">
+            <label class="form-label">Admin ID</label>
+            <input type="text" id="usn" class="form-control" placeholder="Enter admin ID" autocomplete="off">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" id="password" class="form-control" placeholder="Enter password"
+              onkeydown="if(event.key==='Enter') adminLogin()">
+          </div>
+
+          <div class="alert" id="alertBox"></div>
+
+          <button class="btn btn-pink btn-full btn-lg" id="loginBtn" onclick="adminLogin()">
+            Login as Admin
+          </button>
+
+          <div class="auth-footer">
+            <a href="/login">Student Login</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    async function adminLogin() {
+      const usn = document.getElementById('usn').value.trim().toUpperCase();
+      const password = document.getElementById('password').value;
+      const alert = document.getElementById('alertBox');
+
+      if (!usn || !password)
+        return showAlert(alert, 'Please enter admin ID and password.');
+
+      const btn = document.getElementById('loginBtn');
+      setLoading(btn, true, 'Logging in...');
+      const data = await apiFetch('/api/login', { usn, password });
+      setLoading(btn, false);
+
+      if (data.success) {
+        showAlert(alert, '✅ Admin login successful! Redirecting...', 'success');
+        setTimeout(() => {
+          window.location.href = '/admin';
+        }, 800);
+      } else {
+        showAlert(alert, data.message || 'Invalid admin credentials.');
+      }
+    }
+  </script>
+</body>
+</html>

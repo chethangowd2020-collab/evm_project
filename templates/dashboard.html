@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | ClassRep EVM</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="logo-icon">🗳️</div>
+      <span>ClassRep EVM</span>
+    </div>
+    <div class="navbar-links">
+      <a href="/dashboard" class="nav-link">Dashboard</a>
+      <a href="/logout" class="btn-nav-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-content" style="max-width:900px;margin:0 auto;padding:2rem 1rem;position:relative;z-index:1;">
+    <div class="welcome-hero" id="welcomeHero">
+      <p style="opacity:0.7;font-size:0.85rem;margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.1em;">Student Dashboard</p>
+      <h1>Hello, <span id="welcomeUsn">Student</span>! 👋</h1>
+      <p>Participate in your class representative election</p>
+      <div class="class-badge">🏫 Class: <strong id="welcomeClass">—</strong></div>
+    </div>
+
+    <!-- Voted Banner -->
+    <div class="voted-banner" id="votedBanner" style="display:none;margin-bottom:1.5rem;">
+      <div class="checkmark">✅</div>
+      <h3 style="font-size:1.1rem;font-weight:700;color:#059669;">You have already voted!</h3>
+      <p style="font-size:0.9rem;margin-top:0.3rem;color:#6B7280;">Your vote has been recorded. Thank you for participating in the election.</p>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="action-grid" id="actionGrid">
+      <a href="/vote" class="action-card" id="voteCard">
+        <span class="icon">🗳️</span>
+        <h3>Vote Now</h3>
+        <p>Cast your vote for class representatives</p>
+      </a>
+      <a href="/candidate_register" class="action-card" id="candidateCard">
+        <span class="icon">🙋</span>
+        <h3>Stand for Election</h3>
+        <p>Register yourself as a candidate</p>
+      </a>
+    </div>
+
+    <!-- Info cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;">
+      <div class="card card-sm" style="max-width:100%;padding:1.5rem;">
+        <div class="section-title">📋 How Voting Works</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.9rem;">
+            <span style="background:var(--grad1);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">1</span>
+            <span>Select one male and one female candidate from your class</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.9rem;">
+            <span style="background:var(--grad1);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">2</span>
+            <span>Review your selection before confirming</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.9rem;">
+            <span style="background:var(--grad1);color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;">3</span>
+            <span>You can vote only once — choose wisely!</span>
+          </li>
+        </ul>
+      </div>
+      <div class="card card-sm" style="max-width:100%;padding:1.5rem;">
+        <div class="section-title">📌 Candidate Rules</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.9rem;">
+            <span>👥</span><span>Max 2 male candidates per class</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.9rem;">
+            <span>👥</span><span>Max 2 female candidates per class</span>
+          </li>
+          <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.9rem;">
+            <span>✅</span><span>Only registered students can enroll as candidates</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    (async () => {
+      const data = await apiGet('/api/student_info');
+      if (!data.success) {
+        window.location.href = '/login';
+        return;
+      }
+
+      document.getElementById('welcomeUsn').textContent = data.usn;
+      document.getElementById('welcomeClass').textContent = data.class;
+
+      if (data.hasVoted) {
+        document.getElementById('votedBanner').style.display = 'block';
+        const voteCard = document.getElementById('voteCard');
+        voteCard.style.opacity = '0.5';
+        voteCard.style.cursor = 'not-allowed';
+        voteCard.style.pointerEvents = 'none';
+        voteCard.querySelector('h3').textContent = 'Already Voted';
+        voteCard.querySelector('p').textContent = 'You have already cast your vote';
+      }
+
+      if (data.isCandidate) {
+        const cCard = document.getElementById('candidateCard');
+        cCard.style.borderColor = '#10B981';
+        cCard.querySelector('.icon').textContent = '🏆';
+        cCard.querySelector('h3').textContent = 'Enrolled as Candidate';
+        cCard.querySelector('p').textContent = 'You are already registered as a candidate';
+        cCard.style.pointerEvents = 'none';
+      }
+    })();
+  </script>
+</body>
+</html>

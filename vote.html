@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vote | ClassRep EVM</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="logo-icon">🗳️</div>
+      <span>ClassRep EVM</span>
+    </div>
+    <div class="navbar-links">
+      <a href="/dashboard" class="nav-link">← Dashboard</a>
+      <a href="/logout" class="btn-nav-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-content" style="max-width:900px;margin:0 auto;padding:2rem 1rem;position:relative;z-index:1;">
+    <div style="margin-bottom:1.5rem;">
+      <div class="page-title">Cast Your Vote</div>
+      <div class="page-subtitle">Select one male and one female representative from your class: <strong id="classLabel">—</strong></div>
+    </div>
+
+    <!-- Voting disabled -->
+    <div class="card" id="votingDisabled" style="display:none;text-align:center;padding:3rem;">
+      <div style="font-size:3rem;margin-bottom:1rem;">⏸️</div>
+      <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">Voting is Currently Closed</h3>
+      <p style="color:var(--text-soft);">The admin has not started the voting session yet. Please check back later.</p>
+    </div>
+
+    <!-- Already voted -->
+    <div class="card" id="alreadyVoted" style="display:none;text-align:center;padding:3rem;">
+      <div style="font-size:3rem;margin-bottom:1rem;">✅</div>
+      <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;color:#059669;">You Have Already Voted</h3>
+      <p style="color:var(--text-soft);">Your vote has been recorded. Thank you for participating!</p>
+      <a href="/dashboard" class="btn btn-primary" style="margin-top:1.5rem;">Back to Dashboard</a>
+    </div>
+
+    <!-- Voting form -->
+    <div id="votingSection">
+      <div class="candidates-grid" id="candidatesGrid">
+        <!-- Male section -->
+        <div class="gender-section">
+          <div class="gender-header male">👨 Male Candidates</div>
+          <div class="candidate-list" id="maleCandidates">
+            <div class="empty-state"><div class="empty-icon">⏳</div><p>Loading...</p></div>
+          </div>
+        </div>
+
+        <!-- Female section -->
+        <div class="gender-section">
+          <div class="gender-header female">👩 Female Candidates</div>
+          <div class="candidate-list" id="femaleCandidates">
+            <div class="empty-state"><div class="empty-icon">⏳</div><p>Loading...</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit area -->
+      <div class="vote-submit-area">
+        <div class="selection-summary">
+          <span class="selection-pill" id="malePill">👨 Male: Not selected</span>
+          <span class="selection-pill" id="femalePill">👩 Female: Not selected</span>
+        </div>
+        <button class="btn btn-primary btn-lg" id="submitVoteBtn" onclick="confirmVote()" disabled>
+          🗳️ Submit Vote
+        </button>
+        <p style="font-size:0.8rem;color:var(--text-soft);margin-top:0.8rem;">
+          You must select both a male and female candidate to submit.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+      <div class="modal-icon">⚠️</div>
+      <div class="modal-title">Confirm Your Vote</div>
+      <div class="modal-desc">
+        You can vote only once. This action cannot be undone.<br><br>
+        <strong id="confirmMale" style="color:#3B82F6;display:block;margin-bottom:4px;">Male: —</strong>
+        <strong id="confirmFemale" style="color:#EC4899;">Female: —</strong>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary" id="finalVoteBtn" onclick="submitVote()">Yes, Vote Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Overlay -->
+  <div class="success-overlay" id="successOverlay">
+    <div class="success-box">
+      <div class="success-checkmark">✓</div>
+      <h2 style="font-family:'DM Serif Display',serif;font-size:1.6rem;margin-bottom:0.5rem;">Vote Submitted!</h2>
+      <p style="color:var(--text-soft);margin-bottom:1.5rem;">Your vote has been recorded successfully. Thank you for participating!</p>
+      <button class="btn btn-success" onclick="window.location.href='/dashboard'">Back to Dashboard</button>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+  <script>
+    let selectedMale = null, selectedFemale = null;
+    let maleCandidatesData = [], femaleCandidatesData = [];
+
+    function renderCandidates(list, containerId, gender) {
+      const el = document.getElementById(containerId);
+      if (!list.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">${gender==='Male'?'👨':'👩'}</div><p>No ${gender.toLowerCase()} candidates enrolled yet.</p></div>`;
+        return;
+      }
+      el.innerHTML = list.map(c => `
+        <div class="candidate-card" id="card-${c.id}" onclick="selectCandidate(${c.id},'${gender}','${c.name}')">
+          <div class="candidate-avatar ${gender==='Female'?'female':''}">${gender==='Male'?'👨':'👩'}</div>
+          <div class="candidate-info">
+            <h4>${c.name}</h4>
+            <span>${c.usn} &bull; ${c.class}</span>
+          </div>
+          <input type="radio" class="candidate-radio" name="vote_${gender.toLowerCase()}" value="${c.id}">
+        </div>
+      `).join('');
+    }
+
+    function selectCandidate(id, gender, name) {
+      if (gender === 'Male') {
+        selectedMale = { id, name };
+        maleCandidatesData.forEach(c => document.getElementById('card-'+c.id)?.classList.remove('selected-male'));
+        document.getElementById('card-'+id)?.classList.add('selected-male');
+        document.querySelector(`input[name="vote_male"][value="${id}"]`).checked = true;
+        const pill = document.getElementById('malePill');
+        pill.textContent = '👨 ' + name;
+        pill.className = 'selection-pill selected';
+      } else {
+        selectedFemale = { id, name };
+        femaleCandidatesData.forEach(c => document.getElementById('card-'+c.id)?.classList.remove('selected-female'));
+        document.getElementById('card-'+id)?.classList.add('selected-female');
+        document.querySelector(`input[name="vote_female"][value="${id}"]`).checked = true;
+        const pill = document.getElementById('femalePill');
+        pill.textContent = '👩 ' + name;
+        pill.className = 'selection-pill selected-female';
+      }
+      document.getElementById('submitVoteBtn').disabled = !(selectedMale && selectedFemale);
+    }
+
+    function confirmVote() {
+      if (!selectedMale || !selectedFemale) return;
+      document.getElementById('confirmMale').textContent = '👨 Male: ' + selectedMale.name;
+      document.getElementById('confirmFemale').textContent = '👩 Female: ' + selectedFemale.name;
+      document.getElementById('confirmModal').classList.add('show');
+    }
+
+    function closeModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+    }
+
+    async function submitVote() {
+      const btn = document.getElementById('finalVoteBtn');
+      setLoading(btn, true, 'Submitting...');
+      const data = await apiFetch('/api/submit_vote', {
+        male_id: selectedMale.id,
+        female_id: selectedFemale.id
+      });
+      setLoading(btn, false);
+      closeModal();
+      if (data.success) {
+        document.getElementById('successOverlay').classList.add('show');
+      } else {
+        alert(data.message || 'Failed to submit vote.');
+      }
+    }
+
+    (async () => {
+      const info = await apiGet('/api/student_info');
+      if (!info.success) { window.location.href = '/login'; return; }
+
+      document.getElementById('classLabel').textContent = info.class;
+
+      if (info.hasVoted) {
+        document.getElementById('votingSection').style.display = 'none';
+        document.getElementById('alreadyVoted').style.display = 'block';
+        return;
+      }
+
+      const d = await apiGet('/api/candidates');
+      if (!d.success) return;
+
+      if (!d.voting_enabled) {
+        document.getElementById('votingSection').style.display = 'none';
+        document.getElementById('votingDisabled').style.display = 'block';
+        return;
+      }
+
+      maleCandidatesData = d.males;
+      femaleCandidatesData = d.females;
+      renderCandidates(d.males, 'maleCandidates', 'Male');
+      renderCandidates(d.females, 'femaleCandidates', 'Female');
+    })();
+  </script>
+</body>
+</html>
