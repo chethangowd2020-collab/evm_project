@@ -76,8 +76,6 @@
               <option value="usn_desc">USN: High to Low</option>
               <option value="voted_first">Voted First</option>
               <option value="not_voted_first">Not Voted First</option>
-              <option value="class_asc">Class/Section: A to Z</option>
-              <option value="class_desc">Class/Section: Z to A</option>
             </select>
           </div>
           <div style="min-width:220px;flex:1;">
@@ -89,7 +87,7 @@
             </select>
           </div>
           <div style="min-width:220px;flex:1;">
-            <label for="studentClassFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Class / Section</label>
+            <label for="studentClassFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Class</label>
             <select id="studentClassFilter" class="form-control" onchange="renderStudents()">
               <option value="all">All Classes / Sections</option>
             </select>
@@ -163,28 +161,38 @@
 
     function compareStudents(a, b, sortBy) {
       const usnCompare = getUsnSortValue(a.usn) - getUsnSortValue(b.usn) || a.usn.localeCompare(b.usn);
-      const classCompare = (a.class || '').localeCompare(b.class || '') || a.usn.localeCompare(b.usn);
-
       if (sortBy === 'usn_desc') return -usnCompare;
-      if (sortBy === 'voted_first') return Number(b.hasVoted) - Number(a.hasVoted) || classCompare;
-      if (sortBy === 'not_voted_first') return Number(a.hasVoted) - Number(b.hasVoted) || classCompare;
-      if (sortBy === 'class_desc') return -classCompare;
-      if (sortBy === 'class_asc') return classCompare;
+      if (sortBy === 'voted_first') return Number(b.hasVoted) - Number(a.hasVoted) || usnCompare; // Fallback to USN if voted status is same
+      if (sortBy === 'not_voted_first') return Number(a.hasVoted) - Number(b.hasVoted) || usnCompare; // Fallback to USN if voted status is same
       return usnCompare;
     }
 
     function populateClassFilter(students) {
       const select = document.getElementById('studentClassFilter');
       const currentValue = select.value || 'all';
-      const classes = [...new Set(students.map(s => s.class).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      // Use a predefined static list of classes for the filter
+      const predefinedClasses = [
+        "CSE A", "CSE B", "CSE C", "CSE D",
+        "ISE E", "ISE F", "ISE G",
+        "AIML H",
+        "CSE(DS) I",
+        "ECE J", "ECE K", "ECE L",
+        "EEE M",
+        "CIVIL N",
+        "MECH O"
+      ];
 
       select.innerHTML = `
-        <option value="all">All Classes / Sections</option>
-        ${classes.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
+        <option value="all">All Classes</option>
+        ${predefinedClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('')}
       `;
 
-      if (classes.includes(currentValue)) {
+      // Ensure the previously selected value is retained if it's still in the list, otherwise default to 'all'
+      if (currentValue === 'all' || predefinedClasses.includes(currentValue)) {
         select.value = currentValue;
+      }
+      else {
+        select.value = 'all';
       }
     }
 
