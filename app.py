@@ -53,6 +53,7 @@ def init_db():
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS students (
         usn TEXT PRIMARY KEY,
+        name TEXT,
         phone TEXT,
         class TEXT,
         password TEXT,
@@ -79,6 +80,9 @@ def init_db():
         value TEXT
     )''')
     c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('voting_enabled', '0')")
+    student_columns = [row[1] for row in c.execute("PRAGMA table_info(students)").fetchall()]
+    if 'name' not in student_columns:
+        c.execute("ALTER TABLE students ADD COLUMN name TEXT")
     conn.commit()
     conn.close()
 
@@ -181,10 +185,14 @@ def send_otp():
 def api_register():
     data = request.json
     usn = data.get('usn', '').upper()
+    name = data.get('name', '').strip()
     email = data.get('email', '').strip().lower()
     cls = data.get('class')
     otp = data.get('otp')
     password = data.get('password')
+
+    if not name:
+        return jsonify({'success': False, 'message': 'Name is required'})
 
     if otp_store.get(usn) != otp:
         return jsonify({'success': False, 'message': 'Invalid OTP'})
@@ -195,8 +203,10 @@ def api_register():
         conn.close()
         return jsonify({'success': False, 'message': 'USN already registered'})
 
-    conn.execute('INSERT INTO students (usn, phone, class, password, isVerified, hasVoted) VALUES (?,?,?,?,1,0)',
-                 (usn, email, cls, hash_password(password)))
+    conn.execute(
+        'INSERT INTO students (usn, name, phone, class, password, isVerified, hasVoted) VALUES (?,?,?,?,?,1,0)',
+        (usn, name, email, cls, hash_password(password))
+    )
     conn.commit()
     conn.close()
     otp_store.pop(usn, None)
@@ -247,12 +257,16 @@ def student_info():
     if 'usn' not in session:
         return jsonify({'success': False})
     conn = get_db()
-    student = conn.execute('SELECT usn, class, hasVoted FROM students WHERE usn=?', (session['usn'],)).fetchone()
+    student = conn.execute(
+        'SELECT usn, name, class, hasVoted FROM students WHERE usn=?',
+        (session['usn'],)
+    ).fetchone()
     is_candidate = conn.execute('SELECT id FROM candidates WHERE usn=?', (session['usn'],)).fetchone()
     conn.close()
     return jsonify({
         'success': True,
         'usn': student['usn'],
+        'name': student['name'],
         'class': student['class'],
         'hasVoted': bool(student['hasVoted']),
         'isCandidate': bool(is_candidate)
@@ -264,20 +278,24 @@ def register_candidate():
         return jsonify({'success': False, 'message': 'Not logged in'})
     data = request.json
     usn = session['usn']
-    name = data.get('name')
     gender = data.get('gender')
 
     conn = get_db()
-    student = conn.execute('SELECT class FROM students WHERE usn=?', (usn,)).fetchone()
+    student = conn.execute('SELECT name, class FROM students WHERE usn=?', (usn,)).fetchone()
     if not student:
         conn.close()
         return jsonify({'success': False, 'message': 'Student not found'})
 
+    name = (student['name'] or '').strip()
     cls = student['class']
     existing = conn.execute('SELECT id FROM candidates WHERE usn=?', (usn,)).fetchone()
     if existing:
         conn.close()
         return jsonify({'success': False, 'message': 'Already registered as candidate'})
+
+    if not name:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Student name not found. Please update your registration first.'})
 
     count = conn.execute('SELECT COUNT(*) as c FROM candidates WHERE class=? AND gender=?', (cls, gender)).fetchone()
     if count['c'] >= 2:
@@ -345,7 +363,11 @@ def admin_students():
     if session.get('role') != 'admin':
         return jsonify({'success': False})
     conn = get_db()
-    students = [dict(r) for r in conn.execute('SELECT usn, phone AS email, class, isVerified, hasVoted FROM students ORDER BY class, usn').fetchall()]
+    students = [
+        dict(r) for r in conn.execute(
+            'SELECT usn, name, phone AS email, class, isVerified, hasVoted FROM students ORDER BY class, usn'
+        ).fetchall()
+    ]
     conn.close()
     return jsonify({'success': True, 'students': students})
 

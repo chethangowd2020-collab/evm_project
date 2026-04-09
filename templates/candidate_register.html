@@ -50,7 +50,8 @@
 
             <div class="form-group">
               <label class="form-label">Full Name</label>
-              <input type="text" id="name" class="form-control" placeholder="Enter your full name">
+              <input type="text" id="name" class="form-control" placeholder="Auto-filled from your registration" readonly
+                style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
             <div class="form-group">
@@ -90,6 +91,7 @@
       if (!data.success) { window.location.href = '/login'; return; }
 
       document.getElementById('usn').value = data.usn;
+      document.getElementById('name').value = data.name || '';
       document.getElementById('class').value = data.class;
 
       if (data.isCandidate) {
@@ -99,16 +101,15 @@
     })();
 
     async function enrollCandidate() {
-      const name = document.getElementById('name').value.trim();
       const gender = document.getElementById('gender').value;
       const alert = document.getElementById('alertBox');
 
-      if (!name) return showAlert(alert, 'Please enter your full name.');
+      if (!document.getElementById('name').value.trim()) return showAlert(alert, 'Your name was not found. Please register again.');
       if (!gender) return showAlert(alert, 'Please select your gender.');
 
       const btn = document.getElementById('enrollBtn');
       setLoading(btn, true, 'Enrolling...');
-      const data = await apiFetch('/api/register_candidate', { name, gender });
+      const data = await apiFetch('/api/register_candidate', { gender });
       setLoading(btn, false);
 
       if (data.success) {
