@@ -14,7 +14,3 @@ services:
         value: ADMIN
       - key: ADMIN_PASSWORD
         sync: false
-    disk:
-      name: smart-evm-data
-      mountPath: /var/data
-      sizeGB: 1
