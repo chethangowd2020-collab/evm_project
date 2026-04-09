@@ -71,7 +71,7 @@
         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:end;margin-bottom:1rem;">
           <div style="min-width:220px;flex:1;">
             <label for="studentSort" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Sort Students</label>
-            <select id="studentSort" class="form-input" onchange="renderStudents()">
+            <select id="studentSort" class="form-control" onchange="renderStudents()">
               <option value="usn_asc">USN: Low to High</option>
               <option value="usn_desc">USN: High to Low</option>
               <option value="voted_first">Voted First</option>
@@ -82,7 +82,7 @@
           </div>
           <div style="min-width:220px;flex:1;">
             <label for="studentVoteFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Vote Status</label>
-            <select id="studentVoteFilter" class="form-input" onchange="renderStudents()">
+            <select id="studentVoteFilter" class="form-control" onchange="renderStudents()">
               <option value="all">All Students</option>
               <option value="voted">Voted</option>
               <option value="not_voted">Not Voted</option>
@@ -90,7 +90,7 @@
           </div>
           <div style="min-width:220px;flex:1;">
             <label for="studentClassFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Class / Section</label>
-            <select id="studentClassFilter" class="form-input" onchange="renderStudents()">
+            <select id="studentClassFilter" class="form-control" onchange="renderStudents()">
               <option value="all">All Classes / Sections</option>
             </select>
           </div>
