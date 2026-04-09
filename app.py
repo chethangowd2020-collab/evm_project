@@ -214,22 +214,33 @@ def api_login():
         return jsonify({'success': True, 'role': 'admin'})
 
     conn = get_db()
-    # Check if identifier is email or USN
+    # Check if identifier is email or USN, and distinguish an unknown account
+    # from a wrong password so the UI can guide first-time users.
     if '@' in identifier:
         student = conn.execute(
-            'SELECT * FROM students WHERE phone=? AND password=?',
-            (identifier.lower(), hash_password(password))
+            'SELECT * FROM students WHERE phone=?',
+            (identifier.lower(),)
         ).fetchone()
     else:
-        student = conn.execute('SELECT * FROM students WHERE usn=? AND password=?', (identifier, hash_password(password))).fetchone()
+        student = conn.execute(
+            'SELECT * FROM students WHERE usn=?',
+            (identifier,)
+        ).fetchone()
     conn.close()
 
-    if student:
-        session['usn'] = student['usn']
-        session['class'] = student['class']
-        session['role'] = 'student'
-        return jsonify({'success': True, 'role': 'student'})
-    return jsonify({'success': False, 'message': 'Invalid USN/Email or password'})
+    if not student:
+        return jsonify({
+            'success': False,
+            'message': 'USN not registered please register your USN and then login'
+        })
+
+    if student['password'] != hash_password(password):
+        return jsonify({'success': False, 'message': 'Invalid password'})
+
+    session['usn'] = student['usn']
+    session['class'] = student['class']
+    session['role'] = 'student'
+    return jsonify({'success': True, 'role': 'student'})
 
 @app.route('/api/student_info')
 def student_info():
