@@ -45,6 +45,7 @@ def init_db():
         name TEXT,
         phone TEXT,
         class TEXT,
+        semester TEXT,
         password TEXT,
         isVerified INTEGER DEFAULT 0,
         hasVoted INTEGER DEFAULT 0
@@ -185,6 +186,7 @@ def api_register():
     name = data.get('name', '').strip()
     email = data.get('email', '').strip().lower()
     cls = data.get('class')
+    sem = data.get('semester')
     otp = data.get('otp')
     password = data.get('password')
 
@@ -202,8 +204,8 @@ def api_register():
         return jsonify({'success': False, 'message': 'USN already registered'})
 
     cur.execute(
-        'INSERT INTO students (usn, name, phone, class, password, isVerified, hasVoted) VALUES (%s,%s,%s,%s,%s,1,0)',
-        (usn, name, email, cls, hash_password(password))
+        'INSERT INTO students (usn, name, phone, class, semester, password, isVerified, hasVoted) VALUES (%s,%s,%s,%s,%s,%s,1,0)',
+        (usn, name, email, cls, sem, hash_password(password))
     )
     conn.commit()
     conn.close()
@@ -369,7 +371,7 @@ def admin_students():
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        'SELECT usn, name, phone AS email, class, hasVoted FROM students ORDER BY class, usn'
+        'SELECT usn, name, phone AS email, class, semester, hasVoted FROM students ORDER BY class, usn'
     )
     students = cur.fetchall()
     conn.close()

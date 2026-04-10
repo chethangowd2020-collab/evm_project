@@ -74,6 +74,8 @@
             <select id="studentSort" class="form-control" onchange="renderStudents()">
               <option value="usn_asc">USN: Low to High</option>
               <option value="usn_desc">USN: High to Low</option>
+              <option value="sem_asc">Semester: 1 to 8</option>
+              <option value="sem_desc">Semester: 8 to 1</option>
               <option value="voted_first">Voted First</option>
               <option value="not_voted_first">Not Voted First</option>
             </select>
@@ -101,12 +103,13 @@
                 <th>Name</th>
                 <th>Email</th>
                 <th>Class</th>
+                <th>Sem</th>
                 <th>Voted</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="studentsBody">
-              <tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
+              <tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -161,6 +164,8 @@
     function compareStudents(a, b, sortBy) {
       const usnCompare = getUsnSortValue(a.usn) - getUsnSortValue(b.usn) || a.usn.localeCompare(b.usn);
       if (sortBy === 'usn_desc') return -usnCompare;
+      if (sortBy === 'sem_asc') return (parseInt(a.semester) || 0) - (parseInt(b.semester) || 0) || usnCompare;
+      if (sortBy === 'sem_desc') return (parseInt(b.semester) || 0) - (parseInt(a.semester) || 0) || usnCompare;
       if (sortBy === 'voted_first') return Number(b.hasVoted) - Number(a.hasVoted) || usnCompare; // Fallback to USN if voted status is same
       if (sortBy === 'not_voted_first') return Number(a.hasVoted) - Number(b.hasVoted) || usnCompare; // Fallback to USN if voted status is same
       return usnCompare;
@@ -221,13 +226,14 @@
           <td>${s.name || '-'}</td>
           <td>${s.email}</td>
           <td><span class="badge badge-primary">${s.class}</span></td>
+          <td><strong>Sem ${s.semester || '-'}</strong></td>
           <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
           <td>
             <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(event, '${s.usn}')">Reset Password</button>
             <button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button>
           </td>
         </tr>
-      `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">No students match the selected filters.</td></tr>';
+      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No students match the selected filters.</td></tr>';
     }
 
     async function loadVotingStatus() {
