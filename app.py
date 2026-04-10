@@ -266,26 +266,29 @@ def api_login():
 def student_info():
     if 'usn' not in session:
         return jsonify({'success': False})
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute('SELECT usn, name, class, semester, hasVoted FROM students WHERE usn=%s', (session['usn'],))
-    student = cur.fetchone()
-    if not student:
-        conn.close()
-        return jsonify({'success': False, 'message': 'Student record not found. Please log in again.'})
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT usn, name, class, semester, hasVoted FROM students WHERE usn=%s', (session['usn'],))
+        student = cur.fetchone()
+        if not student:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Student record not found. Please log in again.'})
 
-    cur.execute('SELECT id FROM candidates WHERE usn=%s', (session['usn'],))
-    is_candidate = cur.fetchone()
-    conn.close()
-    return jsonify({
-        'success': True,
-        'usn': student['usn'],
-        'name': student['name'],
-        'class': student['class'],
-        'semester': student['semester'],
-        'hasVoted': bool(student['hasVoted']),
-        'isCandidate': bool(is_candidate)
-    })
+        cur.execute('SELECT id FROM candidates WHERE usn=%s', (session['usn'],))
+        is_candidate = cur.fetchone()
+        conn.close()
+        return jsonify({
+            'success': True,
+            'usn': student['usn'],
+            'name': student['name'],
+            'class': student['class'],
+            'semester': student['semester'],
+            'hasVoted': bool(student['hasVoted']),
+            'isCandidate': bool(is_candidate)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/register_candidate', methods=['POST'])
 def register_candidate():
@@ -332,29 +335,32 @@ def get_candidates():
     if 'usn' not in session:
         return jsonify({'success': False})
     
-    conn = get_db()
-    cur = conn.cursor()
-    # Fetch class from DB to ensure it matches candidates table perfectly
-    cur.execute('SELECT class FROM students WHERE usn=%s', (session['usn'],))
-    student = cur.fetchone()
-    if not student:
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        # Fetch class from DB to ensure it matches candidates table perfectly
+        cur.execute('SELECT class FROM students WHERE usn=%s', (session['usn'],))
+        student = cur.fetchone()
+        if not student:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Student record not found'})
+        
+        cls = student['class']
+        cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Male'))
+        males = cur.fetchall()
+        cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Female'))
+        females = cur.fetchall()
+        cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+        setting = cur.fetchone()
         conn.close()
-        return jsonify({'success': False, 'message': 'Student record not found'})
-    
-    cls = student['class']
-    cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Male'))
-    males = cur.fetchall()
-    cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Female'))
-    females = cur.fetchall()
-    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
-    setting = cur.fetchone()
-    conn.close()
-    return jsonify({
-        'success': True,
-        'males': males,
-        'females': females,
-        'voting_enabled': setting['value'] == '1'
-    })
+        return jsonify({
+            'success': True,
+            'males': males,
+            'females': females,
+            'voting_enabled': setting['value'] == '1' if setting else False
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/submit_vote', methods=['POST'])
 def submit_vote():

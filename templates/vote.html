@@ -208,8 +208,8 @@
         renderCandidates(d.females, 'femaleCandidates', 'Female');
       } catch (err) {
         console.error('Error fetching candidates:', err);
-        document.getElementById('maleCandidates').innerHTML = '<p style="color:red">Error loading candidates.</p>';
-        document.getElementById('femaleCandidates').innerHTML = '<p style="color:red">Error loading candidates.</p>';
+        document.getElementById('maleCandidates').innerHTML = `<p style="color:red">Error: ${err.message || 'Failed to load candidates.'}</p>`;
+        document.getElementById('femaleCandidates').innerHTML = `<p style="color:red">Error: ${err.message || 'Failed to load candidates.'}</p>`;
       }
     })();
   </script>
