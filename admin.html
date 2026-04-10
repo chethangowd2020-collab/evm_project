@@ -68,19 +68,62 @@
     <div id="tab-students">
       <div class="card" style="padding:1.5rem;">
         <div class="section-title">👥 Registered Students</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:end;margin-bottom:1rem;">
+          <div style="min-width:220px;flex:1;">
+            <label for="studentSort" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Sort Students</label>
+            <select id="studentSort" class="form-control" onchange="renderStudents()">
+              <option value="usn_asc">USN: Low to High</option>
+              <option value="usn_desc">USN: High to Low</option>
+              <option value="sem_asc">Semester: 1 to 8</option>
+              <option value="sem_desc">Semester: 8 to 1</option>
+              <option value="voted_first">Voted First</option>
+              <option value="not_voted_first">Not Voted First</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
+            <label for="studentSemFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Semester Filter</label>
+            <select id="studentSemFilter" class="form-control" onchange="renderStudents()">
+              <option value="all">All Semesters</option>
+              <option value="1">1st Semester</option>
+              <option value="2">2nd Semester</option>
+              <option value="3">3rd Semester</option>
+              <option value="4">4th Semester</option>
+              <option value="5">5th Semester</option>
+              <option value="6">6th Semester</option>
+              <option value="7">7th Semester</option>
+              <option value="8">8th Semester</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
+            <label for="studentVoteFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Vote Status</label>
+            <select id="studentVoteFilter" class="form-control" onchange="renderStudents()">
+              <option value="all">All Students</option>
+              <option value="voted">Voted</option>
+              <option value="not_voted">Not Voted</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
+            <label for="studentClassFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Class</label>
+            <select id="studentClassFilter" class="form-control" onchange="renderStudents()">
+              <option value="all">All Classes / Sections</option>
+            </select>
+          </div>
+        </div>
         <div class="table-wrap">
           <table id="studentsTable">
             <thead>
               <tr>
                 <th>USN</th>
+                <th>Name</th>
                 <th>Email</th>
                 <th>Class</th>
+                <th>Sem</th>
                 <th>Voted</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="studentsBody">
-              <tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
+              <tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -96,8 +139,8 @@
             <thead>
               <tr>
                 <th>#</th>
-                <th>Name</th>
                 <th>USN</th>
+                <th>Name</th>
                 <th>Class</th>
                 <th>Gender</th>
                 <th>Votes</th>
@@ -115,12 +158,78 @@
 
   <script src="/static/script.js"></script>
   <script>
+    let allStudents = [];
+
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
         b.classList.toggle('active', ['students','candidates'][i] === tab);
       });
       document.getElementById('tab-students').style.display = tab === 'students' ? 'block' : 'none';
       document.getElementById('tab-candidates').style.display = tab === 'candidates' ? 'block' : 'none';
+    }
+
+    function getUsnSortValue(usn) {
+      const text = (usn || '').toString().toUpperCase();
+      const match = text.match(/(\d+)$/);
+      if (!match) return Number.MAX_SAFE_INTEGER;
+      return Number(match[1]);
+    }
+
+    function compareStudents(a, b, sortBy) {
+      const usnCompare = getUsnSortValue(a.usn) - getUsnSortValue(b.usn) || a.usn.localeCompare(b.usn);
+      if (sortBy === 'usn_desc') return -usnCompare;
+      if (sortBy === 'sem_asc') return (parseInt(a.semester) || 0) - (parseInt(b.semester) || 0) || usnCompare;
+      if (sortBy === 'sem_desc') return (parseInt(b.semester) || 0) - (parseInt(a.semester) || 0) || usnCompare;
+      if (sortBy === 'voted_first') return Number(b.hasVoted) - Number(a.hasVoted) || usnCompare;
+      if (sortBy === 'not_voted_first') return Number(a.hasVoted) - Number(b.hasVoted) || usnCompare;
+      return usnCompare;
+    }
+
+    function populateClassFilter(students) {
+      const select = document.getElementById('studentClassFilter');
+      const currentValue = select.value || 'all';
+      const predefinedClasses = [
+        "CSE A", "CSE B", "CSE C", "CSE D",
+        "ISE E", "ISE F", "ISE G",
+        "AIML H", "CSE(DS) I",
+        "ECE J", "ECE K", "ECE L",
+        "EEE M", "CIVIL N", "MECH O"
+      ];
+      select.innerHTML = `<option value="all">All Classes</option>` + 
+        predefinedClasses.map(cls => `<option value="${cls}">${cls}</option>`).join('');
+      select.value = predefinedClasses.includes(currentValue) ? currentValue : 'all';
+    }
+
+    function renderStudents() {
+      const tbody = document.getElementById('studentsBody');
+      const sortBy = document.getElementById('studentSort').value;
+      const voteFilter = document.getElementById('studentVoteFilter').value;
+      const semFilter = document.getElementById('studentSemFilter').value;
+      const classFilter = document.getElementById('studentClassFilter').value;
+
+      let students = [...allStudents];
+      if (voteFilter === 'voted') students = students.filter(s => s.hasVoted);
+      else if (voteFilter === 'not_voted') students = students.filter(s => !s.hasVoted);
+      
+      if (semFilter !== 'all') students = students.filter(s => s.semester === semFilter);
+      if (classFilter !== 'all') students = students.filter(s => s.class === classFilter);
+
+      students.sort((a, b) => compareStudents(a, b, sortBy));
+
+      tbody.innerHTML = students.map(s => `
+        <tr>
+          <td><strong>${s.usn}</strong></td>
+          <td>${s.name || '-'}</td>
+          <td>${s.email}</td>
+          <td><span class="badge badge-primary">${s.class}</span></td>
+          <td><strong>Sem ${s.semester || '-'}</strong></td>
+          <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
+          <td>
+            <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(event, '${s.usn}')">Reset Password</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button>
+          </td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No students match the selected filters.</td></tr>';
     }
 
     async function loadVotingStatus() {
@@ -144,19 +253,9 @@
     async function loadStudents() {
       const d = await apiGet('/api/admin/students');
       if (!d.success) return;
-      const tbody = document.getElementById('studentsBody');
-      tbody.innerHTML = d.students.map(s => `
-        <tr>
-          <td><strong>${s.usn}</strong></td>
-          <td>${s.email}</td>
-          <td><span class="badge badge-primary">${s.class}</span></td>
-          <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
-          <td>
-            <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(event, '${s.usn}')">Reset Password</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button>
-          </td>
-        </tr>
-      `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">No students registered yet.</td></tr>';
+      allStudents = d.students;
+      populateClassFilter(allStudents);
+      renderStudents();
 
       document.getElementById('totalStudents').textContent = d.students.length;
       const voted = d.students.filter(s => s.hasVoted).length;
@@ -171,8 +270,8 @@
       tbody.innerHTML = d.candidates.map((c, i) => `
         <tr>
           <td>${i+1}</td>
-          <td><strong>${c.name}</strong></td>
           <td>${c.usn}</td>
+          <td><strong>${c.name}</strong></td>
           <td><span class="badge badge-primary">${c.class}</span></td>
           <td><span class="badge badge-${c.gender === 'Male' ? 'male' : 'female'}">${c.gender}</span></td>
           <td><strong style="color:var(--primary)">${c.votes}</strong></td>

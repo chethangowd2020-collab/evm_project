@@ -81,6 +81,20 @@
             </select>
           </div>
           <div style="min-width:220px;flex:1;">
+            <label for="studentSemFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Semester Filter</label>
+            <select id="studentSemFilter" class="form-control" onchange="renderStudents()">
+              <option value="all">All Semesters</option>
+              <option value="1">1st Semester</option>
+              <option value="2">2nd Semester</option>
+              <option value="3">3rd Semester</option>
+              <option value="4">4th Semester</option>
+              <option value="5">5th Semester</option>
+              <option value="6">6th Semester</option>
+              <option value="7">7th Semester</option>
+              <option value="8">8th Semester</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
             <label for="studentVoteFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Vote Status</label>
             <select id="studentVoteFilter" class="form-control" onchange="renderStudents()">
               <option value="all">All Students</option>
@@ -223,6 +237,7 @@
       const tbody = document.getElementById('studentsBody');
       const sortBy = document.getElementById('studentSort').value;
       const voteFilter = document.getElementById('studentVoteFilter').value;
+      const semFilter = document.getElementById('studentSemFilter').value;
       const classFilter = document.getElementById('studentClassFilter').value;
 
       let students = [...allStudents];
@@ -231,6 +246,10 @@
         students = students.filter(student => student.hasVoted);
       } else if (voteFilter === 'not_voted') {
         students = students.filter(student => !student.hasVoted);
+      }
+
+      if (semFilter !== 'all') {
+        students = students.filter(student => student.semester === semFilter);
       }
 
       if (classFilter !== 'all') {
