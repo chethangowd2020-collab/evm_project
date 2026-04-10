@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import hashlib
 import random
 import os
@@ -17,6 +18,12 @@ app.secret_key = os.getenv('SECRET_KEY', 'evm_secret_key_2024')
 ADMIN_USN = os.getenv('ADMIN_USN', 'ADMIN').upper()
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
+# Supabase Connection String (e.g., postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres)
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if not DATABASE_URL:
+    print("WARNING: DATABASE_URL not found. Database features will fail.")
+
 # Email settings (set as environment variables)
 SMTP_HOST = os.getenv('SMTP_HOST')
 SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
@@ -24,28 +31,10 @@ SMTP_USERNAME = os.getenv('SMTP_USERNAME')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
 EMAIL_FROM = os.getenv('EMAIL_FROM')
 
-def resolve_db_path():
-    configured_path = os.getenv('DATABASE_PATH')
-    if configured_path:
-        return configured_path
-
-    render_disk_root = os.getenv('RENDER_DISK_ROOT')
-    if render_disk_root:
-        return os.path.join(render_disk_root, 'database.db')
-
-    # Render and similar hosts may not allow reliable writes in the code directory.
-    # Use the OS temp directory in production-like environments unless configured.
-    if os.getenv('RENDER') or os.getenv('PORT'):
-        return os.path.join(tempfile.gettempdir(), 'database.db')
-
-    return os.path.join(BASE_DIR, 'database.db')
-
-
-DB_PATH = resolve_db_path()
-
 def get_db():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    if not DATABASE_URL:
+        raise ConnectionError("DATABASE_URL environment variable is not set.")
+    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     return conn
 
 def init_db():
@@ -61,7 +50,7 @@ def init_db():
         hasVoted INTEGER DEFAULT 0
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS candidates (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         usn TEXT UNIQUE,
         name TEXT,
         class TEXT,
@@ -69,7 +58,7 @@ def init_db():
         votes INTEGER DEFAULT 0
     )''')
     c.execute('''CREATE TABLE IF NOT EXISTS votes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         usn TEXT,
         class TEXT,
         male_candidate_id INTEGER,
@@ -79,15 +68,15 @@ def init_db():
         key TEXT PRIMARY KEY,
         value TEXT
     )''')
-    c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('voting_enabled', '0')")
-    student_columns = [row[1] for row in c.execute("PRAGMA table_info(students)").fetchall()]
-    if 'name' not in student_columns:
-        c.execute("ALTER TABLE students ADD COLUMN name TEXT")
+    c.execute("INSERT INTO settings (key, value) VALUES ('voting_enabled', '0') ON CONFLICT (key) DO NOTHING")
     conn.commit()
     conn.close()
 
 
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print(f"Database initialization failed: {e}")
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
@@ -198,13 +187,14 @@ def api_register():
         return jsonify({'success': False, 'message': 'Invalid OTP'})
 
     conn = get_db()
-    existing = conn.execute('SELECT usn FROM students WHERE usn=?', (usn,)).fetchone()
-    if existing:
+    cur = conn.cursor()
+    cur.execute('SELECT usn FROM students WHERE usn=%s', (usn,))
+    if cur.fetchone():
         conn.close()
         return jsonify({'success': False, 'message': 'USN already registered'})
 
-    conn.execute(
-        'INSERT INTO students (usn, name, phone, class, password, isVerified, hasVoted) VALUES (?,?,?,?,?,1,0)',
+    cur.execute(
+        'INSERT INTO students (usn, name, phone, class, password, isVerified, hasVoted) VALUES (%s,%s,%s,%s,%s,1,0)',
         (usn, name, email, cls, hash_password(password))
     )
     conn.commit()
@@ -224,18 +214,13 @@ def api_login():
         return jsonify({'success': True, 'role': 'admin'})
 
     conn = get_db()
-    # Check if identifier is email or USN, and distinguish an unknown account
-    # from a wrong password so the UI can guide first-time users.
+    cur = conn.cursor()
     if '@' in identifier:
-        student = conn.execute(
-            'SELECT * FROM students WHERE phone=?',
-            (identifier.lower(),)
-        ).fetchone()
+        cur.execute('SELECT * FROM students WHERE phone=%s', (identifier.lower(),))
     else:
-        student = conn.execute(
-            'SELECT * FROM students WHERE usn=?',
-            (identifier,)
-        ).fetchone()
+        cur.execute('SELECT * FROM students WHERE usn=%s', (identifier,))
+    
+    student = cur.fetchone()
     conn.close()
 
     if not student:
@@ -257,11 +242,11 @@ def student_info():
     if 'usn' not in session:
         return jsonify({'success': False})
     conn = get_db()
-    student = conn.execute(
-        'SELECT usn, name, class, hasVoted FROM students WHERE usn=?',
-        (session['usn'],)
-    ).fetchone()
-    is_candidate = conn.execute('SELECT id FROM candidates WHERE usn=?', (session['usn'],)).fetchone()
+    cur = conn.cursor()
+    cur.execute('SELECT usn, name, class, hasVoted FROM students WHERE usn=%s', (session['usn'],))
+    student = cur.fetchone()
+    cur.execute('SELECT id FROM candidates WHERE usn=%s', (session['usn'],))
+    is_candidate = cur.fetchone()
     conn.close()
     return jsonify({
         'success': True,
@@ -281,14 +266,17 @@ def register_candidate():
     gender = data.get('gender')
 
     conn = get_db()
-    student = conn.execute('SELECT name, class FROM students WHERE usn=?', (usn,)).fetchone()
+    cur = conn.cursor()
+    cur.execute('SELECT name, class FROM students WHERE usn=%s', (usn,))
+    student = cur.fetchone()
     if not student:
         conn.close()
         return jsonify({'success': False, 'message': 'Student not found'})
 
     name = (student['name'] or '').strip()
     cls = student['class']
-    existing = conn.execute('SELECT id FROM candidates WHERE usn=?', (usn,)).fetchone()
+    cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
+    existing = cur.fetchone()
     if existing:
         conn.close()
         return jsonify({'success': False, 'message': 'Already registered as candidate'})
@@ -297,12 +285,13 @@ def register_candidate():
         conn.close()
         return jsonify({'success': False, 'message': 'Student name not found. Please update your registration first.'})
 
-    count = conn.execute('SELECT COUNT(*) as c FROM candidates WHERE class=? AND gender=?', (cls, gender)).fetchone()
+    cur.execute('SELECT COUNT(*) as c FROM candidates WHERE class=%s AND gender=%s', (cls, gender))
+    count = cur.fetchone()
     if count['c'] >= 2:
         conn.close()
         return jsonify({'success': False, 'message': f'Maximum {gender} candidates reached for your class'})
 
-    conn.execute('INSERT INTO candidates (usn, name, class, gender, votes) VALUES (?,?,?,?,0)',
+    cur.execute('INSERT INTO candidates (usn, name, class, gender, votes) VALUES (%s,%s,%s,%s,0)',
                  (usn, name, cls, gender))
     conn.commit()
     conn.close()
@@ -314,9 +303,13 @@ def get_candidates():
         return jsonify({'success': False})
     cls = session.get('class')
     conn = get_db()
-    males = [dict(r) for r in conn.execute('SELECT * FROM candidates WHERE class=? AND gender="Male"', (cls,)).fetchall()]
-    females = [dict(r) for r in conn.execute('SELECT * FROM candidates WHERE class=? AND gender="Female"', (cls,)).fetchall()]
-    setting = conn.execute("SELECT value FROM settings WHERE key='voting_enabled'").fetchone()
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Male'))
+    males = cur.fetchall()
+    cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Female'))
+    females = cur.fetchall()
+    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+    setting = cur.fetchone()
     conn.close()
     return jsonify({
         'success': True,
@@ -336,21 +329,24 @@ def submit_vote():
     female_id = data.get('female_id')
 
     conn = get_db()
-    student = conn.execute('SELECT hasVoted FROM students WHERE usn=?', (usn,)).fetchone()
+    cur = conn.cursor()
+    cur.execute('SELECT hasVoted FROM students WHERE usn=%s', (usn,))
+    student = cur.fetchone()
     if student['hasVoted']:
         conn.close()
         return jsonify({'success': False, 'message': 'You have already voted'})
 
-    setting = conn.execute("SELECT value FROM settings WHERE key='voting_enabled'").fetchone()
+    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+    setting = cur.fetchone()
     if setting['value'] != '1':
         conn.close()
         return jsonify({'success': False, 'message': 'Voting is not enabled'})
 
-    conn.execute('INSERT INTO votes (usn, class, male_candidate_id, female_candidate_id) VALUES (?,?,?,?)',
+    cur.execute('INSERT INTO votes (usn, class, male_candidate_id, female_candidate_id) VALUES (%s,%s,%s,%s)',
                  (usn, cls, male_id, female_id))
-    conn.execute('UPDATE candidates SET votes = votes + 1 WHERE id=?', (male_id,))
-    conn.execute('UPDATE candidates SET votes = votes + 1 WHERE id=?', (female_id,))
-    conn.execute('UPDATE students SET hasVoted=1 WHERE usn=?', (usn,))
+    cur.execute('UPDATE candidates SET votes = votes + 1 WHERE id=%s', (male_id,))
+    cur.execute('UPDATE candidates SET votes = votes + 1 WHERE id=%s', (female_id,))
+    cur.execute('UPDATE students SET hasVoted=1 WHERE usn=%s', (usn,))
     conn.commit()
     conn.close()
     session['hasVoted'] = True
@@ -363,11 +359,11 @@ def admin_students():
     if session.get('role') != 'admin':
         return jsonify({'success': False})
     conn = get_db()
-    students = [
-        dict(r) for r in conn.execute(
-            'SELECT usn, name, phone AS email, class, isVerified, hasVoted FROM students ORDER BY class, usn'
-        ).fetchall()
-    ]
+    cur = conn.cursor()
+    cur.execute(
+        'SELECT usn, name, phone AS email, class, isVerified, hasVoted FROM students ORDER BY class, usn'
+    )
+    students = cur.fetchall()
     conn.close()
     return jsonify({'success': True, 'students': students})
 
@@ -376,7 +372,9 @@ def admin_candidates():
     if session.get('role') != 'admin':
         return jsonify({'success': False})
     conn = get_db()
-    candidates = [dict(r) for r in conn.execute('SELECT * FROM candidates ORDER BY class, gender').fetchall()]
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM candidates ORDER BY class, gender')
+    candidates = cur.fetchall()
     conn.close()
     return jsonify({'success': True, 'candidates': candidates})
 
@@ -385,9 +383,11 @@ def toggle_voting():
     if session.get('role') != 'admin':
         return jsonify({'success': False})
     conn = get_db()
-    current = conn.execute("SELECT value FROM settings WHERE key='voting_enabled'").fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+    current = cur.fetchone()
     new_val = '0' if current['value'] == '1' else '1'
-    conn.execute("UPDATE settings SET value=? WHERE key='voting_enabled'", (new_val,))
+    cur.execute("UPDATE settings SET value=%s WHERE key='voting_enabled'", (new_val,))
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'voting_enabled': new_val == '1'})
@@ -397,7 +397,9 @@ def voting_status():
     if session.get('role') != 'admin':
         return jsonify({'success': False})
     conn = get_db()
-    setting = conn.execute("SELECT value FROM settings WHERE key='voting_enabled'").fetchone()
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+    setting = cur.fetchone()
     conn.close()
     return jsonify({'success': True, 'voting_enabled': setting['value'] == '1'})
 
@@ -411,21 +413,23 @@ def delete_student():
         return jsonify({'success': False, 'message': 'USN required'})
     
     conn = get_db()
+    cur = conn.cursor()
     # Check if student has voted
-    student = conn.execute('SELECT hasVoted FROM students WHERE usn=?', (usn,)).fetchone()
+    cur.execute('SELECT hasVoted FROM students WHERE usn=%s', (usn,))
+    student = cur.fetchone()
     if not student:
         conn.close()
         return jsonify({'success': False, 'message': 'Student not found'})
     
     if student['hasVoted']:
         # If voted, also delete their vote
-        conn.execute('DELETE FROM votes WHERE usn=?', (usn,))
+        cur.execute('DELETE FROM votes WHERE usn=%s', (usn,))
     
     # Delete candidate if they are one
-    conn.execute('DELETE FROM candidates WHERE usn=?', (usn,))
+    cur.execute('DELETE FROM candidates WHERE usn=%s', (usn,))
     
     # Delete student
-    conn.execute('DELETE FROM students WHERE usn=?', (usn,))
+    cur.execute('DELETE FROM students WHERE usn=%s', (usn,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
@@ -446,13 +450,15 @@ def reset_student_password():
         return jsonify({'success': False, 'message': 'New password must be at least 6 characters'})
 
     conn = get_db()
-    student = conn.execute('SELECT usn FROM students WHERE usn=?', (usn,)).fetchone()
+    cur = conn.cursor()
+    cur.execute('SELECT usn FROM students WHERE usn=%s', (usn,))
+    student = cur.fetchone()
     if not student:
         conn.close()
         return jsonify({'success': False, 'message': 'Student not found'})
 
-    conn.execute(
-        'UPDATE students SET password=? WHERE usn=?',
+    cur.execute(
+        'UPDATE students SET password=%s WHERE usn=%s',
         (hash_password(new_password), usn)
     )
     conn.commit()
@@ -469,17 +475,19 @@ def delete_candidate():
         return jsonify({'success': False, 'message': 'Candidate ID required'})
     
     conn = get_db()
+    cur = conn.cursor()
     # Get candidate info
-    candidate = conn.execute('SELECT usn FROM candidates WHERE id=?', (candidate_id,)).fetchone()
+    cur.execute('SELECT usn FROM candidates WHERE id=%s', (candidate_id,))
+    candidate = cur.fetchone()
     if not candidate:
         conn.close()
         return jsonify({'success': False, 'message': 'Candidate not found'})
     
     # Delete votes for this candidate
-    conn.execute('DELETE FROM votes WHERE male_candidate_id=? OR female_candidate_id=?', (candidate_id, candidate_id))
+    cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
     
     # Delete candidate
-    conn.execute('DELETE FROM candidates WHERE id=?', (candidate_id,))
+    cur.execute('DELETE FROM candidates WHERE id=%s', (candidate_id,))
     conn.commit()
     conn.close()
     return jsonify({'success': True})
@@ -489,8 +497,11 @@ def admin_results():
     if session.get('role') != 'admin':
         return jsonify({'success': False})
     conn = get_db()
-    candidates = [dict(r) for r in conn.execute('SELECT * FROM candidates ORDER BY class, gender, votes DESC').fetchall()]
-    total_votes = conn.execute('SELECT COUNT(*) as c FROM votes').fetchone()['c']
+    cur = conn.cursor()
+    cur.execute('SELECT * FROM candidates ORDER BY class, gender, votes DESC')
+    candidates = cur.fetchall()
+    cur.execute('SELECT COUNT(*) as c FROM votes')
+    total_votes = cur.fetchone()['c']
     conn.close()
 
     classes = {}

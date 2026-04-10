@@ -21,31 +21,29 @@ You can override both in production using environment variables:
 - `ADMIN_USN`
 - `ADMIN_PASSWORD`
 
-## Public deployment on Render
+## Production Deployment (Render + Supabase)
 
-This project includes `render.yaml`, so you can deploy it and get a public link that keeps working even after you close VS Code.
+To ensure data is **never lost** during redeployments, this project uses an external PostgreSQL database (Supabase).
 
 ### Steps
 
-1. Upload this project to GitHub.
-2. Create an account on Render.
-3. In Render, choose `New +` -> `Blueprint`.
-4. Connect your GitHub repository.
-5. Render will detect `render.yaml` and create the web service.
-6. Set `ADMIN_PASSWORD` in Render to a strong password before production use.
-7. Add `DATABASE_PATH=/var/data/database.db` in Render environment variables.
-8. Deploy and open the generated `https://...onrender.com` URL.
-
-### Important note about data
-
-The deployment is configured with a persistent disk mounted at `/var/data`. Pointing `DATABASE_PATH` there keeps your SQLite database across restarts and redeploys.
+1. **Database Setup**: Create a project on Supabase. Copy the **Connection String** (URI) from Project Settings > Database.
+2. **GitHub**: Push your code to a GitHub repository.
+3. **Host the App**: On Render, create a new **Web Service** and connect your repo.
+4. **Environment Variables**: In the Render dashboard, add the following:
+   - `DATABASE_URL`: Your Supabase connection string.
+   - `SECRET_KEY`: A random long string for session security.
+   - `ADMIN_PASSWORD`: Your custom admin password.
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`: For email features.
+5. **Deploy**: Every time you push code to GitHub, Render will update the app. Your data remains safe in Supabase.
 
 ## Student flow
 
 1. Register at `/register`
-2. Login at `/login`
-3. Optionally enroll as candidate at `/candidate_register`
-4. Vote at `/vote` after admin enables voting
+   - Uses an Alphanumeric Captcha for verification.
+2. Login at `/login`.
+3. Optionally enroll as candidate at `/candidate_register`.
+4. Vote at `/vote` after admin enables voting.
 
 ## Admin tools
 
