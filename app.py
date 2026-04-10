@@ -369,7 +369,7 @@ def admin_students():
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        'SELECT usn, name, phone AS email, class, isVerified, hasVoted FROM students ORDER BY class, usn'
+        'SELECT usn, name, phone AS email, class, hasVoted FROM students ORDER BY class, usn'
     )
     students = cur.fetchall()
     conn.close()
@@ -422,20 +422,23 @@ def delete_student():
     
     conn = get_db()
     cur = conn.cursor()
-    # Check if student has voted
-    cur.execute('SELECT hasVoted FROM students WHERE usn=%s', (usn,))
-    student = cur.fetchone()
-    if not student:
+
+    # Check if student exists
+    cur.execute('SELECT usn FROM students WHERE usn=%s', (usn,))
+    if not cur.fetchone():
         conn.close()
         return jsonify({'success': False, 'message': 'Student not found'})
-    
-    if student['hasVoted']:
-        # If voted, also delete their vote
-        cur.execute('DELETE FROM votes WHERE usn=%s', (usn,))
-    
-    # Delete candidate if they are one
-    cur.execute('DELETE FROM candidates WHERE usn=%s', (usn,))
-    
+
+    # 1. Clean up candidate data and associated votes received
+    cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
+    candidate = cur.fetchone()
+    if candidate:
+        candidate_id = candidate['id']
+        cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
+        cur.execute('DELETE FROM candidates WHERE id=%s', (candidate_id,))
+
+    # 2. Clean up votes cast by the student and the student record
+    cur.execute('DELETE FROM votes WHERE usn=%s', (usn,))
     # Delete student
     cur.execute('DELETE FROM students WHERE usn=%s', (usn,))
     conn.commit()

@@ -75,13 +75,12 @@
                 <th>USN</th>
                 <th>Email</th>
                 <th>Class</th>
-                <th>Verified</th>
                 <th>Voted</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody id="studentsBody">
-              <tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
+              <tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading...</td></tr>
             </tbody>
           </table>
         </div>
@@ -151,14 +150,13 @@
           <td><strong>${s.usn}</strong></td>
           <td>${s.email}</td>
           <td><span class="badge badge-primary">${s.class}</span></td>
-          <td>${s.isVerified ? '<span class="badge badge-success">Verified</span>' : '<span class="badge badge-danger">No</span>'}</td>
           <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
           <td>
             <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(event, '${s.usn}')">Reset Password</button>
             <button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button>
           </td>
         </tr>
-      `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">No students registered yet.</td></tr>';
+      `).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">No students registered yet.</td></tr>';
 
       document.getElementById('totalStudents').textContent = d.students.length;
       const voted = d.students.filter(s => s.hasVoted).length;
