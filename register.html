@@ -40,15 +40,38 @@
               <label class="form-label">Class</label>
               <select id="class" class="form-control">
                 <option value="">Select class</option>
-                <option value="CSE-A">CSE-A</option>
-                <option value="CSE-B">CSE-B</option>
-                <option value="ISE">ISE</option>
-                <option value="ECE">ECE</option>
-                <option value="EEE">EEE</option>
-                <option value="MECH">MECH</option>
-                <option value="CIVIL">CIVIL</option>
+                <option value="CSE A">CSE A</option>
+                <option value="CSE B">CSE B</option>
+                <option value="CSE C">CSE C</option>
+                <option value="CSE D">CSE D</option>
+                <option value="ISE E">ISE E</option>
+                <option value="ISE F">ISE F</option>
+                <option value="ISE G">ISE G</option>
+                <option value="AIML H">AIML H</option>
+                <option value="CSE(DS) I">CSE(DS) I</option>
+                <option value="ECE J">ECE J</option>
+                <option value="ECE K">ECE K</option>
+                <option value="ECE L">ECE L</option>
+                <option value="EEE M">EEE M</option>
+                <option value="CIVIL N">CIVIL N</option>
+                <option value="MECH O">MECH O</option>
               </select>
             </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">select sem</label>
+            <select id="semester" class="form-control">
+              <option value="">Select Semester</option>
+              <option value="1">1st Semester</option>
+              <option value="2">2nd Semester</option>
+              <option value="3">3rd Semester</option>
+              <option value="4">4th Semester</option>
+              <option value="5">5th Semester</option>
+              <option value="6">6th Semester</option>
+              <option value="7">7th Semester</option>
+              <option value="8">8th Semester</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -117,12 +140,13 @@
       const usn = document.getElementById('usn').value.trim().toUpperCase();
       const email = document.getElementById('email').value.trim();
       const cls = document.getElementById('class').value;
+      const sem = document.getElementById('semester').value;
       const captcha = document.getElementById('captcha').value.trim();
       const password = document.getElementById('password').value;
       const confirm = document.getElementById('confirmPassword').value;
       const alert = document.getElementById('alertBox');
 
-      if (!usn || !email || !cls || !captcha || !password)
+      if (!usn || !email || !cls || !sem || !captcha || !password)
         return showAlert(alert, 'Please fill in all fields.');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert(alert, 'Enter a valid email address.');
       if (password.length < 6)
@@ -132,7 +156,7 @@
 
       const btn = document.getElementById('registerBtn');
       setLoading(btn, true, 'Registering...');
-      const data = await apiFetch('/api/register', { usn, email, class: cls, otp: captcha, password });
+      const data = await apiFetch('/api/register', { usn, email, class: cls, semester: sem, otp: captcha, password });
       setLoading(btn, false);
 
       if (data.success) {
