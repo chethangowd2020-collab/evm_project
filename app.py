@@ -124,7 +124,11 @@ def vote():
 def candidate_register():
     if 'usn' not in session:
         return redirect(url_for('login'))
-    return render_template('candidate_register.html')
+    return render_template(
+        'candidate_register.html',
+        name=session.get('name', 'Student'),
+        cls=session.get('class', '—'),
+        sem=session.get('semester', '—'))
 
 @app.route('/admin')
 def admin():

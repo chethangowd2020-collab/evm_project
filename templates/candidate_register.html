@@ -44,19 +44,25 @@
 
             <div class="form-group">
               <label class="form-label">Your USN</label>
-              <input type="text" id="usn" class="form-control" placeholder="Auto-filled from your login" readonly
+              <input type="text" id="usn" class="form-control" value="{{ session.get('usn', '') }}" readonly
                 style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
             <div class="form-group">
               <label class="form-label">Full Name</label>
-              <input type="text" id="name" class="form-control" placeholder="Auto-filled from your registration" readonly
+              <input type="text" id="name" class="form-control" value="{{ name }}" readonly
                 style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
             <div class="form-group">
               <label class="form-label">Class</label>
-              <input type="text" id="class" class="form-control" placeholder="Auto-filled from your login" readonly
+              <input type="text" id="class" class="form-control" value="{{ cls }}" readonly
+                style="background:#F0F4FF;color:var(--text-soft);">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Semester</label>
+              <input type="text" id="semester" class="form-control" value="{{ sem }}" readonly
                 style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
