@@ -23,7 +23,10 @@
       <p style="opacity:0.7;font-size:0.85rem;margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.1em;">Student Dashboard</p>
       <h1>HELLO <span id="welcomeName">{{ name.upper() }}</span>! 👋</h1>
       <p>Participate in your class representative election</p>
-      <div class="class-badge">🏫 Class: <strong id="welcomeClass">—</strong></div>
+      <div class="class-badge">
+        <span>🏫 Class: <strong id="welcomeClass">—</strong></span>
+        <span style="margin-left:10px;padding-left:10px;border-left:1px solid rgba(255,255,255,0.3);">🎓 Sem: <strong id="welcomeSem">—</strong></span>
+      </div>
     </div>
 
     <!-- Voted Banner -->
@@ -94,6 +97,7 @@
 
       document.getElementById('welcomeName').textContent = (data.name || data.usn).toUpperCase();
       document.getElementById('welcomeClass').textContent = data.class;
+      document.getElementById('welcomeSem').textContent = data.semester || '—';
 
       if (data.hasVoted) {
         document.getElementById('votedBanner').style.display = 'block';

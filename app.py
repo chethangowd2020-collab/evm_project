@@ -250,6 +250,7 @@ def api_login():
     session['usn'] = student['usn']
     session['name'] = student['name']
     session['class'] = student['class']
+    session['semester'] = student['semester']
     session['role'] = 'student'
     return jsonify({'success': True, 'role': 'student'})
 
@@ -259,7 +260,7 @@ def student_info():
         return jsonify({'success': False})
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('SELECT usn, name, class, hasVoted FROM students WHERE usn=%s', (session['usn'],))
+    cur.execute('SELECT usn, name, class, semester, hasVoted FROM students WHERE usn=%s', (session['usn'],))
     student = cur.fetchone()
     cur.execute('SELECT id FROM candidates WHERE usn=%s', (session['usn'],))
     is_candidate = cur.fetchone()
@@ -269,6 +270,7 @@ def student_info():
         'usn': student['usn'],
         'name': student['name'],
         'class': student['class'],
+        'semester': student['semester'],
         'hasVoted': bool(student['hasVoted']),
         'isCandidate': bool(is_candidate)
     })
