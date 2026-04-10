@@ -108,7 +108,7 @@ def login():
 def dashboard():
     if 'usn' not in session:
         return redirect(url_for('login'))
-    return render_template('dashboard.html')
+    return render_template('dashboard.html', name=session.get('name', 'Student'))
 
 @app.route('/vote')
 def vote():
@@ -248,6 +248,7 @@ def api_login():
         return jsonify({'success': False, 'message': 'Invalid password'})
 
     session['usn'] = student['usn']
+    session['name'] = student['name']
     session['class'] = student['class']
     session['role'] = 'student'
     return jsonify({'success': True, 'role': 'student'})
