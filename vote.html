@@ -160,30 +160,35 @@
     async function submitVote() {
       const btn = document.getElementById('finalVoteBtn');
       setLoading(btn, true, 'Submitting...');
-      const data = await apiFetch('/api/submit_vote', {
-        male_id: selectedMale.id,
-        female_id: selectedFemale.id
-      });
-      setLoading(btn, false);
-      closeModal();
-      if (data.success) {
-        document.getElementById('successOverlay').classList.add('show');
-      } else {
-        alert(data.message || 'Failed to submit vote.');
+      try {
+        const data = await apiFetch('/api/submit_vote', {
+          male_id: selectedMale.id,
+          female_id: selectedFemale.id
+        });
+        if (data.success) {
+          document.getElementById('successOverlay').classList.add('show');
+        } else {
+          alert(data.message || 'Failed to submit vote.');
+        }
+      } finally {
+        setLoading(btn, false);
+        closeModal();
       }
     }
 
     (async () => {
-      const info = await apiGet('/api/student_info');
-      if (!info.success) { window.location.href = '/login'; return; }
-
-      document.getElementById('classLabel').textContent = info.class;
-
-      if (info.hasVoted) {
-        // Handle already voted state
-      }
-
       try {
+        const info = await apiGet('/api/student_info');
+        if (!info.success) { window.location.href = '/login'; return; }
+
+        document.getElementById('classLabel').textContent = info.class;
+
+        if (info.hasVoted) {
+          document.getElementById('votingSection').style.display = 'none';
+          document.getElementById('alreadyVoted').style.display = 'block';
+          return;
+        }
+
         const d = await apiGet('/api/candidates');
         if (!d.success) {
           alert(d.message || 'Session expired or data error. Redirecting to login...');

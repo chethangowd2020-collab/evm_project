@@ -270,6 +270,10 @@ def student_info():
     cur = conn.cursor()
     cur.execute('SELECT usn, name, class, semester, hasVoted FROM students WHERE usn=%s', (session['usn'],))
     student = cur.fetchone()
+    if not student:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Student record not found. Please log in again.'})
+
     cur.execute('SELECT id FROM candidates WHERE usn=%s', (session['usn'],))
     is_candidate = cur.fetchone()
     conn.close()
