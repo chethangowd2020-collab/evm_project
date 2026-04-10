@@ -180,24 +180,32 @@
       document.getElementById('classLabel').textContent = info.class;
 
       if (info.hasVoted) {
-        document.getElementById('votingSection').style.display = 'none';
-        document.getElementById('alreadyVoted').style.display = 'block';
-        return;
+        // Handle already voted state
       }
 
-      const d = await apiGet('/api/candidates');
-      if (!d.success) return;
+      try {
+        const d = await apiGet('/api/candidates');
+        if (!d.success) {
+          alert(d.message || 'Session expired or data error. Redirecting to login...');
+          window.location.href = '/login';
+          return;
+        }
 
-      if (!d.voting_enabled) {
-        document.getElementById('votingSection').style.display = 'none';
-        document.getElementById('votingDisabled').style.display = 'block';
-        return;
+        if (!d.voting_enabled) {
+          document.getElementById('votingSection').style.display = 'none';
+          document.getElementById('votingDisabled').style.display = 'block';
+          return;
+        }
+
+        maleCandidatesData = d.males;
+        femaleCandidatesData = d.females;
+        renderCandidates(d.males, 'maleCandidates', 'Male');
+        renderCandidates(d.females, 'femaleCandidates', 'Female');
+      } catch (err) {
+        console.error('Error fetching candidates:', err);
+        document.getElementById('maleCandidates').innerHTML = '<p style="color:red">Error loading candidates.</p>';
+        document.getElementById('femaleCandidates').innerHTML = '<p style="color:red">Error loading candidates.</p>';
       }
-
-      maleCandidatesData = d.males;
-      femaleCandidatesData = d.females;
-      renderCandidates(d.males, 'maleCandidates', 'Male');
-      renderCandidates(d.females, 'femaleCandidates', 'Female');
     })();
   </script>
 </body>

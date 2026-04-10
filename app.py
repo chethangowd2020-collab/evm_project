@@ -327,9 +327,17 @@ def register_candidate():
 def get_candidates():
     if 'usn' not in session:
         return jsonify({'success': False})
-    cls = session.get('class')
+    
     conn = get_db()
     cur = conn.cursor()
+    # Fetch class from DB to ensure it matches candidates table perfectly
+    cur.execute('SELECT class FROM students WHERE usn=%s', (session['usn'],))
+    student = cur.fetchone()
+    if not student:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Student record not found'})
+    
+    cls = student['class']
     cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Male'))
     males = cur.fetchall()
     cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Female'))
