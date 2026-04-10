@@ -50,6 +50,11 @@ def init_db():
         isVerified INTEGER DEFAULT 0,
         hasVoted INTEGER DEFAULT 0
     )''')
+    try:
+        # Ensure semester column exists if table was created previously
+        c.execute('ALTER TABLE students ADD COLUMN IF NOT EXISTS semester TEXT')
+    except Exception as e:
+        print(f"Notice: Semester column check: {e}")
     c.execute('''CREATE TABLE IF NOT EXISTS candidates (
         id SERIAL PRIMARY KEY,
         usn TEXT UNIQUE,

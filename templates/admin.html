@@ -146,6 +146,25 @@
   <script>
     let allStudents = [];
 
+    // Safety: Ensure API helpers exist if not in script.js
+    if (typeof apiGet === 'undefined') {
+      window.apiGet = async (url) => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      };
+    }
+    if (typeof apiFetch === 'undefined') {
+      window.apiFetch = async (url, data) => {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return res.json();
+      };
+    }
+
     function switchTab(tab) {
       document.querySelectorAll('.tab-btn').forEach((b, i) => {
         b.classList.toggle('active', ['students','candidates'][i] === tab);
@@ -237,13 +256,15 @@
     }
 
     async function loadVotingStatus() {
-      const d = await apiGet('/api/admin/voting_status');
-      if (!d.success) return;
-      const enabled = d.voting_enabled;
-      document.getElementById('statusDot').className = 'status-dot' + (enabled ? ' active' : '');
-      document.getElementById('statusText').textContent = enabled ? 'Voting is ACTIVE' : 'Voting is STOPPED';
-      document.getElementById('toggleVotingBtn').textContent = enabled ? '⏹ Stop Voting' : '▶ Start Voting';
-      document.getElementById('toggleVotingBtn').className = 'btn ' + (enabled ? 'btn-danger' : 'btn-success');
+      try {
+        const d = await apiGet('/api/admin/voting_status');
+        if (!d.success) return;
+        const enabled = d.voting_enabled;
+        document.getElementById('statusDot').className = 'status-dot' + (enabled ? ' active' : '');
+        document.getElementById('statusText').textContent = enabled ? 'Voting is ACTIVE' : 'Voting is STOPPED';
+        document.getElementById('toggleVotingBtn').textContent = enabled ? '⏹ Stop Voting' : '▶ Start Voting';
+        document.getElementById('toggleVotingBtn').className = 'btn ' + (enabled ? 'btn-danger' : 'btn-success');
+      } catch (e) { console.error("Voting status error:", e); }
     }
 
     async function toggleVoting() {
@@ -255,34 +276,44 @@
     }
 
     async function loadStudents() {
-      const d = await apiGet('/api/admin/students');
-      if (!d.success) return;
-      allStudents = d.students;
-      populateClassFilter(allStudents);
-      renderStudents();
+      try {
+        const d = await apiGet('/api/admin/students');
+        if (!d.success) {
+          window.location.href = '/login';
+          return;
+        }
+        allStudents = d.students;
+        populateClassFilter(allStudents);
+        renderStudents();
 
-      document.getElementById('totalStudents').textContent = d.students.length;
-      const voted = d.students.filter(s => s.hasVoted).length;
-      document.getElementById('totalVoters').textContent = voted;
-      document.getElementById('turnoutPct').textContent = d.students.length ? Math.round(voted / d.students.length * 100) + '%' : '0%';
+        document.getElementById('totalStudents').textContent = d.students.length;
+        const voted = d.students.filter(s => s.hasVoted).length;
+        document.getElementById('totalVoters').textContent = voted;
+        document.getElementById('turnoutPct').textContent = d.students.length ? Math.round(voted / d.students.length * 100) + '%' : '0%';
+      } catch (e) {
+        console.error("Load students error:", e);
+        document.getElementById('studentsBody').innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;padding:2rem;">Error loading data. Please check connection or session.</td></tr>`;
+      }
     }
 
     async function loadCandidates() {
-      const d = await apiGet('/api/admin/candidates');
-      if (!d.success) return;
-      const tbody = document.getElementById('candidatesBody');
-      tbody.innerHTML = d.candidates.map((c, i) => `
-        <tr>
-          <td>${i+1}</td>
-          <td>${c.usn}</td>
-          <td><strong>${c.name}</strong></td>
-          <td><span class="badge badge-primary">${c.class}</span></td>
-          <td><span class="badge badge-${c.gender === 'Male' ? 'male' : 'female'}">${c.gender}</span></td>
-          <td><strong style="color:var(--primary)">${c.votes}</strong></td>
-          <td><button class="btn btn-danger btn-sm" onclick="deleteCandidate(event, ${c.id})">Delete</button></td>
-        </tr>
-      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates enrolled yet.</td></tr>';
-      document.getElementById('totalCandidates').textContent = d.candidates.length;
+      try {
+        const d = await apiGet('/api/admin/candidates');
+        if (!d.success) return;
+        const tbody = document.getElementById('candidatesBody');
+        tbody.innerHTML = d.candidates.map((c, i) => `
+          <tr>
+            <td>${i+1}</td>
+            <td>${c.usn}</td>
+            <td><strong>${c.name}</strong></td>
+            <td><span class="badge badge-primary">${c.class}</span></td>
+            <td><span class="badge badge-${c.gender === 'Male' ? 'male' : 'female'}">${c.gender}</span></td>
+            <td><strong style="color:var(--primary)">${c.votes}</strong></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteCandidate(event, ${c.id})">Delete</button></td>
+          </tr>
+        `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates enrolled yet.</td></tr>';
+        document.getElementById('totalCandidates').textContent = d.candidates.length;
+      } catch (e) { console.error("Load candidates error:", e); }
     }
 
     async function deleteStudent(event, usn) {
