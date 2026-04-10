@@ -318,15 +318,20 @@
 
     async function deleteStudent(event, usn) {
       if (!confirm(`Are you sure you want to delete student ${usn}? This action cannot be undone.`)) return;
-      const btn = event.target;
+      const btn = event.currentTarget || event.target;
       setLoading(btn, true, 'Deleting...');
-      const data = await apiFetch('/api/admin/delete_student', { usn });
-      setLoading(btn, false);
-      if (data.success) {
-        loadStudents();
-        loadVotingStatus();
-      } else {
-        alert(data.message || 'Failed to delete student');
+      try {
+        const data = await apiFetch('/api/admin/delete_student', { usn });
+        if (data.success) {
+          await loadStudents();
+          await loadVotingStatus();
+        } else {
+          alert(data.message || 'Failed to delete student');
+        }
+      } catch (e) {
+        alert('A network error occurred while trying to delete the student.');
+      } finally {
+        setLoading(btn, false);
       }
     }
 
@@ -357,15 +362,20 @@
 
     async function deleteCandidate(event, id) {
       if (!confirm('Are you sure you want to delete this candidate? This action cannot be undone.')) return;
-      const btn = event.target;
+      const btn = event.currentTarget || event.target;
       setLoading(btn, true, 'Deleting...');
-      const data = await apiFetch('/api/admin/delete_candidate', { id });
-      setLoading(btn, false);
-      if (data.success) {
-        loadCandidates();
-        loadVotingStatus();
-      } else {
-        alert(data.message || 'Failed to delete candidate');
+      try {
+        const data = await apiFetch('/api/admin/delete_candidate', { id });
+        if (data.success) {
+          await loadCandidates();
+          await loadVotingStatus();
+        } else {
+          alert(data.message || 'Failed to delete candidate');
+        }
+      } catch (e) {
+        alert('A network error occurred while trying to delete the candidate.');
+      } finally {
+        setLoading(btn, false);
       }
     }
 

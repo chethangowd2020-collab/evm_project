@@ -427,30 +427,33 @@ def delete_student():
     if not usn:
         return jsonify({'success': False, 'message': 'USN required'})
     
-    conn = get_db()
-    cur = conn.cursor()
+    try:
+        conn = get_db()
+        cur = conn.cursor()
 
-    # Check if student exists
-    cur.execute('SELECT usn FROM students WHERE usn=%s', (usn,))
-    if not cur.fetchone():
+        # Check if student exists
+        cur.execute('SELECT usn FROM students WHERE usn=%s', (usn,))
+        if not cur.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': 'Student not found'})
+
+        # 1. Clean up candidate data and associated votes received
+        cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
+        candidate = cur.fetchone()
+        if candidate:
+            candidate_id = candidate['id']
+            cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
+            cur.execute('DELETE FROM candidates WHERE id=%s', (candidate_id,))
+
+        # 2. Clean up votes cast by the student and the student record
+        cur.execute('DELETE FROM votes WHERE usn=%s', (usn,))
+        # Delete student
+        cur.execute('DELETE FROM students WHERE usn=%s', (usn,))
+        conn.commit()
         conn.close()
-        return jsonify({'success': False, 'message': 'Student not found'})
-
-    # 1. Clean up candidate data and associated votes received
-    cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
-    candidate = cur.fetchone()
-    if candidate:
-        candidate_id = candidate['id']
-        cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
-        cur.execute('DELETE FROM candidates WHERE id=%s', (candidate_id,))
-
-    # 2. Clean up votes cast by the student and the student record
-    cur.execute('DELETE FROM votes WHERE usn=%s', (usn,))
-    # Delete student
-    cur.execute('DELETE FROM students WHERE usn=%s', (usn,))
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True})
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Database error: {str(e)}'})
 
 @app.route('/api/admin/reset_student_password', methods=['POST'])
 def reset_student_password():
@@ -492,23 +495,26 @@ def delete_candidate():
     if not candidate_id:
         return jsonify({'success': False, 'message': 'Candidate ID required'})
     
-    conn = get_db()
-    cur = conn.cursor()
-    # Get candidate info
-    cur.execute('SELECT usn FROM candidates WHERE id=%s', (candidate_id,))
-    candidate = cur.fetchone()
-    if not candidate:
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        # Get candidate info
+        cur.execute('SELECT usn FROM candidates WHERE id=%s', (candidate_id,))
+        candidate = cur.fetchone()
+        if not candidate:
+            conn.close()
+            return jsonify({'success': False, 'message': 'Candidate not found'})
+        
+        # Delete votes for this candidate
+        cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
+        
+        # Delete candidate
+        cur.execute('DELETE FROM candidates WHERE id=%s', (candidate_id,))
+        conn.commit()
         conn.close()
-        return jsonify({'success': False, 'message': 'Candidate not found'})
-    
-    # Delete votes for this candidate
-    cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
-    
-    # Delete candidate
-    cur.execute('DELETE FROM candidates WHERE id=%s', (candidate_id,))
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True})
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Database error: {str(e)}'})
 
 @app.route('/api/admin/results')
 def admin_results():
