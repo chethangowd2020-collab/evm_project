@@ -108,7 +108,7 @@ def login():
 def dashboard():
     if 'usn' not in session:
         return redirect(url_for('login'))
-    return render_template('dashboard.html', name=session.get('name', 'Student'), cls=session.get('class', '—'))
+    return render_template('dashboard.html', name=session.get('name', 'Student'))
 
 @app.route('/vote')
 def vote():
