@@ -94,7 +94,10 @@
   <script>
     (async () => {
       const data = await apiGet('/api/student_info');
-      if (!data.success) { window.location.href = '/login'; return; }
+      if (!data.success) { 
+        console.error("Student info fetch failed:", data.message);
+        return; 
+      }
 
       document.getElementById('usn').value = data.usn;
       document.getElementById('name').value = data.name || '';

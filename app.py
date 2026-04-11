@@ -135,12 +135,18 @@ def dashboard():
 def vote():
     if 'usn' not in session:
         return redirect(url_for('login'))
+    # Role guard: Admins cannot vote
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin'))
     return render_template('vote.html')
 
 @app.route('/candidate_register')
 def candidate_register():
     if 'usn' not in session:
         return redirect(url_for('login'))
+    # Role guard: Admins cannot register as candidates
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin'))
     return render_template(
         'candidate_register.html',
         name=session.get('name', 'Student'),

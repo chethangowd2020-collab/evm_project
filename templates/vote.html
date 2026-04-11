@@ -179,7 +179,10 @@
     (async () => {
       try {
         const info = await apiGet('/api/student_info');
-        if (!info.success) { window.location.href = '/login'; return; }
+        if (!info.success) { 
+          console.error("Authentication check failed:", info.message);
+          return; 
+        }
 
         document.getElementById('classLabel').textContent = info.class;
 
@@ -191,8 +194,8 @@
 
         const d = await apiGet('/api/candidates');
         if (!d.success) {
-          alert(d.message || 'Session expired or data error. Redirecting to login...');
-          window.location.href = '/login';
+          console.error("Candidate list fetch error:", d.message);
+          alert("Error loading candidates. Please refresh.");
           return;
         }
 
