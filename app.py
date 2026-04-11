@@ -466,6 +466,18 @@ def delete_student():
             conn.close()
             return jsonify({'success': False, 'message': 'Student not found'})
 
+        # 0. If the student has already voted, decrement the counts for candidates they voted for
+        cur.execute('SELECT hasVoted FROM students WHERE usn=%s', (usn,))
+        student_status = cur.fetchone()
+        if student_status and student_status['hasVoted']:
+            cur.execute('SELECT male_candidate_id, female_candidate_id FROM votes WHERE usn=%s', (usn,))
+            vote_rec = cur.fetchone()
+            if vote_rec:
+                if vote_rec['male_candidate_id']:
+                    cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (vote_rec['male_candidate_id'],))
+                if vote_rec['female_candidate_id']:
+                    cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (vote_rec['female_candidate_id'],))
+
         # 1. Clean up candidate data and associated votes received
         cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
         candidate = cur.fetchone()
@@ -534,10 +546,23 @@ def delete_candidate():
             conn.close()
             return jsonify({'success': False, 'message': 'Candidate not found'})
         
-        # Delete votes for this candidate
+        # 1. Find all votes involving this candidate to clean up properly
+        cur.execute('SELECT usn, male_candidate_id, female_candidate_id FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
+        affected_votes = cur.fetchall()
+
+        for vote in affected_votes:
+            # Decrement the count for the OTHER candidate in that same vote record
+            other_id = vote['female_candidate_id'] if vote['male_candidate_id'] == int(candidate_id) else vote['male_candidate_id']
+            if other_id:
+                cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (other_id,))
+            
+            # Reset the student's voting status so they can vote again in the updated pool
+            cur.execute('UPDATE students SET hasVoted=0 WHERE usn=%s', (vote['usn'],))
+
+        # 2. Delete the specific vote records
         cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
         
-        # Delete candidate
+        # 3. Finally, delete the candidate
         cur.execute('DELETE FROM candidates WHERE id=%s', (candidate_id,))
         conn.commit()
         conn.close()
