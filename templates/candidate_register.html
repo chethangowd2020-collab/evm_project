@@ -102,6 +102,7 @@
       document.getElementById('usn').value = data.usn;
       document.getElementById('name').value = data.name || '';
       document.getElementById('class').value = data.class;
+      document.getElementById('semester').value = data.semester || '—';
 
       if (data.isCandidate) {
         document.getElementById('enrollForm').style.display = 'none';

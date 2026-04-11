@@ -66,9 +66,14 @@ def init_db():
         usn TEXT UNIQUE,
         name TEXT,
         class TEXT,
+        semester TEXT,
         gender TEXT,
         votes INTEGER DEFAULT 0
     )''')
+    try:
+        c.execute('ALTER TABLE candidates ADD COLUMN IF NOT EXISTS semester TEXT')
+    except Exception as e:
+        print(f"Notice: Candidates semester column check: {e}")
     c.execute('''CREATE TABLE IF NOT EXISTS votes (
         id SERIAL PRIMARY KEY,
         usn TEXT,
@@ -338,7 +343,7 @@ def register_candidate():
 
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('SELECT name, class FROM students WHERE usn=%s', (usn,))
+    cur.execute('SELECT name, class, semester FROM students WHERE usn=%s', (usn,))
     student = cur.fetchone()
     if not student:
         conn.close()
@@ -346,6 +351,7 @@ def register_candidate():
 
     name = (student['name'] or '').strip()
     cls = student['class']
+    sem = student['semester']
     cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
     existing = cur.fetchone()
     if existing:
@@ -356,14 +362,14 @@ def register_candidate():
         conn.close()
         return jsonify({'success': False, 'message': 'Student name not found. Please update your registration first.'})
 
-    cur.execute('SELECT COUNT(*) as c FROM candidates WHERE class=%s AND gender=%s', (cls, gender))
+    cur.execute('SELECT COUNT(*) as c FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, gender))
     count = cur.fetchone()
     if count['c'] >= 2:
         conn.close()
         return jsonify({'success': False, 'message': f'Maximum {gender} candidates reached for your class'})
 
-    cur.execute('INSERT INTO candidates (usn, name, class, gender, votes) VALUES (%s,%s,%s,%s,0)',
-                 (usn, name, cls, gender))
+    cur.execute('INSERT INTO candidates (usn, name, class, semester, gender, votes) VALUES (%s,%s,%s,%s,%s,0)',
+                 (usn, name, cls, sem, gender))
     conn.commit()
     conn.close()
     return jsonify({'success': True, 'message': 'Registered as candidate successfully!'})
@@ -377,16 +383,17 @@ def get_candidates():
         conn = get_db()
         cur = conn.cursor()
         # Fetch class from DB to ensure it matches candidates table perfectly
-        cur.execute('SELECT class FROM students WHERE usn=%s', (session['usn'],))
+        cur.execute('SELECT class, semester FROM students WHERE usn=%s', (session['usn'],))
         student = cur.fetchone()
         if not student:
             conn.close()
             return jsonify({'success': False, 'message': 'Student record not found'})
         
         cls = student['class']
-        cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Male'))
+        sem = student['semester']
+        cur.execute('SELECT * FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, 'Male'))
         males = cur.fetchall()
-        cur.execute('SELECT * FROM candidates WHERE class=%s AND gender=%s', (cls, 'Female'))
+        cur.execute('SELECT * FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, 'Female'))
         females = cur.fetchall()
         cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
         setting = cur.fetchone()
@@ -455,7 +462,7 @@ def admin_candidates():
         return jsonify({'success': False})
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM candidates ORDER BY class, gender')
+    cur.execute('SELECT * FROM candidates ORDER BY class, semester, gender')
     candidates = cur.fetchall()
     conn.close()
     return jsonify({'success': True, 'candidates': candidates})
@@ -614,7 +621,7 @@ def admin_results():
         return jsonify({'success': False})
     conn = get_db()
     cur = conn.cursor()
-    cur.execute('SELECT * FROM candidates ORDER BY class, gender, votes DESC')
+    cur.execute('SELECT * FROM candidates ORDER BY class, semester, gender, votes DESC')
     candidates = cur.fetchall()
     cur.execute('SELECT COUNT(*) as c FROM votes')
     total_votes = cur.fetchone()['c']
@@ -622,7 +629,7 @@ def admin_results():
 
     classes = {}
     for c in candidates:
-        cls = c['class']
+        cls = f"{c['class']} (Sem {c.get('semester', '—')})"
         if cls not in classes:
             classes[cls] = {'males': [], 'females': []}
         if c['gender'] == 'Male':
