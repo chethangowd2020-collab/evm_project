@@ -120,6 +120,7 @@ def login():
 def dashboard():
     if 'usn' not in session:
         return redirect(url_for('login'))
+    session.permanent = True # Refresh session expiration on every activity
     # Redirect admins away from student dashboard
     if session.get('role') == 'admin':
         return redirect(url_for('admin'))
@@ -275,7 +276,7 @@ def api_login():
 
     session.clear() # Clear any old session data
     session.permanent = True
-    session['usn'] = student['usn']
+    session['usn'] = str(student['usn']).upper()
     session['name'] = student['name']
     session['class'] = student['class']
     session['semester'] = student['semester']

@@ -90,8 +90,10 @@
   <script>
     (async () => {
       const data = await apiGet('/api/student_info');
+      // Remove the hard redirect to /login here. 
+      // The Python route @app.route('/dashboard') already handles authentication.
       if (!data.success) {
-        window.location.href = '/login';
+        console.error("Dashboard API Error:", data.message);
         return;
       }
 
