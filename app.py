@@ -120,6 +120,10 @@ def login():
 def dashboard():
     if 'usn' not in session:
         return redirect(url_for('login'))
+    # Redirect admins away from student dashboard
+    if session.get('role') == 'admin':
+        return redirect(url_for('admin'))
+        
     return render_template(
         'dashboard.html', 
         name=session.get('name', 'Student'),
@@ -244,13 +248,13 @@ def api_login():
     password = data.get('password')
 
     if identifier == ADMIN_USN and password == ADMIN_PASSWORD:
+        session.clear() # Clear any old session data
         session.permanent = True
         session['role'] = 'admin'
         session['usn'] = ADMIN_USN
         return jsonify({'success': True, 'role': 'admin'})
 
     conn = get_db()
-    session.permanent = True
     cur = conn.cursor()
     if '@' in identifier:
         cur.execute('SELECT * FROM students WHERE phone=%s', (identifier.lower(),))
@@ -269,11 +273,14 @@ def api_login():
     if student['password'] != hash_password(password):
         return jsonify({'success': False, 'message': 'Invalid password'})
 
+    session.clear() # Clear any old session data
+    session.permanent = True
     session['usn'] = student['usn']
     session['name'] = student['name']
     session['class'] = student['class']
     session['semester'] = student['semester']
     session['role'] = 'student'
+    session.modified = True # Force Flask to save the session
     return jsonify({'success': True, 'role': 'student'})
 
 @app.route('/api/student_info')
