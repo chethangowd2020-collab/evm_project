@@ -81,6 +81,11 @@ def init_db():
         male_candidate_id INTEGER,
         female_candidate_id INTEGER
     )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS otps (
+        usn TEXT PRIMARY KEY,
+        otp TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
     c.execute('''CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
         value TEXT
@@ -107,9 +112,6 @@ def add_header(response):
     response.headers["Pragma"] = "no-cache"
     response.headers["Expires"] = "0"
     return response
-
-# OTP storage (in-memory for demo)
-otp_store = {}
 
 # ─── ROUTES ───────────────────────────────────────────────────
 
@@ -222,7 +224,14 @@ def send_otp():
     captcha_question = f"Type this code: {captcha_text}"
     captcha_answer = captcha_text
     
-    otp_store[usn] = captcha_answer
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        'INSERT INTO otps (usn, otp) VALUES (%s, %s) ON CONFLICT (usn) DO UPDATE SET otp = EXCLUDED.otp, created_at = CURRENT_TIMESTAMP',
+        (usn.upper(), captcha_answer)
+    )
+    conn.commit()
+    conn.close()
     
     return jsonify({
         'success': True, 
@@ -244,11 +253,15 @@ def api_register():
     if not name:
         return jsonify({'success': False, 'message': 'Name is required'})
 
-    if otp_store.get(usn) != otp:
-        return jsonify({'success': False, 'message': 'Invalid OTP'})
-
     conn = get_db()
     cur = conn.cursor()
+    cur.execute('SELECT otp FROM otps WHERE usn=%s', (usn,))
+    otp_rec = cur.fetchone()
+    
+    if not otp_rec or otp_rec['otp'] != otp:
+        conn.close()
+        return jsonify({'success': False, 'message': 'Invalid OTP'})
+
     cur.execute('SELECT usn FROM students WHERE usn=%s', (usn,))
     if cur.fetchone():
         conn.close()
@@ -259,8 +272,9 @@ def api_register():
         (usn, name, email, cls, sem, hash_password(password))
     )
     conn.commit()
+    cur.execute('DELETE FROM otps WHERE usn=%s', (usn,))
+    conn.commit()
     conn.close()
-    otp_store.pop(usn, None)
     return jsonify({'success': True, 'message': 'Registration successful!'})
 
 @app.route('/api/login', methods=['POST'])
