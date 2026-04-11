@@ -18,7 +18,7 @@ app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv('SECRET_KEY', 'evm_secret_key_2024')
 
 # Session security and persistence configuration
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 ADMIN_USN = os.getenv('ADMIN_USN', 'ADMIN').upper()
@@ -92,6 +92,16 @@ except Exception as e:
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
+
+@app.after_request
+def add_header(response):
+    """
+    Add headers to prevent the browser from caching sensitive pages.
+    """
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 # OTP storage (in-memory for demo)
 otp_store = {}
