@@ -100,14 +100,20 @@ otp_store = {}
 
 @app.route('/')
 def index():
+    if 'usn' in session:
+        return redirect(url_for('admin' if session.get('role') == 'admin' else 'dashboard'))
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET'])
 def register():
+    if 'usn' in session:
+        return redirect(url_for('admin' if session.get('role') == 'admin' else 'dashboard'))
     return render_template('register.html')
 
 @app.route('/login', methods=['GET'])
 def login():
+    if 'usn' in session:
+        return redirect(url_for('admin' if session.get('role') == 'admin' else 'dashboard'))
     return render_template('login.html')
 
 @app.route('/dashboard')
