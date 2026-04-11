@@ -209,7 +209,8 @@
       if (data.success) {
         showAlert(alert, '✅ Login successful! Redirecting...', 'success');
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          // Redirect based on actual role to prevent "bounce-back" redirects
+          window.location.href = data.role === 'admin' ? '/admin' : '/dashboard';
         }, 800);
       } else {
         showAlert(alert, data.message || 'Invalid credentials.');
@@ -291,7 +292,8 @@
       if (data.success) {
         showAlert(alert, '✅ Admin login successful! Redirecting...', 'success');
         setTimeout(() => {
-          window.location.href = '/admin';
+          // Redirect based on actual role to prevent "bounce-back" redirects
+          window.location.href = data.role === 'admin' ? '/admin' : '/dashboard';
         }, 800);
       } else {
         showAlert(alert, data.message || 'Invalid admin credentials.');

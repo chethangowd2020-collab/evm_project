@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import psycopg2
+from datetime import timedelta
 from psycopg2.extras import RealDictCursor
 import hashlib
 import random
@@ -15,6 +16,11 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv('SECRET_KEY', 'evm_secret_key_2024')
+
+# Session security and persistence configuration
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 ADMIN_USN = os.getenv('ADMIN_USN', 'ADMIN').upper()
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
@@ -232,11 +238,13 @@ def api_login():
     password = data.get('password')
 
     if identifier == ADMIN_USN and password == ADMIN_PASSWORD:
+        session.permanent = True
         session['role'] = 'admin'
         session['usn'] = ADMIN_USN
         return jsonify({'success': True, 'role': 'admin'})
 
     conn = get_db()
+    session.permanent = True
     cur = conn.cursor()
     if '@' in identifier:
         cur.execute('SELECT * FROM students WHERE phone=%s', (identifier.lower(),))
