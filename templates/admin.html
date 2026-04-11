@@ -330,16 +330,15 @@
             <td><strong>Sem ${c.semester || '-'}</strong></td>
             <td><span class="badge badge-${c.gender === 'Male' ? 'male' : 'female'}">${c.gender}</span></td>
             <td><strong style="color:var(--primary)">${c.votes}</strong></td>
-            <td><button class="btn btn-danger btn-sm" onclick="deleteCandidate(event, ${c.id})">Delete</button></td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteCandidate(this, ${c.id})">Delete</button></td>
           </tr>
         `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates enrolled yet.</td></tr>';
         document.getElementById('totalCandidates').textContent = d.candidates.length;
       } catch (e) { console.error("Load candidates error:", e); }
     }
 
-    async function deleteStudent(event, usn) {
+    async function deleteStudent(btn, usn) {
       if (!confirm(`Are you sure you want to delete student ${usn}? This action cannot be undone.`)) return;
-      const btn = event.currentTarget || event.target;
       setLoading(btn, true, 'Deleting...');
       try {
         const data = await apiFetch('/api/admin/delete_student', { usn });
@@ -356,7 +355,7 @@
       }
     }
 
-    async function resetStudentPassword(event, usn) {
+    async function resetStudentPassword(btn, usn) {
       const newPassword = prompt(`Enter a new password for ${usn}:`);
       if (newPassword === null) return;
 
@@ -366,7 +365,6 @@
         return;
       }
 
-      const btn = event.target;
       setLoading(btn, true, 'Resetting...');
       const data = await apiFetch('/api/admin/reset_student_password', {
         usn,
@@ -381,9 +379,8 @@
       }
     }
 
-    async function deleteCandidate(event, id) {
+    async function deleteCandidate(btn, id) {
       if (!confirm('Are you sure you want to delete this candidate? This action cannot be undone.')) return;
-      const btn = event.currentTarget || event.target;
       setLoading(btn, true, 'Deleting...');
       try {
         const data = await apiFetch('/api/admin/delete_candidate', { id });
