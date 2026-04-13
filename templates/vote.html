@@ -107,7 +107,7 @@
     // Safety: Ensure API helpers exist
     if (typeof apiGet === 'undefined') {
       window.apiGet = async (url) => {
-        const res = await fetch(url);
+        const res = await fetch(url, { credentials: 'same-origin' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       };
@@ -116,6 +116,7 @@
       window.apiFetch = async (url, data) => {
         const res = await fetch(url, {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
