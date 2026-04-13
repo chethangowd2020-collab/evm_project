@@ -25,7 +25,7 @@ function setLoading(btn, loading, text = '') {
 async function apiFetch(url, data) {
   const res = await fetch(url, {
     method: 'POST',
-    credentials: 'same-origin',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
@@ -34,7 +34,7 @@ async function apiFetch(url, data) {
 
 async function apiGet(url) {
   const res = await fetch(url, {
-    credentials: 'same-origin'
+    credentials: 'include'
   });
   return res.json();
 }

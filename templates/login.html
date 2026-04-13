@@ -181,7 +181,7 @@
   <script>
     if (typeof apiGet === 'undefined') {
       window.apiGet = async (url) => {
-        const res = await fetch(url, { credentials: 'same-origin' });
+        const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       };
@@ -190,7 +190,7 @@
       window.apiFetch = async (url, data) => {
         const res = await fetch(url, {
           method: 'POST',
-          credentials: 'same-origin',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
