@@ -9,6 +9,7 @@ import smtplib
 import tempfile
 from email.message import EmailMessage
 import string
+import sqlite3
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
@@ -26,9 +27,12 @@ ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
 # Supabase Connection String (e.g., postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres)
 DATABASE_URL = os.getenv('DATABASE_URL')
+DATABASE_PATH = os.getenv('DATABASE_PATH', 'database.db')
+
+USE_SQLITE = not DATABASE_URL
 
 if not DATABASE_URL:
-    print("WARNING: DATABASE_URL not found. Database features will fail.")
+    print("WARNING: DATABASE_URL not found. Using local SQLite database.")
 
 # Email settings (set as environment variables)
 SMTP_HOST = os.getenv('SMTP_HOST')
@@ -37,15 +41,49 @@ SMTP_USERNAME = os.getenv('SMTP_USERNAME')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
 EMAIL_FROM = os.getenv('EMAIL_FROM')
 
+class SQLiteCursorWrapper:
+    def __init__(self, cursor):
+        self.cursor = cursor
+    
+    def execute(self, query, params=None):
+        query = query.replace('%s', '?')
+        return self.cursor.execute(query, params or ())
+    
+    def fetchone(self):
+        return self.cursor.fetchone()
+    
+    def fetchall(self):
+        return self.cursor.fetchall()
+    
+    def __iter__(self):
+        return iter(self.cursor)
+
+class SQLiteConnection:
+    def __init__(self, db_path):
+        self.conn = sqlite3.connect(db_path)
+        self.conn.row_factory = sqlite3.Row
+    
+    def cursor(self):
+        return SQLiteCursorWrapper(self.conn.cursor())
+    
+    def commit(self):
+        return self.conn.commit()
+    
+    def close(self):
+        return self.conn.close()
+
 def get_db():
-    if not DATABASE_URL:
-        raise ConnectionError("DATABASE_URL environment variable is not set.")
-    conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
-    return conn
+    if USE_SQLITE:
+        return SQLiteConnection(DATABASE_PATH)
+    else:
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        return conn
 
 def init_db():
     conn = get_db()
     c = conn.cursor()
+    
+    # Students table
     c.execute('''CREATE TABLE IF NOT EXISTS students (
         usn TEXT PRIMARY KEY,
         name TEXT,
@@ -56,41 +94,82 @@ def init_db():
         isVerified INTEGER DEFAULT 0,
         hasVoted INTEGER DEFAULT 0
     )''')
-    try:
-        # Ensure semester column exists if table was created previously
-        c.execute('ALTER TABLE students ADD COLUMN IF NOT EXISTS semester TEXT')
-    except Exception as e:
-        print(f"Notice: Semester column check: {e}")
-    c.execute('''CREATE TABLE IF NOT EXISTS candidates (
-        id SERIAL PRIMARY KEY,
-        usn TEXT UNIQUE,
-        name TEXT,
-        class TEXT,
-        semester TEXT,
-        gender TEXT,
-        votes INTEGER DEFAULT 0
-    )''')
-    try:
-        c.execute('ALTER TABLE candidates ADD COLUMN IF NOT EXISTS semester TEXT')
-    except Exception as e:
-        print(f"Notice: Candidates semester column check: {e}")
-    c.execute('''CREATE TABLE IF NOT EXISTS votes (
-        id SERIAL PRIMARY KEY,
-        usn TEXT,
-        class TEXT,
-        male_candidate_id INTEGER,
-        female_candidate_id INTEGER
-    )''')
+    
+    if USE_SQLITE:
+        # Add missing columns to students table
+        try:
+            c.execute('ALTER TABLE students ADD COLUMN name TEXT')
+        except Exception as e:
+            pass
+        try:
+            c.execute('ALTER TABLE students ADD COLUMN semester TEXT')
+        except Exception as e:
+            pass
+    
+    # Candidates table
+    if USE_SQLITE:
+        c.execute('''CREATE TABLE IF NOT EXISTS candidates (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usn TEXT UNIQUE,
+            name TEXT,
+            class TEXT,
+            semester TEXT,
+            gender TEXT,
+            votes INTEGER DEFAULT 0
+        )''')
+        # Try to add semester column if it doesn't exist
+        try:
+            c.execute('ALTER TABLE candidates ADD COLUMN semester TEXT')
+        except Exception as e:
+            pass  # Column might already exist
+    else:
+        c.execute('''CREATE TABLE IF NOT EXISTS candidates (
+            id SERIAL PRIMARY KEY,
+            usn TEXT UNIQUE,
+            name TEXT,
+            class TEXT,
+            semester TEXT,
+            gender TEXT,
+            votes INTEGER DEFAULT 0
+        )''')
+    
+    # Votes table
+    if USE_SQLITE:
+        c.execute('''CREATE TABLE IF NOT EXISTS votes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usn TEXT,
+            class TEXT,
+            male_candidate_id INTEGER,
+            female_candidate_id INTEGER
+        )''')
+    else:
+        c.execute('''CREATE TABLE IF NOT EXISTS votes (
+            id SERIAL PRIMARY KEY,
+            usn TEXT,
+            class TEXT,
+            male_candidate_id INTEGER,
+            female_candidate_id INTEGER
+        )''')
+    
+    # OTPS table
     c.execute('''CREATE TABLE IF NOT EXISTS otps (
         usn TEXT PRIMARY KEY,
         otp TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )''')
+    
+    # Settings table
     c.execute('''CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
         value TEXT
     )''')
-    c.execute("INSERT INTO settings (key, value) VALUES ('voting_enabled', '0') ON CONFLICT (key) DO NOTHING")
+    
+    # Insert default voting_enabled setting
+    if USE_SQLITE:
+        c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('voting_enabled', '0')")
+    else:
+        c.execute("INSERT INTO settings (key, value) VALUES ('voting_enabled', '0') ON CONFLICT (key) DO NOTHING")
+    
     conn.commit()
     conn.close()
 
@@ -404,11 +483,26 @@ def get_candidates():
             return jsonify({'success': False, 'message': 'Student record not found'})
         
         cls = (student['class'] or '').strip()
-        sem = (student['semester'] or '').strip()
-        cur.execute('SELECT * FROM candidates WHERE TRIM(class)=%s AND TRIM(semester)=%s AND gender=%s', (cls, sem, 'Male'))
-        males = cur.fetchall()
-        cur.execute('SELECT * FROM candidates WHERE TRIM(class)=%s AND TRIM(semester)=%s AND gender=%s', (cls, sem, 'Female'))
-        females = cur.fetchall()
+        sem = student['semester']  # Keep as None if it is None
+        
+        # Build query based on whether semester is None or not
+        placeholder = '?' if USE_SQLITE else '%s'
+        if sem is None:
+            male_query = f'SELECT * FROM candidates WHERE class={placeholder} AND (semester IS NULL OR semester={placeholder}) AND gender={placeholder}'
+            female_query = f'SELECT * FROM candidates WHERE class={placeholder} AND (semester IS NULL OR semester={placeholder}) AND gender={placeholder}'
+            params_male = (cls, '', 'Male')
+            params_female = (cls, '', 'Female')
+        else:
+            sem = sem.strip()
+            male_query = f'SELECT * FROM candidates WHERE class={placeholder} AND semester={placeholder} AND gender={placeholder}'
+            female_query = f'SELECT * FROM candidates WHERE class={placeholder} AND semester={placeholder} AND gender={placeholder}'
+            params_male = (cls, sem, 'Male')
+            params_female = (cls, sem, 'Female')
+        
+        cur.execute(male_query, params_male)
+        males = [dict(row) for row in cur.fetchall()]
+        cur.execute(female_query, params_female)
+        females = [dict(row) for row in cur.fetchall()]
         cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
         setting = cur.fetchone()
         conn.close()
