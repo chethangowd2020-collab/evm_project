@@ -17,6 +17,7 @@ STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 app.secret_key = os.getenv('SECRET_KEY', 'evm_secret_key_2024')
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 # Session security and persistence configuration
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
