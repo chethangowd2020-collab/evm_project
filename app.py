@@ -364,8 +364,8 @@ def register_candidate():
         return jsonify({'success': False, 'message': 'Student not found'})
 
     name = (student['name'] or '').strip()
-    cls = student['class']
-    sem = student['semester']
+    cls = (student['class'] or '').strip()
+    sem = (student['semester'] or '').strip()
     cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
     existing = cur.fetchone()
     if existing:
@@ -376,7 +376,7 @@ def register_candidate():
         conn.close()
         return jsonify({'success': False, 'message': 'Student name not found. Please update your registration first.'})
 
-    cur.execute('SELECT COUNT(*) as c FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, gender))
+    cur.execute('SELECT COUNT(*) as c FROM candidates WHERE TRIM(class)=%s AND TRIM(semester)=%s AND gender=%s', (cls, sem, gender))
     count = cur.fetchone()
     if count['c'] >= 2:
         conn.close()
@@ -405,9 +405,9 @@ def get_candidates():
         
         cls = (student['class'] or '').strip()
         sem = (student['semester'] or '').strip()
-        cur.execute('SELECT * FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, 'Male'))
+        cur.execute('SELECT * FROM candidates WHERE TRIM(class)=%s AND TRIM(semester)=%s AND gender=%s', (cls, sem, 'Male'))
         males = cur.fetchall()
-        cur.execute('SELECT * FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, 'Female'))
+        cur.execute('SELECT * FROM candidates WHERE TRIM(class)=%s AND TRIM(semester)=%s AND gender=%s', (cls, sem, 'Female'))
         females = cur.fetchall()
         cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
         setting = cur.fetchone()
