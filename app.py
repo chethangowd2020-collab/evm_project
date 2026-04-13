@@ -245,8 +245,8 @@ def api_register():
     usn = data.get('usn', '').upper()
     name = data.get('name', '').strip()
     email = data.get('email', '').strip().lower()
-    cls = data.get('class')
-    sem = data.get('semester')
+    cls = data.get('class', '').strip()
+    sem = data.get('semester', '').strip()
     otp = data.get('otp')
     password = data.get('password')
 
@@ -403,8 +403,8 @@ def get_candidates():
             conn.close()
             return jsonify({'success': False, 'message': 'Student record not found'})
         
-        cls = student['class']
-        sem = student['semester']
+        cls = (student['class'] or '').strip()
+        sem = (student['semester'] or '').strip()
         cur.execute('SELECT * FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, 'Male'))
         males = cur.fetchall()
         cur.execute('SELECT * FROM candidates WHERE class=%s AND semester=%s AND gender=%s', (cls, sem, 'Female'))

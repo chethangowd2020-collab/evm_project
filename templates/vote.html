@@ -104,12 +104,31 @@
 
   <script src="/static/script.js"></script>
   <script>
+    // Safety: Ensure API helpers exist
+    if (typeof apiGet === 'undefined') {
+      window.apiGet = async (url) => {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      };
+    }
+    if (typeof apiFetch === 'undefined') {
+      window.apiFetch = async (url, data) => {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return res.json();
+      };
+    }
+
     let selectedMale = null, selectedFemale = null;
     let maleCandidatesData = [], femaleCandidatesData = [];
 
     function renderCandidates(list, containerId, gender) {
       const el = document.getElementById(containerId);
-      if (!list.length) {
+      if (!list || !list.length) {
         el.innerHTML = `<div class="empty-state"><div class="empty-icon">${gender==='Male'?'👨':'👩'}</div><p>No ${gender.toLowerCase()} candidates enrolled yet.</p></div>`;
         return;
       }
@@ -180,7 +199,8 @@
       try {
         const info = await apiGet('/api/student_info');
         if (!info.success) { 
-          console.error("Authentication check failed:", info.message);
+          alert("Session expired. Please login again.");
+          window.location.href = '/login';
           return; 
         }
 
