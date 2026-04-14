@@ -212,6 +212,24 @@ def register_candidate():
     except Exception as e:
         print("ERROR:", str(e))
         return jsonify({'success': False, 'message': str(e)})
+    
+@app.route('/api/candidates')
+def get_candidates():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
+        data = cur.fetchall()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(i) for i in data]
+        })
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/vote')
 def vote():
