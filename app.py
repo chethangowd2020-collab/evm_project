@@ -688,6 +688,21 @@ def publish_results():
     conn = get_db()
     cur = conn.cursor()
 
+    cur.execute("UPDATE result_status SET published=1 WHERE id=1")
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'message': 'Results published successfully!'})
+
+@app.route('/api/admin/publish_results', methods=['POST'])
+def publish_results():
+    if session.get('role') != 'admin':
+        return jsonify({'success': False})
+
+    conn = get_db()
+    cur = conn.cursor()
+
     # ONLY ALLOW IF VOTING IS STOPPED
     cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
     voting = cur.fetchone()
