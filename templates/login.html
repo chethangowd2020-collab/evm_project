@@ -117,13 +117,17 @@
     }
 
     /* Login Card Styles */
-    -container { margin-bottom: 1.5rem; }
-    .tab-buttons { display: flex; border-bottom: 2px solid var(--border); }
-    .tab-btn { 
-      flex: 1; padding: 0.9rem; background: none; border: none; cursor: pointer; 
-      font-weight: 600; color: var(--text-soft); border-bottom: 3px solid transparent;
-      transition: all 0.2s;
-      font-size: 0.95rem;
+    .container { margin-bottom: 1.5rem; }
+    .tab-buttons {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     gap: 10px;
+    }
+    .tab-btn {
+     flex: unset;
+     min-width: 120px;
+     text-align: center;
     }
     .tab-btn.active { 
      background: var(--grad1);
@@ -207,7 +211,7 @@
   
 
   <div class="page-wrapper">
-    <div style="width:100%;max-width:520px;margin:0 auto;padding:0 1rem;">
+    <div class="auth-wrapper">
       <div class="auth-card">
         <div class="auth-header">
           <div class="auth-icon"><img src="/static/logo.webp" style="width:150px;height:auto;object-fit:contain;"></div>
