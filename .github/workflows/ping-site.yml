@@ -10,4 +10,4 @@ jobs:
     steps:
       - name: Ping Render app
         run: |
-          curl -I -m 10 https://your-app.onrender.com || true
+          curl -I -m 10 https://smart-evm.onrender.com || true
