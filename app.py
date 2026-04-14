@@ -166,6 +166,13 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html')
 
+@app.route('/vote')
+def vote():
+    if 'usn' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('vote.html')
+
 @app.route('/api/student_info')
 def student_info():
     if 'usn' not in session:
