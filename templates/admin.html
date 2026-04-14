@@ -135,7 +135,7 @@
       <div class="card" style="padding:1.5rem;">
         <div class="section-title">🏆 Enrolled Candidates</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:end;margin-bottom:1rem;">
-          <div style="min-width:320px;flex:1;">
+          <div style="min-width:240px;flex:1;">
             <label for="candidateSort" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Sort Candidates</label>
             <select id="candidateSort" class="form-control" onchange="loadCandidates()">
               <option value="usn_asc">USN: Low to High</option>
@@ -146,6 +146,41 @@
               <option value="class_desc">Class Z→A</option>
               <option value="votes_desc">Votes: High to Low</option>
               <option value="votes_asc">Votes: Low to High</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
+            <label for="candidateSemFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Semester Filter</label>
+            <select id="candidateSemFilter" class="form-control" onchange="loadCandidates()">
+              <option value="all">All Semesters</option>
+              <option value="1">1st Semester</option>
+              <option value="2">2nd Semester</option>
+              <option value="3">3rd Semester</option>
+              <option value="4">4th Semester</option>
+              <option value="5">5th Semester</option>
+              <option value="6">6th Semester</option>
+              <option value="7">7th Semester</option>
+              <option value="8">8th Semester</option>
+            </select>
+          </div>
+          <div style="min-width:220px;flex:1;">
+            <label for="candidateClassFilter" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Class</label>
+            <select id="candidateClassFilter" class="form-control" onchange="loadCandidates()">
+              <option value="all">All Classes</option>
+              <option value="CSE A">CSE A</option>
+              <option value="CSE B">CSE B</option>
+              <option value="CSE C">CSE C</option>
+              <option value="CSE D">CSE D</option>
+              <option value="ISE E">ISE E</option>
+              <option value="ISE F">ISE F</option>
+              <option value="ISE G">ISE G</option>
+              <option value="AIML H">AIML H</option>
+              <option value="CSE(DS) I">CSE(DS) I</option>
+              <option value="ECE J">ECE J</option>
+              <option value="ECE K">ECE K</option>
+              <option value="ECE L">ECE L</option>
+              <option value="EEE M">EEE M</option>
+              <option value="CIVIL N">CIVIL N</option>
+              <option value="MECH O">MECH O</option>
             </select>
           </div>
         </div>
@@ -369,7 +404,18 @@
           return;
         }
         const sortBy = document.getElementById('candidateSort').value;
-        const sortedCandidates = [...d.candidates].sort((a, b) => compareCandidates(a, b, sortBy));
+        const semFilter = document.getElementById('candidateSemFilter').value;
+        const classFilter = document.getElementById('candidateClassFilter').value;
+
+        let candidates = [...d.candidates];
+        if (semFilter !== 'all') {
+          candidates = candidates.filter(c => getCandidateSemesterValue(c.semester).toString() === semFilter);
+        }
+        if (classFilter !== 'all') {
+          candidates = candidates.filter(c => normalizeClassValue(c.class) === normalizeClassValue(classFilter));
+        }
+
+        const sortedCandidates = candidates.sort((a, b) => compareCandidates(a, b, sortBy));
         tbody.innerHTML = sortedCandidates.map((c, i) => `
           <tr>
             <td>${i+1}</td>
@@ -381,8 +427,8 @@
             <td><strong style="color:var(--primary)">${c.votes ?? 0}</strong></td>
             <td><button class="btn btn-danger btn-sm" onclick="deleteCandidate(this, ${c.id})">Delete</button></td>
           </tr>
-        `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates enrolled yet.</td></tr>';
-        document.getElementById('totalCandidates').textContent = d.candidates.length;
+        `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates match the selected filters.</td></tr>';
+        document.getElementById('totalCandidates').textContent = sortedCandidates.length;
       } catch (e) {
         console.error("Load candidates error:", e);
         document.getElementById('candidatesBody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:2rem;">Error loading candidate data. Check the server logs.</td></tr>`;
