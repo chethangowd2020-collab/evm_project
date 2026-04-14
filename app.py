@@ -97,19 +97,18 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
 
-    c.execute('''CREATE TABLE IF NOT EXISTS students (
-        usn TEXT PRIMARY KEY,
-        name TEXT,
-        phone TEXT,
-        class TEXT,
-        semester TEXT,
-        password TEXT,
-        isVerified INTEGER DEFAULT 0,
-        hasVoted INTEGER DEFAULT 0
+    c.execute('''CREATE TABLE IF NOT EXISTS candidates (
+    id SERIAL PRIMARY KEY,
+    usn TEXT UNIQUE,
+    name TEXT,
+    class TEXT,
+    semester TEXT,
+    gender TEXT,
+    votes INTEGER DEFAULT 0
     )''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS candidates (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+       id SERIAL PRIMARY KEY,
         usn TEXT UNIQUE,
         name TEXT,
         class TEXT,
@@ -119,7 +118,7 @@ def init_db():
     )''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS votes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         usn TEXT,
         class TEXT,
         male_candidate_id INTEGER,
