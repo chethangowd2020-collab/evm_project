@@ -199,10 +199,11 @@
     (async () => {
       try {
         const info = await apiGet('/api/student_info');
-        if (!info.success) { 
-          alert("Session expired. Please login again.");
+        if (!info.success) {
+          console.error('Student info error', info);
+          alert(info.message || "Session expired. Please login again.");
           window.location.href = '/login';
-          return; 
+          return;
         }
 
         document.getElementById('classLabel').textContent = info.class;

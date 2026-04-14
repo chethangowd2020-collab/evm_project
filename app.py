@@ -22,7 +22,8 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 # Session security and persistence configuration
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SAMESITE'] = os.getenv('SESSION_COOKIE_SAMESITE', 'Lax')
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('SESSION_COOKIE_SECURE', 'False').lower() in ('1', 'true', 'yes')
 ADMIN_USN = os.getenv('ADMIN_USN', 'ADMIN').upper()
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD', 'admin123')
 
@@ -402,7 +403,7 @@ def api_login():
 @app.route('/api/student_info')
 def student_info():
     if 'usn' not in session:
-        return jsonify({'success': False})
+        return jsonify({'success': False, 'message': 'Not logged in'}), 401
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -410,7 +411,7 @@ def student_info():
         student = cur.fetchone()
         if not student:
             conn.close()
-            return jsonify({'success': False, 'message': 'Student record not found. Please log in again.'})
+            return jsonify({'success': False, 'message': 'Student record not found. Please log in again.'}), 401
 
         cur.execute('SELECT id FROM candidates WHERE usn=%s', (session['usn'],))
         is_candidate = cur.fetchone()
