@@ -710,7 +710,7 @@ tr:hover td { background: var(--bg); }
 );
 
   background-size: 300% 300%;
-  animation: gradientFlow 6s ease-in-out infinite;
+  animation: gradientFlow 6s linear infinite;
 
   color: white;
 }
