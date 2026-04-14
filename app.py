@@ -168,6 +168,32 @@ def results():
         return redirect(url_for('login'))
 
     return render_template('results_public.html')
+@app.route('/api/login', methods=['POST'])
+
+def api_login():
+    data = request.json
+    identifier = data.get('usn', '').upper()
+    password = data.get('password')
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute('SELECT * FROM students WHERE usn=%s', (identifier,))
+    student = cur.fetchone()
+
+    conn.close()
+
+    if not student:
+        return jsonify({'success': False, 'message': 'User not found'})
+
+    if student['password'] != hash_password(password):
+        return jsonify({'success': False, 'message': 'Wrong password'})
+
+    session['usn'] = student['usn']
+    session['name'] = student['name']
+    session['role'] = 'student'
+
+    return jsonify({'success': True, 'role': 'student'})
 
 # ---------------- RESULTS ----------------
 
