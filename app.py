@@ -194,6 +194,11 @@ def init_db():
     
     conn.commit()
     conn.close()
+    # Results published setting
+    if USE_SQLITE:
+        c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('results_published', '0')")
+    else:
+        c.execute("INSERT INTO settings (key, value) VALUES ('results_published', '0') ON CONFLICT (key) DO NOTHING")
 
 
 try:
@@ -339,6 +344,7 @@ def serve_manifest():
 @app.route('/sw.js')
 def serve_sw():
     return app.send_static_file('sw.js')
+
 
 # ─── API ENDPOINTS ────────────────────────────────────────────
 
@@ -671,6 +677,28 @@ def toggle_voting():
     conn.close()
     return jsonify({'success': True, 'voting_enabled': new_val == '1'})
 
+@app.route('/api/admin/publish_results', methods=['POST'])
+def publish_results():
+    if session.get('role') != 'admin':
+        return jsonify({'success': False})
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # ONLY ALLOW IF VOTING IS STOPPED
+    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+    voting = cur.fetchone()
+
+    if voting and voting['value'] == '1':
+        conn.close()
+        return jsonify({'success': False, 'message': 'Stop voting before publishing results'})
+
+    cur.execute("UPDATE settings SET value='1' WHERE key='results_published'")
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True, 'message': 'Results published successfully'})
+
 @app.route('/api/admin/voting_status')
 def voting_status():
     if session.get('role') != 'admin':
@@ -839,3 +867,34 @@ if __name__ == '__main__':
     init_db()
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', debug=False, port=port)
+    
+@app.route('/api/results_public')
+def results_public():
+    conn = get_db()
+    cur = conn.cursor()
+
+    # CHECK IF PUBLISHED
+    cur.execute("SELECT value FROM settings WHERE key='results_published'")
+    setting = cur.fetchone()
+
+    if not setting or setting['value'] != '1':
+        conn.close()
+        return jsonify({'success': False, 'message': 'not_published'})
+
+    cur.execute('SELECT * FROM candidates ORDER BY class, semester, gender, votes DESC')
+    candidates = cur.fetchall()
+    conn.close()
+
+    classes = {}
+
+    for c in candidates:
+        cls = f"{c['class']} (Sem {c.get('semester', '—')})"
+        if cls not in classes:
+            classes[cls] = {'males': [], 'females': []}
+
+        if c['gender'] == 'Male':
+            classes[cls]['males'].append(dict(c))
+        else:
+            classes[cls]['females'].append(dict(c))
+
+    return jsonify({'success': True, 'classes': classes})
