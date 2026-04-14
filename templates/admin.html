@@ -135,20 +135,17 @@
       <div class="card" style="padding:1.5rem;">
         <div class="section-title">🏆 Enrolled Candidates</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:end;margin-bottom:1rem;">
-          <div style="min-width:220px;flex:1;">
-            <label for="candidateClassSort" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Sort by Class</label>
-            <select id="candidateClassSort" class="form-control" onchange="loadCandidates()">
-              <option value="none">No class sort</option>
-              <option value="asc">Class A→Z</option>
-              <option value="desc">Class Z→A</option>
-            </select>
-          </div>
-          <div style="min-width:220px;flex:1;">
-            <label for="candidateSemSort" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Sort by Semester</label>
-            <select id="candidateSemSort" class="form-control" onchange="loadCandidates()">
-              <option value="none">No semester sort</option>
-              <option value="asc">Semester 1→8</option>
-              <option value="desc">Semester 8→1</option>
+          <div style="min-width:320px;flex:1;">
+            <label for="candidateSort" style="display:block;font-size:0.85rem;font-weight:600;margin-bottom:0.35rem;">Sort Candidates</label>
+            <select id="candidateSort" class="form-control" onchange="loadCandidates()">
+              <option value="usn_asc">USN: Low to High</option>
+              <option value="usn_desc">USN: High to Low</option>
+              <option value="sem_asc">Semester 1→8</option>
+              <option value="sem_desc">Semester 8→1</option>
+              <option value="class_asc">Class A→Z</option>
+              <option value="class_desc">Class Z→A</option>
+              <option value="votes_desc">Votes: High to Low</option>
+              <option value="votes_asc">Votes: Low to High</option>
             </select>
           </div>
         </div>
