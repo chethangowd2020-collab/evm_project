@@ -63,3 +63,13 @@ async function apiGet(url) {
   });
   return res.json();
 }
+
+function publishResults() {
+  fetch('/api/admin/publish_results', {
+    method: 'POST'
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+  });
+}
