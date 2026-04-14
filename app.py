@@ -283,7 +283,15 @@ def candidate_register():
 def admin():
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
+    if request.args.get('force_admin') == '1':
+        return render_template('admin.html')
     return render_template('admin.html')
+
+@app.route('/force_admin')
+def force_admin():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+    return redirect(url_for('admin', force_admin='1'))
 
 @app.route('/admin_login')
 def admin_login():
