@@ -1,15 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Results</title>
-</head>
-<body>
+fetch('/api/results_public')
+.then(res => res.json())
+.then(data => {
+    if (!data.success) {
+        document.getElementById("resultBox").innerText =
+            "Results have not yet published !!";
+        return;
+    }
 
-  <h2>Election Results</h2>
-
-  <div id="resultBox">
-    Loading results...
-  </div>
-
-</body>
-</html>
+    // render results
+    console.log(data.classes);
+});
