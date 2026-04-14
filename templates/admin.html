@@ -343,32 +343,41 @@
       'EEE M', 'CIVIL N', 'MECH O'
     ];
 
+    function normalizeClassValue(cls) {
+      return (cls || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
+    }
+
     function getCandidateClassIndex(cls) {
-      if (!cls) return candidateClassOrder.length;
-      const idx = candidateClassOrder.indexOf(cls.trim());
+      const normalized = normalizeClassValue(cls);
+      const idx = candidateClassOrder.findIndex(item => normalizeClassValue(item) === normalized);
       return idx === -1 ? candidateClassOrder.length : idx;
     }
 
+    function getCandidateSemesterValue(sem) {
+      if (sem === null || sem === undefined) return Number.MAX_SAFE_INTEGER;
+      const raw = sem.toString().trim();
+      const normalized = raw.replace(/^sem(?:ester)?\s*/i, '');
+      const num = parseInt(normalized, 10);
+      return Number.isFinite(num) ? num : Number.MAX_SAFE_INTEGER;
+    }
+
     function compareCandidates(a, b, classSort, semSort) {
-      const classCompare = getCandidateClassIndex(a.class) - getCandidateClassIndex(b.class);
-      const semCompare = (parseInt(a.semester) || 0) - (parseInt(b.semester) || 0);
+      const classCompare = getCandidateClassIndex(a['class']) - getCandidateClassIndex(b['class']);
+      const semCompare = getCandidateSemesterValue(a.semester) - getCandidateSemesterValue(b.semester);
       const fallback = getUsnSortValue(a.usn) - getUsnSortValue(b.usn) || a.usn.localeCompare(b.usn);
 
       if (classSort !== 'none') {
         if (classCompare !== 0) {
           return classSort === 'asc' ? classCompare : -classCompare;
         }
-        if (semSort !== 'none') {
+        if (semSort !== 'none' && semCompare !== 0) {
           return semSort === 'asc' ? semCompare : -semCompare;
         }
         return fallback;
       }
 
-      if (semSort !== 'none') {
-        if (semCompare !== 0) {
-          return semSort === 'asc' ? semCompare : -semCompare;
-        }
-        return fallback;
+      if (semSort !== 'none' && semCompare !== 0) {
+        return semSort === 'asc' ? semCompare : -semCompare;
       }
 
       return fallback;
