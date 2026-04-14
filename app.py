@@ -164,8 +164,39 @@ def login():
 def dashboard():
     if 'usn' not in session:
         return redirect(url_for('login'))
-
     return render_template('dashboard.html')
+
+@app.route('/api/student_info')
+def student_info():
+    if 'usn' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT * FROM students WHERE usn=%s", (session['usn'],))
+    student = cur.fetchone()
+
+    if not student:
+        return jsonify({'success': False, 'message': 'Student not found'})
+
+    # check if already voted
+    cur.execute("SELECT * FROM votes WHERE usn=%s", (session['usn'],))
+    vote = cur.fetchone()
+
+    # check if candidate
+    cur.execute("SELECT * FROM candidates WHERE usn=%s", (session['usn'],))
+    candidate = cur.fetchone()
+
+    return jsonify({
+        'success': True,
+        'usn': student['usn'],
+        'name': student['name'],
+        'class': student['class'],
+        'semester': student['semester'],
+        'hasVoted': True if vote else False,
+        'isCandidate': True if candidate else False
+    })
 
 @app.route('/admin')
 def admin():
