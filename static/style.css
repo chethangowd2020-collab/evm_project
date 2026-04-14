@@ -528,7 +528,7 @@ tr:hover td { background: var(--bg); }
   transition: all 0.2s;
 }
 .tab-btn.active { 
-  color: var(--primary);
+  color: var(--grad1);
   border-bottom-color: var(--primary);
   background: transparent;   /* IMPORTANT: keeps shape same */
 }
