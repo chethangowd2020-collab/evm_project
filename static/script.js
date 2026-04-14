@@ -84,23 +84,44 @@ function checkResults() {
       }
 
       // if published → go to results page
-      window.location.href = "/results_public_page";
+      window.location.href = "/results";
     })
     .catch(() => {
       alert("Something went wrong");
     });
 }
 
-function publishResults() {
-  fetch('/api/admin/publish_results', {
-    method: 'POST'
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert(data.message);
-  });
-}
+
 
 function viewResults() {
   window.location.href = "/results_public_page";
+}
+
+async function handleLogin() {
+  const usn = document.getElementById('usn').value;
+  const password = document.getElementById('password').value;
+
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ usn, password })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    // ✅ mark session active (IMPORTANT)
+    setAuthActive(true);
+
+    // ✅ redirect based on role
+    if (data.role === 'admin') {
+      window.location.href = '/admin';
+    } else {
+      window.location.href = '/dashboard';
+    }
+  } else {
+    alert(data.message || "Login failed");
+  }
 }
