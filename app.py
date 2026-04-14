@@ -81,6 +81,26 @@ def get_db():
         conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
         return conn
 
+
+def row_get(row, key, default=None):
+    if row is None:
+        return default
+    if isinstance(row, dict):
+        if key in row:
+            return row[key]
+        lower = key.lower()
+        if lower in row:
+            return row[lower]
+        return row.get(key, default)
+    try:
+        return row[key]
+    except Exception:
+        if hasattr(row, 'get'):
+            lower = key.lower()
+            return row.get(lower, default)
+        return default
+
+
 def init_db():
     conn = get_db()
     c = conn.cursor()
@@ -416,13 +436,20 @@ def student_info():
         cur.execute('SELECT id FROM candidates WHERE usn=%s', (session['usn'],))
         is_candidate = cur.fetchone()
         conn.close()
+
+        has_voted = row_get(student, 'hasVoted', False)
+        if isinstance(has_voted, str):
+            has_voted = has_voted.strip() not in ('', '0', 'false', 'False')
+        else:
+            has_voted = bool(has_voted)
+
         return jsonify({
             'success': True,
             'usn': student['usn'],
             'name': student['name'],
             'class': student['class'],
             'semester': student['semester'],
-            'hasVoted': bool(student['hasVoted']),
+            'hasVoted': has_voted,
             'isCandidate': bool(is_candidate)
         })
     except Exception as e:
@@ -485,19 +512,21 @@ def get_candidates():
             return jsonify({'success': False, 'message': 'Student record not found'})
         
         cls = (student['class'] or '').strip()
-        sem = student['semester']  # Keep as None if it is None
+        sem = student['semester']
+        if isinstance(sem, str):
+            sem = sem.strip()
+            if sem == '':
+                sem = None
         
-        # Build query based on whether semester is None or not
         placeholder = '?' if USE_SQLITE else '%s'
         if sem is None:
-            male_query = f'SELECT * FROM candidates WHERE class={placeholder} AND (semester IS NULL OR semester={placeholder}) AND gender={placeholder}'
-            female_query = f'SELECT * FROM candidates WHERE class={placeholder} AND (semester IS NULL OR semester={placeholder}) AND gender={placeholder}'
+            male_query = f"SELECT * FROM candidates WHERE class={placeholder} AND (semester IS NULL OR TRIM(semester) = '' OR semester={placeholder}) AND gender={placeholder}"
+            female_query = f"SELECT * FROM candidates WHERE class={placeholder} AND (semester IS NULL OR TRIM(semester) = '' OR semester={placeholder}) AND gender={placeholder}"
             params_male = (cls, '', 'Male')
             params_female = (cls, '', 'Female')
         else:
-            sem = sem.strip()
-            male_query = f'SELECT * FROM candidates WHERE class={placeholder} AND semester={placeholder} AND gender={placeholder}'
-            female_query = f'SELECT * FROM candidates WHERE class={placeholder} AND semester={placeholder} AND gender={placeholder}'
+            male_query = f"SELECT * FROM candidates WHERE class={placeholder} AND TRIM(semester)={placeholder} AND gender={placeholder}"
+            female_query = f"SELECT * FROM candidates WHERE class={placeholder} AND TRIM(semester)={placeholder} AND gender={placeholder}"
             params_male = (cls, sem, 'Male')
             params_female = (cls, sem, 'Female')
         
@@ -531,7 +560,7 @@ def submit_vote():
     cur = conn.cursor()
     cur.execute('SELECT hasVoted FROM students WHERE usn=%s', (usn,))
     student = cur.fetchone()
-    if student['hasVoted']:
+    if row_get(student, 'hasVoted'):
         conn.close()
         return jsonify({'success': False, 'message': 'You have already voted'})
 
@@ -562,8 +591,16 @@ def admin_students():
     cur.execute(
         'SELECT usn, name, phone AS email, class, semester, hasVoted FROM students ORDER BY class, usn'
     )
-    students = cur.fetchall()
+    rows = cur.fetchall()
     conn.close()
+
+    students = []
+    for row in rows:
+        student = dict(row)
+        if 'hasvoted' in student and 'hasVoted' not in student:
+            student['hasVoted'] = student['hasvoted']
+        students.append(student)
+
     return jsonify({'success': True, 'students': students})
 
 @app.route('/api/admin/candidates')
