@@ -328,6 +328,23 @@ def publish_results():
     conn.close()
     return jsonify({'success': True})
 
+@app.route('/api/admin/results')
+def admin_results():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+
+        cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
+        data = cur.fetchall()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 
 @app.route('/api/results_public')
 def results_public():
