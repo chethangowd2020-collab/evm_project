@@ -124,6 +124,11 @@ body::after {
   padding: 3rem 1rem;
   position: relative; z-index: 1;
 }
+body.login-page .page-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .page-content {
   flex: 1;
