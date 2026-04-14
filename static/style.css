@@ -149,7 +149,7 @@ body::after {
 .page-title {
   font-family: 'DM Serif Display', serif;
   font-size: 2rem;
-  background: var(--grad1);
+  background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   margin-bottom: 0.3rem;
 }
