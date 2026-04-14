@@ -114,32 +114,25 @@ body::after {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
 }
 
-/* LOGIN ONLY */
-body.login-page .page-wrapper {
-  min-height: 100vh;
+/* LOGIN ONLY CENTERING */
+body.login-page .page-content {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
 }
 
-/* ADMIN ONLY (IMPORTANT FIX) */
-body.admin-page .page-wrapper {
-  display: block;
-}
-
-/* DASHBOARD (safe default layout) */
+/* ADMIN + DASHBOARD SHOULD BE NORMAL FLOW */
+body.admin-page .page-wrapper,
 body.dashboard-page .page-wrapper {
   display: block;
+  min-height: auto;
 }
 
 .page-content {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  width: 100%;
+  display: block;   /* ❌ remove flex centering */
 }
 .auth-header {
   text-align: center;
@@ -519,12 +512,9 @@ tr:hover td { background: var(--bg); }
 
 /* ─── ADMIN ───────────────────────────────────────────── */
 .tab-nav {
-  display: flex; gap: 4px;
-  background: var(--surface2);
-  padding: 6px;
-  border-radius: var(--radius-sm);
-  margin-bottom: 1.5rem;
-  border: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-start; /* IMPORTANT FIX */
+  gap: 6px;
   flex-wrap: wrap;
 }
 .tab-btn {
@@ -746,7 +736,9 @@ tr:hover td { background: var(--bg); }
 }
 
 .auth-header::after {
-  display: none;
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
 /* 🔥 ADD HERE (outside the class) */
