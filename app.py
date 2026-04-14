@@ -196,13 +196,7 @@ def student_info():
         'isCandidate': True if candidate else False
     })
 
-@app.route('/api/student_info')
-def student_info():
-    try:
-        # your code
-    except Exception as e:
-        print("ERROR:", str(e))
-        return jsonify({'success': False, 'message': str(e)})
+
 
 @app.route('/admin')
 def admin():
