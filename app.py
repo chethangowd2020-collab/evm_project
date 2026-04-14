@@ -231,6 +231,48 @@ def get_candidates():
         print("ERROR:", str(e))
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/admin/candidates')
+def admin_candidates():
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM candidates")
+        data = cur.fetchall()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+    
+@app.route('/api/admin/students')
+def admin_students():
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM students")
+        data = cur.fetchall()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+    
+@app.route('/api/admin/voting_status')
+def voting_status():
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM voting_status LIMIT 1")
+        data = cur.fetchone()
+
+        return jsonify({
+            'success': True,
+            'data': dict(data) if data else {}
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 @app.route('/vote')
 def vote():
     if 'usn' not in session:
