@@ -157,9 +157,16 @@
     }
     
     .auth-header {
-      padding: 3rem 2rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
+  padding: 3rem 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+
+  /* 🔥 Animated Gradient */
+  background: linear-gradient(270deg, #ff6ec4, #7873f5, #4facfe, #43e97b);
+  background-size: 600% 600%;
+  animation: gradientMove 8s ease infinite;
+
+  color: white;
+}
     
     .auth-icon {
       margin-bottom: 1.2rem;
@@ -196,7 +203,7 @@
   <div class="page-wrapper">
     <div style="width:100%;max-width:520px;margin:0 auto;padding:0 1rem;">
       <div class="auth-card">
-        <div class="auth-header" style="background: linear-gradient(135deg,#A855F7,#5B6CF9);">
+        <div class="auth-header">
           <div class="auth-icon"><img src="/static/logo.webp" style="width:150px;height:auto;object-fit:contain;"></div>
           <h1>Welcome</h1>
           <p>Login or register to access the voting system</p>
