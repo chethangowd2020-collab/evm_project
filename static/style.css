@@ -522,10 +522,12 @@ tr:hover td { background: var(--bg); }
   color: var(--text-soft);
   transition: all 0.2s;
 }
-.tab-btn.active {
-  background: white;
-  color: var(--primary);
-  box-shadow: 0 2px 8px rgba(91,108,249,0.15);
+.tab-btn.active,
+.form-toggle-btn.active {
+  background: var(--grad1);
+  color: white;
+  border-bottom-color: transparent;
+  border: 2px solid transparent;
 }
 
 .stats-row {
