@@ -27,7 +27,7 @@
 
 body {
   font-family: 'Outfit', sans-serif;
-  background: var(--bg);
+  background: #ecd0ad;
   color: var(--text);
   min-height: 100vh;
   line-height: 1.6;
