@@ -166,6 +166,53 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html')
 
+@app.route('/api/register_candidate', methods=['POST'])
+def register_candidate():
+    try:
+        if 'usn' not in session:
+            return jsonify({'success': False, 'message': 'Not logged in'})
+
+        data = request.get_json()
+        gender = data.get('gender')
+
+        conn = get_db()
+        cur = conn.cursor()
+
+        # Get student info
+        cur.execute("SELECT * FROM students WHERE usn=%s", (session['usn'],))
+        student = cur.fetchone()
+
+        if not student:
+            return jsonify({'success': False, 'message': 'Student not found'})
+
+        # Check if already candidate
+        cur.execute("SELECT * FROM candidates WHERE usn=%s", (session['usn'],))
+        existing = cur.fetchone()
+
+        if existing:
+            return jsonify({'success': False, 'message': 'Already registered as candidate'})
+
+        # Insert candidate
+        cur.execute("""
+            INSERT INTO candidates (usn, name, class, semester, gender)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (
+            session['usn'],
+            row_get(student, 'name'),
+            row_get(student, 'class'),
+            row_get(student, 'semester'),
+            gender
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': 'Registered successfully'})
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
+
 @app.route('/vote')
 def vote():
     if 'usn' not in session:
