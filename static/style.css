@@ -542,9 +542,10 @@ tr:hover td { background: var(--bg); }
   text-align: center;
 }
 .stat-card .num {
-  font-size: 1.8rem; font-weight: 800;
-  background: var(--grad1);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
 }
 .stat-card .lbl { font-size: 0.8rem; color: var(--text-soft); font-weight: 600; margin-top: 2px; }
 
