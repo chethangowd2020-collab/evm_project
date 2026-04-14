@@ -106,6 +106,17 @@ def init_db():
     gender TEXT,
     votes INTEGER DEFAULT 0
     )''')
+    
+    c.execute('''CREATE TABLE IF NOT EXISTS students (
+    usn TEXT PRIMARY KEY,
+    name TEXT,
+    phone TEXT,
+    class TEXT,
+    semester TEXT,
+    password TEXT,
+    isVerified INTEGER DEFAULT 0,
+    hasVoted INTEGER DEFAULT 0
+    )''')
 
     
 
@@ -207,6 +218,14 @@ def api_login():
     session['role'] = 'student'
 
     return jsonify({'success': True, 'role': 'student'})
+
+@app.route('/admin')
+def admin():
+    if 'usn' not in session or session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    return render_template('admin.html')
+
 
 # ---------------- RESULTS ----------------
 
