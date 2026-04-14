@@ -160,7 +160,17 @@ def login():
 
 @app.route('/dashboard')
 def dashboard():
+    if 'usn' not in session:
+        return redirect(url_for('login'))
+
     return render_template('dashboard.html')
+
+@app.route('/admin')
+def admin():
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    return render_template('admin.html')
 
 @app.route('/results')
 def results():
@@ -171,36 +181,30 @@ def results():
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.json
-    identifier = data.get('usn', '').upper()
-    password = data.get('password')
+    usn = data.get('usn', '').upper()
+    password = data.get('password', '')
 
-    # ✅ 1. ADMIN LOGIN CHECK FIRST
-    if identifier == ADMIN_USN and password == ADMIN_PASSWORD:
-        session.clear()
-        session['role'] = 'admin'
-        session['usn'] = 'ADMIN'
-        return jsonify({'success': True, 'role': 'admin'})
-
-    # ✅ 2. STUDENT LOGIN
     conn = get_db()
     cur = conn.cursor()
 
-    cur.execute('SELECT * FROM students WHERE usn=%s', (identifier,))
-    student = cur.fetchone()
-    conn.close()
+    # ✅ ADMIN LOGIN
+    if usn == ADMIN_USN and password == ADMIN_PASSWORD:
+        session['usn'] = ADMIN_USN
+        session['role'] = 'admin'
+        return jsonify({'success': True, 'role': 'admin'})
 
-    if not student:
+    # ✅ STUDENT LOGIN
+    cur.execute("SELECT * FROM students WHERE usn=%s", (usn,))
+    user = cur.fetchone()
+
+    if not user:
         return jsonify({'success': False, 'message': 'User not found'})
 
-    if student['password'] != hash_password(password):
+    if user['password'] != hash_password(password):
         return jsonify({'success': False, 'message': 'Wrong password'})
 
-    session.clear()
+    session['usn'] = usn
     session['role'] = 'student'
-    session['usn'] = student['usn']
-    session['name'] = student['name']
-    session['class'] = student['class']
-    session['semester'] = student['semester']
 
     return jsonify({'success': True, 'role': 'student'})
 
