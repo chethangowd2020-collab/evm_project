@@ -66,10 +66,16 @@ body::after {
 }
 
 .navbar-brand {
-  display: flex; align-items: center; gap: 10px;
-  font-size: 1.2rem; font-weight: 700;
-  background: var(--grad1);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+
+  background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
+  text-shadow: 0 2px 12px rgba(37, 99, 235, 0.25);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .navbar-brand .logo-icon {
