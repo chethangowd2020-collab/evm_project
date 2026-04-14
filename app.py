@@ -171,8 +171,16 @@ def login():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/results')
+def results():
+    if 'usn' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('results_public.html')
+
 
 # ---------------- RESULTS ----------------
+
 
 @app.route('/api/admin/publish_results', methods=['POST'])
 def publish_results():
