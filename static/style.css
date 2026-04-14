@@ -120,14 +120,27 @@ body::after {
 /* ─── PAGE WRAPPER ───────────────────────────────────── */
 .page-wrapper {
   min-height: auto;
-  display: flex; align-items: center; justify-content: center;
   padding: 3rem 1rem;
-  position: relative; z-index: 1;
+  position: relative;
+  z-index: 1;
 }
+
+/* LOGIN ONLY */
 body.login-page .page-wrapper {
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ADMIN ONLY (IMPORTANT FIX) */
+body.admin-page .page-wrapper {
+  display: block;
+}
+
+/* DASHBOARD (safe default layout) */
+body.dashboard-page .page-wrapper {
+  display: block;
 }
 
 .page-content {
