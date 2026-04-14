@@ -126,12 +126,10 @@ body::after {
 }
 
 .page-content {
-  width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;          /* ⭐ THIS FIXES LEFT SHIFT */
-  padding: 2rem 1rem;
-  position: relative;
-  z-index: 1;
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* ─── CARDS ───────────────────────────────────────────── */
