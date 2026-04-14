@@ -694,12 +694,10 @@ tr:hover td { background: var(--bg); }
 }
 .auth-header {
   padding: 3rem 2rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-
-  min-height: 200px;  /* 🔥 ADD THIS HERE */
+  min-height: 200px;
 
   background: linear-gradient(270deg, red, blue, green, yellow);
-  background-size: 400% 400%;
+  background-size: 800% 800%;
 
   animation: gradientShift 3s linear infinite;
 
@@ -707,8 +705,21 @@ tr:hover td { background: var(--bg); }
 }
 
 @keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0% {
+    background-position: 0% 0%;
+  }
+  25% {
+    background-position: 100% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
 }
 .auth-header .auth-icon {
   font-size: 3rem; margin-bottom: 0.8rem;
