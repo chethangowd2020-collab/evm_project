@@ -1,0 +1,13 @@
+name: Ping Render site
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  keep-awake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render app
+        run: |
+          curl -I -m 10 https://your-app.onrender.com || true
