@@ -318,12 +318,6 @@ body::after {
   margin-bottom: 2rem;
   position: relative; overflow: hidden;
 }
-.welcome-hero::after {
-  content: '🗳️';
-  position: absolute; right: 2rem; top: 50%;
-  transform: translateY(-50%);
-  font-size: 5rem; opacity: 0.2;
-}
 .welcome-hero h1 {
   font-family: 'DM Serif Display', serif;
   font-size: 1.9rem; margin-bottom: 0.4rem;
