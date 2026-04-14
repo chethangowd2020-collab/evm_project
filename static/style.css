@@ -724,9 +724,11 @@ tr:hover td { background: var(--bg); }
 .auth-header {
   position: relative;
   overflow: hidden;
-  background: var(--grad2);
-  color: white;
-  box-shadow: inset 0 0 80px rgba(255,255,255,0.08);
+   z-index: 1;  
+}
+.auth-header > * {
+  position: relative;
+  z-index: 2;
 }
   
 
@@ -747,15 +749,13 @@ tr:hover td { background: var(--bg); }
 .auth-header::after {
   content: "";
   position: absolute;
-  width: 200%;
-  height: 200%;
-  top: -50%;
-  left: -50%;
+  inset: 0;
 
   background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 60%);
   animation: glowMove 8s linear infinite;
 
   pointer-events: none;
+  z-index: 0;
 }
 
 /* 🔥 ADD HERE (outside the class) */
