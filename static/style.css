@@ -699,7 +699,7 @@ tr:hover td { background: var(--bg); }
   background: linear-gradient(135deg, #ec4899, #a855f7, #ec4899);
   background-size: 400% 400%;
 
-  animation: gradientMove 3s ease infinite;
+  animation: gradientMove 2s linear infinite;
 
   color: white;
 }
