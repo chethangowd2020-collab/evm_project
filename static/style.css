@@ -698,15 +698,7 @@ tr:hover td { background: var(--bg); }
   position: relative;
   overflow: hidden;
 
-  background: linear-gradient(
-  120deg,
-  #ec4899,
-  #d946ef,
-  #a855f7,
-  #9333ea,
-  #a855f7,
-  #d946ef,
-  #ec4899
+  background: linear-gradient(120deg,#fff3e6,#f1f3f6
 );
 
   background-size: 300% 300%;
