@@ -377,25 +377,31 @@
     async function loadCandidates() {
       try {
         const d = await apiGet('/api/admin/candidates');
-        if (!d.success) return;
+        const tbody = document.getElementById('candidatesBody');
+        if (!d.success) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:2rem;">Unable to load candidates. Please refresh or log in again.</td></tr>`;
+          return;
+        }
         const classSort = document.getElementById('candidateClassSort').value;
         const semSort = document.getElementById('candidateSemSort').value;
         const sortedCandidates = [...d.candidates].sort((a, b) => compareCandidates(a, b, classSort, semSort));
-        const tbody = document.getElementById('candidatesBody');
         tbody.innerHTML = sortedCandidates.map((c, i) => `
           <tr>
             <td>${i+1}</td>
-            <td>${c.usn}</td>
-            <td><strong>${c.name}</strong></td>
-            <td><span class="badge badge-primary">${c.class}</span></td>
+            <td>${c.usn || '-'}</td>
+            <td><strong>${c.name || '-'}</strong></td>
+            <td><span class="badge badge-primary">${c.class || '-'}</span></td>
             <td><strong>Sem ${c.semester || '-'}</strong></td>
-            <td><span class="badge badge-${c.gender === 'Male' ? 'male' : 'female'}">${c.gender}</span></td>
-            <td><strong style="color:var(--primary)">${c.votes}</strong></td>
+            <td><span class="badge badge-${c.gender === 'Male' ? 'male' : 'female'}">${c.gender || '-'}</span></td>
+            <td><strong style="color:var(--primary)">${c.votes ?? 0}</strong></td>
             <td><button class="btn btn-danger btn-sm" onclick="deleteCandidate(this, ${c.id})">Delete</button></td>
           </tr>
-        `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates enrolled yet.</td></tr>';
+        `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-soft);padding:2rem;">No candidates enrolled yet.</td></tr>';
         document.getElementById('totalCandidates').textContent = d.candidates.length;
-      } catch (e) { console.error("Load candidates error:", e); }
+      } catch (e) {
+        console.error("Load candidates error:", e);
+        document.getElementById('candidatesBody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:2rem;">Error loading candidate data. Check the server logs.</td></tr>`;
+      }
     }
 
     async function deleteStudent(btn, usn) {

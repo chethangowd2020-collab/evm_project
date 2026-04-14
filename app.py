@@ -615,8 +615,11 @@ def admin_candidates():
     conn = get_db()
     cur = conn.cursor()
     cur.execute('SELECT * FROM candidates ORDER BY class, semester, gender')
-    candidates = cur.fetchall()
+    rows = cur.fetchall()
     conn.close()
+
+    # Convert DB row objects to plain dictionaries for JSON serialization
+    candidates = [dict(row) if not isinstance(row, dict) else row for row in rows]
     return jsonify({'success': True, 'candidates': candidates})
 
 @app.route('/api/admin/toggle_voting', methods=['POST'])
