@@ -332,22 +332,8 @@
       }
     }
 
-    const candidateClassOrder = [
-      'CSE A', 'CSE B', 'CSE C', 'CSE D',
-      'ISE E', 'ISE F', 'ISE G',
-      'AIML H', 'CSE(DS) I',
-      'ECE J', 'ECE K', 'ECE L',
-      'EEE M', 'CIVIL N', 'MECH O'
-    ];
-
     function normalizeClassValue(cls) {
       return (cls || '').toString().trim().toUpperCase().replace(/\s+/g, ' ');
-    }
-
-    function getCandidateClassIndex(cls) {
-      const normalized = normalizeClassValue(cls);
-      const idx = candidateClassOrder.findIndex(item => normalizeClassValue(item) === normalized);
-      return idx === -1 ? candidateClassOrder.length : idx;
     }
 
     function getCandidateSemesterValue(sem) {
@@ -358,26 +344,20 @@
       return Number.isFinite(num) ? num : Number.MAX_SAFE_INTEGER;
     }
 
-    function compareCandidates(a, b, classSort, semSort) {
-      const classCompare = getCandidateClassIndex(a['class']) - getCandidateClassIndex(b['class']);
-      const semCompare = getCandidateSemesterValue(a.semester) - getCandidateSemesterValue(b.semester);
-      const fallback = getUsnSortValue(a.usn) - getUsnSortValue(b.usn) || a.usn.localeCompare(b.usn);
+    function compareCandidates(a, b, sortBy) {
+      const usnCompare = getUsnSortValue(a.usn) - getUsnSortValue(b.usn) || a.usn.localeCompare(b.usn);
+      const semCompare = getCandidateSemesterValue(a.semester) - getCandidateSemesterValue(b.semester) || usnCompare;
+      const classCompare = normalizeClassValue(a.class).localeCompare(normalizeClassValue(b.class)) || usnCompare;
+      const votesCompare = (Number(a.votes) || 0) - (Number(b.votes) || 0) || usnCompare;
 
-      if (classSort !== 'none') {
-        if (classCompare !== 0) {
-          return classSort === 'asc' ? classCompare : -classCompare;
-        }
-        if (semSort !== 'none' && semCompare !== 0) {
-          return semSort === 'asc' ? semCompare : -semCompare;
-        }
-        return fallback;
-      }
-
-      if (semSort !== 'none' && semCompare !== 0) {
-        return semSort === 'asc' ? semCompare : -semCompare;
-      }
-
-      return fallback;
+      if (sortBy === 'usn_desc') return -usnCompare;
+      if (sortBy === 'sem_asc') return semCompare;
+      if (sortBy === 'sem_desc') return -semCompare;
+      if (sortBy === 'class_asc') return classCompare;
+      if (sortBy === 'class_desc') return -classCompare;
+      if (sortBy === 'votes_asc') return votesCompare;
+      if (sortBy === 'votes_desc') return -votesCompare;
+      return usnCompare;
     }
 
     async function loadCandidates() {
