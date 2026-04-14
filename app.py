@@ -669,14 +669,16 @@ def delete_student():
         # 0. If the student has already voted, decrement the counts for candidates they voted for
         cur.execute('SELECT hasVoted FROM students WHERE usn=%s', (usn,))
         student_status = cur.fetchone()
-        if student_status and student_status['hasVoted']:
+        if student_status and row_get(student_status, 'hasVoted'):
             cur.execute('SELECT male_candidate_id, female_candidate_id FROM votes WHERE usn=%s', (usn,))
             vote_rec = cur.fetchone()
             if vote_rec:
-                if vote_rec['male_candidate_id']:
-                    cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (vote_rec['male_candidate_id'],))
-                if vote_rec['female_candidate_id']:
-                    cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (vote_rec['female_candidate_id'],))
+                male_id = row_get(vote_rec, 'male_candidate_id')
+                female_id = row_get(vote_rec, 'female_candidate_id')
+                if male_id:
+                    cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (male_id,))
+                if female_id:
+                    cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (female_id,))
 
         # 1. Clean up candidate data and associated votes received
         cur.execute('SELECT id FROM candidates WHERE usn=%s', (usn,))
