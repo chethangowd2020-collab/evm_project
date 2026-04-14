@@ -219,16 +219,28 @@ def add_header(response):
 
 @app.route('/')
 def index():
+    if request.args.get('force_login') == '1':
+        session.clear()
+        return redirect(url_for('login'))
     if 'usn' in session:
         return redirect(url_for('admin' if session.get('role') == 'admin' else 'dashboard'))
     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET'])
 def register():
+    if request.args.get('force_login') == '1':
+        session.clear()
     return render_template('register.html')
 
 @app.route('/login', methods=['GET'])
 def login():
+    if request.args.get('force_login') == '1':
+        session.clear()
+    return render_template('login.html')
+
+@app.route('/force_login')
+def force_login():
+    session.clear()
     return render_template('login.html')
 
 @app.route('/dashboard')
