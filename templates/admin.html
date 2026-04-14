@@ -390,7 +390,7 @@
           tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:2rem;">Unable to load candidates. Please refresh or log in again.</td></tr>`;
           return;
         }
-        const sortBy = document.getElementById('candidateSort').value;
+        const sortBy = document.getElementById('candidateSort')?.value || 'usn_asc';
         const semFilter = document.getElementById('candidateSemFilter').value;
         const classFilter = document.getElementById('candidateClassFilter').value;
 
