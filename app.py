@@ -753,13 +753,17 @@ def delete_candidate():
         affected_votes = cur.fetchall()
 
         for vote in affected_votes:
-            # Decrement the count for the OTHER candidate in that same vote record
-            other_id = vote['female_candidate_id'] if vote['male_candidate_id'] == int(candidate_id) else vote['male_candidate_id']
+            male_id = row_get(vote, 'male_candidate_id')
+            female_id = row_get(vote, 'female_candidate_id')
+            if male_id == int(candidate_id):
+                other_id = female_id
+            else:
+                other_id = male_id
             if other_id:
                 cur.execute('UPDATE candidates SET votes = votes - 1 WHERE id=%s', (other_id,))
             
             # Reset the student's voting status so they can vote again in the updated pool
-            cur.execute('UPDATE students SET hasVoted=0 WHERE usn=%s', (vote['usn'],))
+            cur.execute('UPDATE students SET hasVoted=0 WHERE usn=%s', (row_get(vote, 'usn'),))
 
         # 2. Delete the specific vote records
         cur.execute('DELETE FROM votes WHERE male_candidate_id=%s OR female_candidate_id=%s', (candidate_id, candidate_id))
