@@ -107,15 +107,7 @@ def init_db():
     votes INTEGER DEFAULT 0
     )''')
 
-    c.execute('''CREATE TABLE IF NOT EXISTS candidates (
-       id SERIAL PRIMARY KEY,
-        usn TEXT UNIQUE,
-        name TEXT,
-        class TEXT,
-        semester TEXT,
-        gender TEXT,
-        votes INTEGER DEFAULT 0
-    )''')
+    
 
     c.execute('''CREATE TABLE IF NOT EXISTS votes (
         id SERIAL PRIMARY KEY,
