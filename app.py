@@ -326,6 +326,9 @@ def results():
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
     return render_template('results.html')
+@app.route('/results_public_page')
+def results_public_page():
+    return render_template('results_public.html')
 
 @app.route('/logout')
 def logout():
@@ -867,7 +870,7 @@ if __name__ == '__main__':
     init_db()
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', debug=False, port=port)
-    
+
 @app.route('/api/results_public')
 def results_public():
     conn = get_db()
