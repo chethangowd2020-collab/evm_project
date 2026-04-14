@@ -180,23 +180,29 @@ def student_info():
     if not student:
         return jsonify({'success': False, 'message': 'Student not found'})
 
-    # check if already voted
     cur.execute("SELECT * FROM votes WHERE usn=%s", (session['usn'],))
     vote = cur.fetchone()
 
-    # check if candidate
     cur.execute("SELECT * FROM candidates WHERE usn=%s", (session['usn'],))
     candidate = cur.fetchone()
 
     return jsonify({
         'success': True,
-        'usn': student['usn'],
-        'name': student['name'],
-        'class': student['class'],
-        'semester': student['semester'],
+        'usn': row_get(student, 'usn'),
+        'name': row_get(student, 'name'),
+        'class': row_get(student, 'class'),
+        'semester': row_get(student, 'semester'),
         'hasVoted': True if vote else False,
         'isCandidate': True if candidate else False
     })
+
+@app.route('/api/student_info')
+def student_info():
+    try:
+        # your code
+    except Exception as e:
+        print("ERROR:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/admin')
 def admin():
