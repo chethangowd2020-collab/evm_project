@@ -236,6 +236,14 @@ def register():
 def login():
     if request.args.get('force_login') == '1':
         session.clear()
+
+    if request.args.get('force_admin') == '1':
+        return render_template(
+            'login.html',
+            alert_message='Please sign in as admin to continue.',
+            active_tab='admin'
+        )
+
     return render_template('login.html')
 
 @app.route('/force_login')
