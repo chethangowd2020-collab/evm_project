@@ -693,9 +693,17 @@ tr:hover td { background: var(--bg); }
   max-width: 480px; margin: 0 auto;
 }
 .auth-header {
-  background: var(--grad1);
-  padding: 2.5rem;
-  text-align: center; color: white;
+  padding: 3rem 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+
+  /* Gradient */
+  background: linear-gradient(270deg, #1e3c72, #2a5298, #6a11cb, #2575fc);
+  background-size: 600% 600%;
+
+  /* Use YOUR animation */
+  animation: gradientShift 8s ease infinite;
+
+  color: white;
 }
 .auth-header .auth-icon {
   font-size: 3rem; margin-bottom: 0.8rem;
