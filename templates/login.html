@@ -179,6 +179,22 @@
 
   <script src="/static/script.js?v=2"></script>
   <script>
+    const initialAlertMessage = {{ alert_message|default('')|tojson }};
+    const initialActiveTab = {{ active_tab|default('student')|tojson }};
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if (initialActiveTab === 'admin') {
+        switchTab('admin');
+      }
+
+      if (initialAlertMessage) {
+        const alertEl = initialActiveTab === 'admin'
+          ? document.getElementById('admin-alert')
+          : document.getElementById('login-alert');
+        showAlert(alertEl, initialAlertMessage, 'info');
+      }
+    });
+
     if (typeof apiGet === 'undefined') {
       window.apiGet = async (url) => {
         const res = await fetch(url, { credentials: 'include' });
