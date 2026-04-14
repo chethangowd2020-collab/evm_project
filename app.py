@@ -292,6 +292,11 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    session.clear()
+    return jsonify({'success': True})
+
 @app.route('/manifest.json')
 def serve_manifest():
     return app.send_static_file('manifest.json')

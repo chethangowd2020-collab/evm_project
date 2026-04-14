@@ -67,6 +67,7 @@
       setLoading(btn, false);
 
       if (data.success) {
+        setAuthActive(true);
         showAlert(alert, '✅ Admin login successful! Redirecting...', 'success');
         setTimeout(() => {
           window.location.href = '/admin';
