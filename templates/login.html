@@ -310,6 +310,7 @@
       setLoading(btn, false);
 
       if (data.success) {
+        setAuthActive(true);
         showAlert(alert, '✅ Admin login successful! Redirecting...', 'success');
         setTimeout(() => {
           // Redirect based on actual role to prevent "bounce-back" redirects
