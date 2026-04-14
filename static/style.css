@@ -111,9 +111,9 @@ body::after {
 
 /* ─── PAGE WRAPPER ───────────────────────────────────── */
 .page-wrapper {
-  min-height: calc(100vh - 64px);
+  min-height: auto;
   display: flex; align-items: center; justify-content: center;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem;
   position: relative; z-index: 1;
 }
 
