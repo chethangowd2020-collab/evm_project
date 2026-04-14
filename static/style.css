@@ -522,12 +522,12 @@ tr:hover td { background: var(--bg); }
   color: var(--text-soft);
   transition: all 0.2s;
 }
-.tab-btn.active,
-.form-toggle-btn.active {
+.tab-btn.active {
+  color: transparent;
   background: var(--grad1);
-  color: white;
-  border-bottom-color: transparent;
-  border: 2px solid transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  border-bottom-color: var(--primary);
 }
 
 .stats-row {
