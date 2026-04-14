@@ -696,6 +696,8 @@ tr:hover td { background: var(--bg); }
   padding: 3rem 2rem;
   border-bottom: 1px solid rgba(255,255,255,0.1);
 
+  min-height: 200px;  /* 🔥 ADD THIS HERE */
+
   background: linear-gradient(270deg, red, blue, green, yellow);
   background-size: 400% 400%;
 
