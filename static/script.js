@@ -100,3 +100,7 @@ function publishResults() {
     alert(data.message);
   });
 }
+
+function viewResults() {
+  window.location.href = "/results_public_page";
+}
