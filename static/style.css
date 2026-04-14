@@ -710,7 +710,7 @@ tr:hover td { background: var(--bg); }
   100% { background-position: 100% 50%; }
 }
 
-@keyframes gradientShift {
+@keyframes gradientMove {
   0% {
     background-position: 0% 0%;
   }
