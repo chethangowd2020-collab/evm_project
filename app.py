@@ -314,8 +314,8 @@ def student_info():
 
 @app.route('/admin')
 def admin():
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
+    if not session.get('admin'):
+        return redirect('/login')  # or '/admin_login_page'
 
     return render_template('admin.html')
 
