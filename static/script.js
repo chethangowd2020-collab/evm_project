@@ -73,3 +73,30 @@ function publishResults() {
     alert(data.message);
   });
 }
+
+function checkResults() {
+  fetch('/api/results_public')
+    .then(res => res.json())
+    .then(data => {
+      if (!data.success) {
+        alert("Results have not yet published !!");
+        return;
+      }
+
+      // if published → go to results page
+      window.location.href = "/results_public_page";
+    })
+    .catch(() => {
+      alert("Something went wrong");
+    });
+}
+
+function publishResults() {
+  fetch('/api/admin/publish_results', {
+    method: 'POST'
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+  });
+}
