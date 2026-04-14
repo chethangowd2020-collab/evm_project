@@ -65,19 +65,11 @@ body::after {
   box-shadow: 0 2px 20px rgba(91,108,249,0.08);
 }
 
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 1.2rem;
-  font-weight: 700;
-
+.navbar-brand span {
   background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
-  text-shadow: 0 2px 12px rgba(37, 99, 235, 0.25);
-  text-shadow: 0 3px 12px rgba(37, 99, 235, 0.35);
-  margin-bottom: 0.3rem;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  font-weight: 700;
 }
 
 .navbar-brand .logo-icon {
@@ -730,11 +722,12 @@ tr:hover td { background: var(--bg); }
   max-width: 480px; margin: 0 auto;
 }
 .auth-header {
+  position: relative;
+  overflow: hidden;
   background: var(--grad2);
   color: white;
   box-shadow: inset 0 0 80px rgba(255,255,255,0.08);
 }
-
   
 
 /* ✅ ADD HERE */
