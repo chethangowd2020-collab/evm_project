@@ -695,12 +695,19 @@ tr:hover td { background: var(--bg); }
 .auth-header {
   padding: 3rem 2rem;
   min-height: 200px;
-  position: relative; /* 🔥 REQUIRED */
-  overflow: hidden;   /* 🔥 REQUIRED */
+  position: relative;
+  overflow: hidden;
 
-  background: linear-gradient(270deg, #ec4899, #a855f7, #ec4899);
-  background-size: 400% 400%;
-  animation: gradientMove 4s linear infinite;
+  background: linear-gradient(
+    120deg,
+    #ec4899,
+    #a855f7,
+    #ec4899,
+    #a855f7
+  );
+
+  background-size: 300% 300%;
+  animation: gradientFlow 6s ease-in-out infinite;
 
   color: white;
 }
@@ -748,6 +755,23 @@ tr:hover td { background: var(--bg); }
   0% { transform: translate(0, 0); }
   50% { transform: translate(25%, 25%); }
   100% { transform: translate(0, 0); }
+}
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 100% 50%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  75% {
+    background-position: 0% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 .auth-header .auth-icon {
   font-size: 3rem; margin-bottom: 0.8rem;
