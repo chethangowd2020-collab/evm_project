@@ -169,18 +169,24 @@ def results():
 
     return render_template('results_public.html')
 @app.route('/api/login', methods=['POST'])
-
 def api_login():
     data = request.json
     identifier = data.get('usn', '').upper()
     password = data.get('password')
 
+    # ✅ 1. ADMIN LOGIN CHECK FIRST
+    if identifier == ADMIN_USN and password == ADMIN_PASSWORD:
+        session.clear()
+        session['role'] = 'admin'
+        session['usn'] = 'ADMIN'
+        return jsonify({'success': True, 'role': 'admin'})
+
+    # ✅ 2. STUDENT LOGIN
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute('SELECT * FROM students WHERE usn=%s', (identifier,))
     student = cur.fetchone()
-
     conn.close()
 
     if not student:
@@ -189,9 +195,12 @@ def api_login():
     if student['password'] != hash_password(password):
         return jsonify({'success': False, 'message': 'Wrong password'})
 
+    session.clear()
+    session['role'] = 'student'
     session['usn'] = student['usn']
     session['name'] = student['name']
-    session['role'] = 'student'
+    session['class'] = student['class']
+    session['semester'] = student['semester']
 
     return jsonify({'success': True, 'role': 'student'})
 
