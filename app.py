@@ -325,20 +325,17 @@ def results():
         return redirect(url_for('login'))
 
     return render_template('results_public.html')
-@app.route('/api/login', methods=['POST'])
-def api_login():
-    data = request.json
-    usn = data.get('usn', '').upper()
-    password = data.get('password', '')
 
-    conn = get_db()
-    cur = conn.cursor()
+@app.route('/admin_login', methods=['POST'])
+def admin_login():
+    username = request.form['username']
+    password = request.form['password']
 
-    # ✅ ADMIN LOGIN
-    if usn == ADMIN_USN and password == ADMIN_PASSWORD:
-        session['usn'] = ADMIN_USN
-        session['role'] = 'admin'
-        return jsonify({'success': True, 'role': 'admin'})
+    if username == 'admin' and password == 'admin123':
+        session['admin'] = True   # ✅ IMPORTANT
+        return redirect('/admin')
+    else:
+        return "Invalid login"
 
     # ✅ STUDENT LOGIN
     cur.execute("SELECT * FROM students WHERE usn=%s", (usn,))
