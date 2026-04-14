@@ -703,9 +703,7 @@ tr:hover td { background: var(--bg); }
 
   color: white;
 }
-.auth-header {
-  background: red !important;
-}
+
 @keyframes gradientShift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
