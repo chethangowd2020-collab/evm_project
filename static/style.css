@@ -528,7 +528,7 @@ tr:hover td { background: var(--bg); }
   transition: all 0.2s;
 }
 .tab-btn.active {
-  background: var(--grad2);   /* same pink gradient as login button */
+  background: var(--grad1);   /* same pink gradient as login button */
   color: white;
   border-bottom-color: transparent;
   border-radius: 8px;
