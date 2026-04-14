@@ -737,23 +737,17 @@ tr:hover td { background: var(--bg); }
   content: "";
   position: absolute;
   inset: 0;
-
-  background: radial-gradient(circle at 20% 30%, rgba(255,255,255,0.25), transparent 40%),
-              radial-gradient(circle at 80% 70%, rgba(255,255,255,0.15), transparent 40%);
-
-  opacity: 0.6;
+  background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 60%);
   pointer-events: none;
+  z-index: 0;
 }
 
-/* ✅ ADD HERE */
 .auth-header::after {
   content: "";
   position: absolute;
   inset: 0;
-
-  background: radial-gradient(circle, rgba(255,255,255,0.15), transparent 60%);
+  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
   animation: glowMove 8s linear infinite;
-
   pointer-events: none;
   z-index: 0;
 }
