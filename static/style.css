@@ -699,12 +699,15 @@ tr:hover td { background: var(--bg); }
   overflow: hidden;
 
   background: linear-gradient(
-    120deg,
-    #ec4899,
-    #a855f7,
-    #ec4899,
-    #a855f7
-  );
+  120deg,
+  #ec4899,
+  #d946ef,
+  #a855f7,
+  #9333ea,
+  #a855f7,
+  #d946ef,
+  #ec4899
+);
 
   background-size: 300% 300%;
   animation: gradientFlow 6s ease-in-out infinite;
@@ -757,21 +760,9 @@ tr:hover td { background: var(--bg); }
   100% { transform: translate(0, 0); }
 }
 @keyframes gradientFlow {
-  0% {
-    background-position: 0% 50%;
-  }
-  25% {
-    background-position: 100% 50%;
-  }
-  50% {
-    background-position: 100% 100%;
-  }
-  75% {
-    background-position: 0% 100%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 .auth-header .auth-icon {
   font-size: 3rem; margin-bottom: 0.8rem;
