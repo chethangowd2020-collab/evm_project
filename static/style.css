@@ -111,10 +111,9 @@ body::after {
 
 /* ─── PAGE WRAPPER ───────────────────────────────────── */
 .page-wrapper {
-  min-height: auto;
-  padding: 3rem 1rem;
-  position: relative;
-  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* LOGIN ONLY */
