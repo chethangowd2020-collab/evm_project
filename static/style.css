@@ -114,6 +114,7 @@ body::after {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 /* LOGIN ONLY */
@@ -723,7 +724,10 @@ tr:hover td { background: var(--bg); }
 .auth-header {
   position: relative;
   overflow: hidden;
-   z-index: 1;  
+  z-index: 1;
+  padding: 3rem 2rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  color: white;
 }
 .auth-header > * {
   position: relative;
@@ -745,10 +749,8 @@ tr:hover td { background: var(--bg); }
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
-  animation: glowMove 8s linear infinite;
-  pointer-events: none;
   z-index: 0;
+  pointer-events: none;
 }
 
 /* 🔥 ADD HERE (outside the class) */
