@@ -695,6 +695,28 @@ def publish_results():
 
     return jsonify({'success': True, 'message': 'Results published successfully!'})
 
+@app.route('/api/results_public')
+def results_public():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("SELECT published FROM result_status WHERE id=1")
+    status = cur.fetchone()
+
+    if not status or status['published'] != 1:
+        conn.close()
+        return jsonify({'success': False})
+
+    cur.execute('SELECT * FROM candidates ORDER BY votes DESC')
+    candidates = cur.fetchall()
+
+    conn.close()
+
+    return jsonify({
+        'success': True,
+        'classes': [dict(c) for c in candidates]
+    })
+
 @app.route('/api/admin/publish_results', methods=['POST'])
 def publish_results():
     if session.get('role') != 'admin':
