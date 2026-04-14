@@ -368,9 +368,8 @@
           tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:2rem;">Unable to load candidates. Please refresh or log in again.</td></tr>`;
           return;
         }
-        const classSort = document.getElementById('candidateClassSort').value;
-        const semSort = document.getElementById('candidateSemSort').value;
-        const sortedCandidates = [...d.candidates].sort((a, b) => compareCandidates(a, b, classSort, semSort));
+        const sortBy = document.getElementById('candidateSort').value;
+        const sortedCandidates = [...d.candidates].sort((a, b) => compareCandidates(a, b, sortBy));
         tbody.innerHTML = sortedCandidates.map((c, i) => `
           <tr>
             <td>${i+1}</td>
