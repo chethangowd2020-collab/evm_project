@@ -533,6 +533,10 @@ tr:hover td { background: var(--bg); }
   border-bottom-color: transparent;
   border-radius: 8px;
 }
+.tab-btn:hover {
+  color: white;
+  background: rgba(168, 85, 247, 0.15);
+}
 
 .stats-row {
   display: grid;
