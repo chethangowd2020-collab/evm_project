@@ -1,12 +1,133 @@
-fetch('/api/results_public')
-.then(res => res.json())
-.then(data => {
-    if (!data.success) {
-        document.getElementById("resultBox").innerText =
-            "Results have not yet published !!";
-        return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Results</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6ff;
+      margin: 0;
+      padding: 20px;
     }
 
-    // render results
-    console.log(data.classes);
-});
+    h1 {
+      text-align: center;
+      color: #1e3a8a;
+      margin-bottom: 20px;
+    }
+
+    #resultBox {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .class-card {
+      background: white;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .class-title {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 10px;
+    }
+
+    .candidate {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .winner {
+      background: #dcfce7;
+      font-weight: bold;
+    }
+
+    .section-title {
+      margin-top: 10px;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .empty {
+      text-align: center;
+      color: red;
+      font-size: 18px;
+      margin-top: 50px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Election Results</h1>
+
+  <div id="resultBox">Loading results...</div>
+
+  <script>
+    fetch('/api/results_public')
+      .then(res => res.json())
+      .then(data => {
+        const box = document.getElementById("resultBox");
+
+        if (!data.success) {
+          box.innerHTML = `
+            <div class="empty">
+              Results have not yet published !!
+            </div>
+          `;
+          return;
+        }
+
+        let html = "";
+
+        for (let cls in data.classes) {
+          const group = data.classes[cls];
+
+          html += `
+            <div class="class-card">
+              <div class="class-title">${cls}</div>
+
+              <div class="section-title">Male CR</div>
+          `;
+
+          group.males.forEach((m, index) => {
+            html += `
+              <div class="candidate ${index === 0 ? 'winner' : ''}">
+                <span>${index + 1}. ${m.name}</span>
+                <span>${m.votes} votes</span>
+              </div>
+            `;
+          });
+
+          html += `<div class="section-title">Female CR</div>`;
+
+          group.females.forEach((f, index) => {
+            html += `
+              <div class="candidate ${index === 0 ? 'winner' : ''}">
+                <span>${index + 1}. ${f.name}</span>
+                <span>${f.votes} votes</span>
+              </div>
+            `;
+          });
+
+          html += `</div>`;
+        }
+
+        box.innerHTML = html;
+      })
+      .catch(() => {
+        document.getElementById("resultBox").innerHTML =
+          "<div class='empty'>Something went wrong</div>";
+      });
+  </script>
+
+</body>
+</html>
