@@ -177,7 +177,6 @@ def results():
 
     return render_template('results_public.html')
 
-
 # ---------------- RESULTS ----------------
 
 
