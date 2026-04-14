@@ -696,12 +696,18 @@ tr:hover td { background: var(--bg); }
   padding: 3rem 2rem;
   min-height: 200px;
 
-  background: linear-gradient(270deg, red, blue, green, yellow);
-  background-size: 800% 800%;
+  background: linear-gradient(90deg, red, blue, green, yellow);
+  background-size: 300% 300%;
 
-  animation: gradientShift 3s linear infinite;
+  animation: moveBg 2s linear infinite;
 
   color: white;
+}
+
+/* 🔥 ADD HERE (outside the class) */
+@keyframes moveBg {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
 }
 
 @keyframes gradientShift {
