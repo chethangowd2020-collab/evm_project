@@ -696,14 +696,16 @@ tr:hover td { background: var(--bg); }
   padding: 3rem 2rem;
   border-bottom: 1px solid rgba(255,255,255,0.1);
 
-  /* Gradient */
-  background: linear-gradient(270deg, #1e3c72, #2a5298, #6a11cb, #2575fc);
+  background: linear-gradient(270deg, #ff6ec4, #7873f5, #4facfe, #43e97b);
   background-size: 600% 600%;
 
-  /* Use YOUR animation */
   animation: gradientShift 8s ease infinite;
 
   color: white;
+}
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 .auth-header .auth-icon {
   font-size: 3rem; margin-bottom: 0.8rem;
