@@ -97,6 +97,18 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
 
+    c.execute('''CREATE TABLE IF NOT EXISTS students (
+        usn TEXT PRIMARY KEY,
+        name TEXT,
+        email TEXT,
+        phone TEXT,
+        class TEXT,
+        semester TEXT,
+        password TEXT,
+        isVerified INTEGER DEFAULT 1,
+        hasVoted INTEGER DEFAULT 0
+    )''')
+
     c.execute('''CREATE TABLE IF NOT EXISTS candidates (
     id SERIAL PRIMARY KEY,
     usn TEXT UNIQUE,
@@ -234,10 +246,12 @@ def get_candidates():
 @app.route('/api/admin/candidates')
 def admin_candidates():
     try:
+        conn = get_db()
         cur = conn.cursor()
         cur.execute("SELECT * FROM candidates")
         data = cur.fetchall()
-
+        conn.close()
+        
         return jsonify({
             'success': True,
             'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
@@ -248,10 +262,12 @@ def admin_candidates():
 @app.route('/api/admin/students')
 def admin_students():
     try:
+        conn = get_db()
         cur = conn.cursor()
         cur.execute("SELECT * FROM students")
         data = cur.fetchall()
-
+        conn.close()
+        
         return jsonify({
             'success': True,
             'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
@@ -262,13 +278,17 @@ def admin_students():
 @app.route('/api/admin/voting_status')
 def voting_status():
     try:
+        conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM voting_status LIMIT 1")
+        cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
         data = cur.fetchone()
-
+        conn.close()
+        
+        enabled = row_get(data, 'value') == '1'
+        
         return jsonify({
             'success': True,
-            'data': dict(data) if data else {}
+            'enabled': enabled
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
@@ -326,35 +346,35 @@ def results():
 
     return render_template('results_public.html')
 
-@app.route('/admin_login', methods=['POST'])
-def admin_login():
-    username = request.form['username']
-    password = request.form['password']
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    usn = data.get('usn', '').strip().upper()
+    password = data.get('password', '')
 
-    if username == 'admin' and password == 'admin123':
-        session['admin'] = True   # ✅ IMPORTANT
-        return redirect('/admin')
-    else:
-        return "Invalid login"
+    # Admin login check
+    if usn == ADMIN_USN and password == ADMIN_PASSWORD:
+        session['usn'] = usn
+        session['role'] = 'admin'
+        session['admin'] = True
+        return jsonify({'success': True, 'role': 'admin'})
 
-    # ✅ STUDENT LOGIN
+    # Student login check
+    conn = get_db()
+    cur = conn.cursor()
     cur.execute("SELECT * FROM students WHERE usn=%s", (usn,))
     user = cur.fetchone()
+    conn.close()
 
     if not user:
         return jsonify({'success': False, 'message': 'User not found'})
 
-    if user['password'] != hash_password(password):
+    if row_get(user, 'password') != hash_password(password):
         return jsonify({'success': False, 'message': 'Wrong password'})
 
     session['usn'] = usn
     session['role'] = 'student'
-
     return jsonify({'success': True, 'role': 'student'})
-
-
-
-
 # ---------------- RESULTS ----------------
 
 
