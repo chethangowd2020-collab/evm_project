@@ -420,11 +420,79 @@ def admin_results():
 
         return jsonify({
             'success': True,
-            'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
+            'data': [dict(row) for row in data]
         })
 
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/admin/toggle_voting', methods=['POST'])
+@admin_required
+def toggle_voting():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+        row = cur.fetchone()
+        current = row_get(row, 'value') == '1'
+        new_val = '0' if current else '1'
+        cur.execute("UPDATE settings SET value=%s WHERE key='voting_enabled'", (new_val,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'enabled': new_val == '1'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/admin/delete_student/<usn>', methods=['POST'])
+@admin_required
+def delete_student(usn):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM students WHERE usn=%s", (usn,))
+        cur.execute("DELETE FROM candidates WHERE usn=%s", (usn,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Student deleted'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/admin/delete_candidate/<int:id>', methods=['POST'])
+@admin_required
+def delete_candidate(id):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM candidates WHERE id=%s", (id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Candidate removed'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/admin/reset_password', methods=['POST'])
+@admin_required
+def reset_password():
+    try:
+        data = request.get_json()
+        usn = data.get('usn')
+        new_pwd = data.get('password')
+        if not usn or not new_pwd:
+            return jsonify({'success': False, 'message': 'Missing data'})
+            
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("UPDATE students SET password=%s WHERE usn=%s", (hash_password(new_pwd), usn))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Password reset successful'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 
 @app.route('/api/results_public')
