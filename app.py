@@ -10,6 +10,7 @@ import tempfile
 from email.message import EmailMessage
 import string
 import sqlite3
+from functools import wraps
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
@@ -226,6 +227,7 @@ def register_candidate():
         return jsonify({'success': False, 'message': str(e)})
     
 @app.route('/api/candidates')
+@admin_required
 def get_candidates():
     try:
         conn = get_db()
@@ -260,6 +262,7 @@ def admin_candidates():
         return jsonify({'success': False, 'error': str(e)})
     
 @app.route('/api/admin/students')
+@admin_required
 def admin_students():
     try:
         conn = get_db()
@@ -276,6 +279,7 @@ def admin_students():
         return jsonify({'success': False, 'error': str(e)})
     
 @app.route('/api/admin/voting_status')
+@admin_required
 def voting_status():
     try:
         conn = get_db()
@@ -356,6 +360,7 @@ def api_login():
     if usn == ADMIN_USN and password == ADMIN_PASSWORD:
         session['usn'] = usn
         session['role'] = 'admin'
+        session.permanent = True
         session['admin'] = True
         return jsonify({'success': True, 'role': 'admin'})
 
@@ -374,11 +379,13 @@ def api_login():
 
     session['usn'] = usn
     session['role'] = 'student'
+    session.permanent = True
     return jsonify({'success': True, 'role': 'student'})
 # ---------------- RESULTS ----------------
 
 
 @app.route('/api/admin/publish_results', methods=['POST'])
+@admin_required
 def publish_results():
     conn = get_db()
     cur = conn.cursor()
@@ -388,6 +395,7 @@ def publish_results():
     return jsonify({'success': True})
 
 @app.route('/api/admin/results')
+@admin_required
 def admin_results():
     try:
         conn = get_db()
