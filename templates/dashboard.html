@@ -49,7 +49,11 @@
         <h3>Stand for Election</h3>
         <p>Register yourself as a candidate</p>
       </a>
-      <a href="/results">Results</a>
+      <a href="/results" class="action-card" id="resultsCard" style="display:none;">
+        <span class="icon">📊</span>
+        <h3>View Results</h3>
+        <p>See the final election outcomes</p>
+      </a>
     </div>
 
     <!-- Info cards -->
@@ -128,6 +132,10 @@
         cCard.style.cursor = 'not-allowed';
         cCard.style.pointerEvents = 'none';
         cCard.querySelector('p').textContent = isVoted ? 'Registration closed after voting' : 'Registration closed (Voting started)';
+      }
+
+      if (data.results_published) {
+        document.getElementById('resultsCard').style.display = 'block';
       }
     })();
   </script>

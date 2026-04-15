@@ -390,6 +390,9 @@ def student_info():
 
     cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
     voting_enabled = row_get(cur.fetchone(), 'value') == '1'
+
+    cur.execute("SELECT value FROM settings WHERE key='results_published'")
+    results_published = row_get(cur.fetchone(), 'value') == '1'
     conn.close()
 
     return jsonify({
@@ -400,7 +403,8 @@ def student_info():
         'semester': row_get(student, 'semester'),
         'hasvoted': True if vote else False,
         'iscandidate': True if candidate else False,
-        'voting_enabled': voting_enabled
+        'voting_enabled': voting_enabled,
+        'results_published': results_published
     })
 
 
