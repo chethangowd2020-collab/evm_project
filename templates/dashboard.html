@@ -112,9 +112,18 @@
         voteCard.style.pointerEvents = 'none';
         voteCard.querySelector('h3').textContent = 'Already Voted';
         voteCard.querySelector('p').textContent = 'You have already cast your vote';
+
+        // Disable candidate registration if user has voted
+        const cCard = document.getElementById('candidateCard');
+        if (!(data.iscandidate || data.isCandidate)) {
+          cCard.style.opacity = '0.5';
+          cCard.style.cursor = 'not-allowed';
+          cCard.style.pointerEvents = 'none';
+          cCard.querySelector('p').textContent = 'Registration closed after voting';
+        }
       }
 
-      if (data.isCandidate) {
+      if (data.iscandidate || data.isCandidate) {
         const cCard = document.getElementById('candidateCard');
         cCard.style.borderColor = '#10B981';
         cCard.querySelector('.icon').textContent = '🏆';

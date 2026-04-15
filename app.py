@@ -214,6 +214,12 @@ def register_candidate():
         if not student:
             return jsonify({'success': False, 'message': 'Student not found'})
 
+        # Check if already voted - cannot register as candidate after voting
+        cur.execute("SELECT * FROM votes WHERE usn=%s", (session['usn'],))
+        if cur.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': 'Cannot register as candidate after voting'})
+
         # Check if already candidate
         cur.execute("SELECT * FROM candidates WHERE usn=%s", (session['usn'],))
         existing = cur.fetchone()
