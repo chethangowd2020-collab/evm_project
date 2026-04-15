@@ -103,7 +103,8 @@
       document.getElementById('welcomeClass').textContent = data.class;
       document.getElementById('welcomeSem').textContent = data.semester || '—';
 
-      if (data.hasVoted) {
+      // Check for either lowercase or camelCase
+      if (data.hasvoted || data.hasVoted) {
         document.getElementById('votedBanner').style.display = 'block';
         const voteCard = document.getElementById('voteCard');
         voteCard.style.opacity = '0.5';

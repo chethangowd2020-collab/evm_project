@@ -93,6 +93,12 @@ def row_get(row, key, default=None):
     except:
         return default
 
+def format_row(row):
+    """Helper to ensure consistent lowercase keys for JS compatibility across DBs"""
+    if not row:
+        return {}
+    return {k.lower(): v for k, v in dict(row).items()}
+
 
 def init_db():
     conn = get_db()
@@ -248,7 +254,14 @@ def get_candidates():
 
         return jsonify({
             'success': True,
-            'data': [dict(row) for row in data]
+            'data': [format_row(row) for row in data],
+            # Grouping for vote.html/dashboard
+            'males': [format_row(row) for row in data if row_get(row, 'gender') == 'Male'],
+            'females': [format_row(row) for row in data if row_get(row, 'gender') == 'Female'],
+            'voting_enabled': row_get(
+                get_db().cursor().execute("SELECT value FROM settings WHERE key='voting_enabled'").fetchone(), 
+                'value'
+            ) == '1'
         })
 
     except Exception as e:
@@ -267,7 +280,7 @@ def admin_candidates():
         
         return jsonify({
             'success': True,
-            'data': [dict(row) for row in data]
+            'data': [format_row(row) for row in data]
         })
     except Exception as e:
         print("Admin Candidates Error:", str(e))
@@ -285,7 +298,7 @@ def admin_students():
         
         return jsonify({
             'success': True,
-            'data': [dict(row) for row in data]
+            'data': [format_row(row) for row in data]
         })
     except Exception as e:
         print("Admin Students Error:", str(e))
@@ -345,8 +358,8 @@ def student_info():
         'name': row_get(student, 'name'),
         'class': row_get(student, 'class'),
         'semester': row_get(student, 'semester'),
-        'hasVoted': True if vote else False,
-        'isCandidate': True if candidate else False
+        'hasvoted': True if vote else False,
+        'iscandidate': True if candidate else False
     })
 
 
@@ -416,17 +429,124 @@ def admin_results():
         conn = get_db()
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
-        data = cur.fetchall()
+        cur.execute("SELECT * FROM candidates ORDER BY class, gender, votes DESC")
+        rows = cur.fetchall()
+        
+        # Calculate total votes
+        cur.execute("SELECT COUNT(*) as total FROM votes")
+        total = cur.fetchone()
         conn.close()
+
+        # Structure the data as the frontend expects
+        classes = {}
+        for r in rows:
+            row = format_row(r)
+            cls = row['class']
+            if cls not in classes:
+                classes[cls] = {'males': [], 'females': []}
+            
+            if row['gender'] == 'Male':
+                classes[cls]['males'].append(row)
+            else:
+                classes[cls]['females'].append(row)
 
         return jsonify({
             'success': True,
-            'data': [dict(row) for row in data]
+            'classes': classes,
+            'total_votes': row_get(total, 'total', 0)
         })
 
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/send_otp', methods=['POST'])
+def send_otp():
+    data = request.get_json()
+    usn = data.get('usn', '').upper()
+    
+    # Alphanumeric Captcha Generator
+    q = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+    
+    conn = get_db()
+    cur = conn.cursor()
+    if USE_SQLITE:
+        cur.execute("INSERT OR REPLACE INTO otps (usn, otp) VALUES (?, ?)", (usn, q))
+    else:
+        cur.execute("INSERT INTO otps (usn, otp) VALUES (%s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp", (usn, q))
+    conn.commit()
+    conn.close()
+    
+    return jsonify({'success': True, 'captcha_question': f"Enter this code: {q}"})
+
+@app.route('/api/register', methods=['POST'])
+def api_register():
+    try:
+        data = request.get_json()
+        usn = data.get('usn', '').strip().upper()
+        otp_entered = data.get('otp', '').strip()
+
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Verify Captcha
+        cur.execute("SELECT otp FROM otps WHERE usn=%s", (usn,))
+        record = cur.fetchone()
+        if not record or row_get(record, 'otp') != otp_entered:
+            return jsonify({'success': False, 'message': 'Invalid Captcha'})
+
+        # Create student
+        cur.execute("""
+            INSERT INTO students (usn, name, email, class, semester, password)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (usn, data.get('name'), data.get('email'), data.get('class'), data.get('semester'), hash_password(data.get('password'))))
+        
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': "USN already registered or error: " + str(e)})
+
+@app.route('/api/submit_vote', methods=['POST'])
+def submit_vote():
+    if 'usn' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Check if voting enabled
+    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+    if row_get(cur.fetchone(), 'value') != '1':
+        return jsonify({'success': False, 'message': 'Voting is closed'})
+
+    # Check if already voted
+    cur.execute("SELECT * FROM votes WHERE usn=%s", (session['usn'],))
+    if cur.fetchone():
+        return jsonify({'success': False, 'message': 'Already voted'})
+
+    data = request.get_json()
+    m_id = data.get('male_id')
+    f_id = data.get('female_id')
+
+    # Record vote
+    cur.execute("SELECT class FROM students WHERE usn=%s", (session['usn'],))
+    cls = row_get(cur.fetchone(), 'class')
+    
+    cur.execute("""
+        INSERT INTO votes (usn, class, male_candidate_id, female_candidate_id)
+        VALUES (%s, %s, %s, %s)
+    """, (session['usn'], cls, m_id, f_id))
+
+    # Increment candidate counts
+    cur.execute("UPDATE candidates SET votes = votes + 1 WHERE id=%s", (m_id,))
+    cur.execute("UPDATE candidates SET votes = votes + 1 WHERE id=%s", (f_id,))
+    
+    # Mark student as voted
+    cur.execute("UPDATE students SET hasVoted=1 WHERE usn=%s", (session['usn'],))
+
+    conn.commit()
+    conn.close()
+    return jsonify({'success': True})
 
 @app.route('/api/admin/toggle_voting', methods=['POST'])
 @admin_required
@@ -504,16 +624,22 @@ def results_public():
 
     cur.execute("SELECT value FROM settings WHERE key='results_published'")
     s = cur.fetchone()
-
     if not s or s['value'] != '1':
         conn.close()
         return jsonify({'success': False})
 
-    cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
-    data = cur.fetchall()
+    cur.execute("SELECT * FROM candidates ORDER BY class, gender, votes DESC")
+    rows = cur.fetchall()
     conn.close()
 
-    return jsonify({'success': True, 'data': [dict(row) for row in data]})
+    classes = {}
+    for r in rows:
+        row = format_row(r)
+        cls = row['class']
+        if cls not in classes: classes[cls] = {'males': [], 'females': []}
+        classes[cls]['males' if row['gender'] == 'Male' else 'females'].append(row)
+
+    return jsonify({'success': True, 'classes': classes})
 
 
 if __name__ == '__main__':

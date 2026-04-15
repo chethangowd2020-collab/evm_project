@@ -307,10 +307,10 @@
           <td>${s.email}</td>
           <td><span class="badge badge-primary">${s.class}</span></td>
           <td><strong>Sem ${s.semester || '-'}</strong></td>
-          <td>${s.hasVoted ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
+          <td>${(s.hasvoted || s.hasVoted) ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
           <td>
-            <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(event, '${s.usn}')">Reset Password</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteStudent(event, '${s.usn}')">Delete</button>
+            <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(this, '${s.usn}')">Reset Password</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteStudent(this, '${s.usn}')">Delete</button>
           </td>
         </tr>
       `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No students match the selected filters.</td></tr>';
@@ -348,7 +348,8 @@
         renderStudents();
 
         document.getElementById('totalStudents').textContent = d.data.length;
-        const voted = d.data.filter(s => s.hasVoted).length;
+        // Handle both lowercase and camelCase for DB compatibility
+        const voted = d.data.filter(s => s.hasvoted || s.hasVoted).length;
         document.getElementById('totalVoters').textContent = voted;
         document.getElementById('turnoutPct').textContent = d.data.length ? Math.round(voted / d.data.length * 100) + '%' : '0%';
       } catch (e) {
