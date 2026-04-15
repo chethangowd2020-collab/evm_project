@@ -160,6 +160,14 @@ init_db()
 def hash_password(p):
     return hashlib.sha256(p.encode()).hexdigest()
 
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get('admin'):
+            return jsonify({'success': False, 'message': 'Admin access required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 @app.route('/')
 def index():
@@ -246,6 +254,7 @@ def get_candidates():
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/admin/candidates')
+@admin_required
 def admin_candidates():
     try:
         conn = get_db()
