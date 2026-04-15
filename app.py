@@ -250,6 +250,10 @@ def get_candidates():
 
         cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
         data = cur.fetchall()
+
+        # Fetch voting status using the existing cursor before closing connection
+        cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+        status_row = cur.fetchone()
         conn.close()
 
         return jsonify({
@@ -258,10 +262,7 @@ def get_candidates():
             # Grouping for vote.html/dashboard
             'males': [format_row(row) for row in data if row_get(row, 'gender') == 'Male'],
             'females': [format_row(row) for row in data if row_get(row, 'gender') == 'Female'],
-            'voting_enabled': row_get(
-                get_db().cursor().execute("SELECT value FROM settings WHERE key='voting_enabled'").fetchone(), 
-                'value'
-            ) == '1'
+            'voting_enabled': row_get(status_row, 'value') == '1'
         })
 
     except Exception as e:

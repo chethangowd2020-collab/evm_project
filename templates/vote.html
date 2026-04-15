@@ -208,7 +208,8 @@
 
         document.getElementById('classLabel').textContent = info['class'] || '—';
 
-        const hasVoted = info.hasVoted === true || info.hasVoted === 1 || info.hasVoted === '1' || String(info.hasVoted).toLowerCase() === 'true';
+        // Ensure we check the lowercase key returned by the API
+        const hasVoted = info.hasvoted === true || info.hasvoted === 1 || info.hasvoted === '1' || String(info.hasvoted).toLowerCase() === 'true';
         if (hasVoted) {
           document.getElementById('votingSection').style.display = 'none';
           document.getElementById('alreadyVoted').style.display = 'block';
