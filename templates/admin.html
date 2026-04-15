@@ -69,7 +69,7 @@
             <div style="font-size:0.82rem;color:var(--text-soft);">Results visibility</div>
           </div>
         </div>
-        <button class="btn btn-success" id="toggleResultsBtn" onclick="toggleResults()">
+        <button class="btn btn-success" id="toggleResultsBtn" onclick="toggleResults(this)">
           Loading...
         </button>
       </div>
@@ -218,7 +218,7 @@
     // Safety: Ensure API helpers exist if not in script.js
     if (typeof apiGet === 'undefined') {
       window.apiGet = async (url) => {
-        const res = await fetch(url, { credentials: 'same-origin' });
+        const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       };
@@ -227,7 +227,7 @@
       window.apiFetch = async (url, data) => {
         const res = await fetch(url, {
           method: 'POST',
-          credentials: 'same-origin',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
@@ -354,9 +354,18 @@
     async function toggleVoting() {
       const btn = document.getElementById('toggleVotingBtn');
       setLoading(btn, true, 'Updating...');
-      await apiFetch('/api/admin/toggle_voting', {});
-      setLoading(btn, false);
-      loadVotingStatus();
+      try {
+        const data = await apiFetch('/api/admin/toggle_voting', {});
+        if (data.success) {
+          await loadVotingStatus();
+        } else {
+          alert(data.message || 'Failed to toggle voting status');
+        }
+      } catch (e) {
+        alert('A network error occurred.');
+      } finally {
+        setLoading(btn, false);
+      }
     }
 
     async function loadStudents() {

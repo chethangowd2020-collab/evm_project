@@ -64,14 +64,16 @@ async function apiGet(url) {
   return res.json();
 }
 
-async function toggleResults() {
+async function toggleResults(btn) {
+  if (btn) setLoading(btn, true, 'Updating...');
   const data = await apiFetch('/api/admin/toggle_results', {});
+  if (btn) setLoading(btn, false);
+
   if (data.success) {
     if (typeof loadVotingStatus === 'function') {
       loadVotingStatus();
     } else {
       alert(data.published ? "Results published!" : "Results hidden!");
-      location.reload();
     }
   } else {
     alert(data.message || "Failed to update results status.");
