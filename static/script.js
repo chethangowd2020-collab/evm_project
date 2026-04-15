@@ -64,14 +64,13 @@ async function apiGet(url) {
   return res.json();
 }
 
-function publishResults() {
-  fetch('/api/admin/publish_results', {
-    method: 'POST'
-  })
-  .then(res => res.json())
-  .then(data => {
-    alert(data.message);
-  });
+async function publishResults() {
+  const data = await apiFetch('/api/admin/publish_results', {});
+  if (data.success) {
+    alert(data.message || "Results published!");
+  } else {
+    alert(data.message || "Failed to publish results.");
+  }
 }
 
 function checkResults() {
@@ -94,23 +93,25 @@ function checkResults() {
 
 
 function viewResults() {
-  window.location.href = "/results_public_page";
+  window.location.href = "/results";
 }
 
 async function handleLogin() {
-  const usn = document.getElementById('usn').value;
-  const password = document.getElementById('password').value;
+  // Note: login.html uses admin-usn and admin-password for admin tab
+  const usnInput = document.getElementById('login-usn') || document.getElementById('admin-usn');
+  const pwdInput = document.getElementById('login-password') || document.getElementById('admin-password');
+  
+  if (!usnInput || !pwdInput) return;
 
-  const res = await fetch('/api/login', {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ usn, password })
-  });
+  const usn = usnInput.value.trim().toUpperCase();
+  const password = pwdInput.value;
 
-  const data = await res.json();
+  if (!usn || !password) {
+    alert("Please enter credentials");
+    return;
+  }
+
+  const data = await apiFetch('/api/login', { usn, password });
 
   if (data.success) {
     // ✅ mark session active (IMPORTANT)

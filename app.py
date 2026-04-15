@@ -407,7 +407,7 @@ def publish_results():
     cur.execute("UPDATE settings SET value='1' WHERE key='results_published'")
     conn.commit()
     conn.close()
-    return jsonify({'success': True})
+    return jsonify({'success': True, 'message': 'Results have been published successfully!'})
 
 @app.route('/api/admin/results')
 @admin_required
