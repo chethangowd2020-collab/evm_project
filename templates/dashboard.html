@@ -103,8 +103,10 @@
       document.getElementById('welcomeClass').textContent = data.class;
       document.getElementById('welcomeSem').textContent = data.semester || '—';
 
-      // Check for either lowercase or camelCase
-      if (data.hasvoted || data.hasVoted) {
+      const isVoted = data.hasvoted || data.hasVoted;
+      const isCandidate = data.iscandidate || data.isCandidate;
+
+      if (isVoted) {
         document.getElementById('votedBanner').style.display = 'block';
         const voteCard = document.getElementById('voteCard');
         voteCard.style.opacity = '0.5';
@@ -112,24 +114,20 @@
         voteCard.style.pointerEvents = 'none';
         voteCard.querySelector('h3').textContent = 'Already Voted';
         voteCard.querySelector('p').textContent = 'You have already cast your vote';
-
-        // Disable candidate registration if user has voted
-        const cCard = document.getElementById('candidateCard');
-        if (!(data.iscandidate || data.isCandidate)) {
-          cCard.style.opacity = '0.5';
-          cCard.style.cursor = 'not-allowed';
-          cCard.style.pointerEvents = 'none';
-          cCard.querySelector('p').textContent = 'Registration closed after voting';
-        }
       }
 
-      if (data.iscandidate || data.isCandidate) {
-        const cCard = document.getElementById('candidateCard');
+      const cCard = document.getElementById('candidateCard');
+      if (isCandidate) {
         cCard.style.borderColor = '#10B981';
         cCard.querySelector('.icon').textContent = '🏆';
         cCard.querySelector('h3').textContent = 'Enrolled as Candidate';
         cCard.querySelector('p').textContent = 'You are already registered as a candidate';
         cCard.style.pointerEvents = 'none';
+      } else if (isVoted || data.voting_enabled) {
+        cCard.style.opacity = '0.5';
+        cCard.style.cursor = 'not-allowed';
+        cCard.style.pointerEvents = 'none';
+        cCard.querySelector('p').textContent = isVoted ? 'Registration closed after voting' : 'Registration closed (Voting started)';
       }
     })();
   </script>

@@ -214,6 +214,12 @@ def register_candidate():
         if not student:
             return jsonify({'success': False, 'message': 'Student not found'})
 
+        # Check if voting has already started - cannot register as candidate during voting
+        cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+        if row_get(cur.fetchone(), 'value') == '1':
+            conn.close()
+            return jsonify({'success': False, 'message': 'Registration is closed. Voting session has already started.'})
+
         # Check if already voted - cannot register as candidate after voting
         cur.execute("SELECT * FROM votes WHERE usn=%s", (session['usn'],))
         if cur.fetchone():
@@ -371,6 +377,9 @@ def student_info():
 
     cur.execute("SELECT * FROM candidates WHERE usn=%s", (session['usn'],))
     candidate = cur.fetchone()
+
+    cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
+    voting_enabled = row_get(cur.fetchone(), 'value') == '1'
     conn.close()
 
     return jsonify({
@@ -380,7 +389,8 @@ def student_info():
         'class': row_get(student, 'class'),
         'semester': row_get(student, 'semester'),
         'hasvoted': True if vote else False,
-        'iscandidate': True if candidate else False
+        'iscandidate': True if candidate else False,
+        'voting_enabled': voting_enabled
     })
 
 

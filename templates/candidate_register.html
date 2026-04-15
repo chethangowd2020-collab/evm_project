@@ -36,6 +36,14 @@
             <a href="/dashboard" class="btn btn-pink" style="margin-top:1.2rem;">Back to Dashboard</a>
           </div>
 
+          <!-- Registration Closed (Voting Started) -->
+          <div id="votingStartedBox" style="display:none;text-align:center;padding:1rem 0;">
+            <div style="font-size:3rem;margin-bottom:0.8rem;">⏸️</div>
+            <h3 style="font-weight:700;margin-bottom:0.4rem;color:var(--danger);">Registration Closed</h3>
+            <p style="color:var(--text-soft);font-size:0.9rem;">Candidate registration is no longer available as the voting session has started.</p>
+            <a href="/dashboard" class="btn btn-secondary" style="margin-top:1.2rem;">Back to Dashboard</a>
+          </div>
+
           <!-- Enrollment Form -->
           <div id="enrollForm">
             <div class="alert alert-info" style="display:block;margin-bottom:1.2rem;">
@@ -104,9 +112,12 @@
       document.getElementById('class').value = data.class;
       document.getElementById('semester').value = data.semester || '—';
 
-      if (data.isCandidate) {
+      if (data.iscandidate || data.isCandidate) {
         document.getElementById('enrollForm').style.display = 'none';
         document.getElementById('alreadyCandidateBox').style.display = 'block';
+      } else if (data.voting_enabled) {
+        document.getElementById('enrollForm').style.display = 'none';
+        document.getElementById('votingStartedBox').style.display = 'block';
       }
     })();
 
