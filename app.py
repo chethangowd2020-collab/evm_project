@@ -347,15 +347,16 @@ def voting_status():
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT value FROM settings WHERE key='voting_enabled'")
-        data = cur.fetchone()
+        cur.execute("SELECT key, value FROM settings WHERE key IN ('voting_enabled', 'results_published')")
+        rows = cur.fetchall()
         conn.close()
         
-        enabled = row_get(data, 'value') == '1'
+        status_map = {row_get(r, 'key'): row_get(r, 'value') == '1' for r in rows}
         
         return jsonify({
             'success': True,
-            'enabled': enabled
+            'enabled': status_map.get('voting_enabled', False),
+            'results_published': status_map.get('results_published', False)
         })
     except Exception as e:
         print("Voting Status Error:", str(e))
@@ -457,15 +458,22 @@ def api_login():
 # ---------------- RESULTS ----------------
 
 
-@app.route('/api/admin/publish_results', methods=['POST'])
+@app.route('/api/admin/toggle_results', methods=['POST'])
 @admin_required
-def publish_results():
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("UPDATE settings SET value='1' WHERE key='results_published'")
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True, 'message': 'Results have been published successfully!'})
+def toggle_results():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT value FROM settings WHERE key='results_published'")
+        row = cur.fetchone()
+        current = row_get(row, 'value') == '1'
+        new_val = '0' if current else '1'
+        cur.execute("UPDATE settings SET value=%s WHERE key='results_published'", (new_val,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'published': new_val == '1'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/admin/results')
 @admin_required

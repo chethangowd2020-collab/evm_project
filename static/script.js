@@ -64,13 +64,17 @@ async function apiGet(url) {
   return res.json();
 }
 
-async function publishResults() {
-  const data = await apiFetch('/api/admin/publish_results', {});
+async function toggleResults() {
+  const data = await apiFetch('/api/admin/toggle_results', {});
   if (data.success) {
-    alert(data.message || "Results published!");
-    location.reload(); // Refresh the page to show updated status
+    if (typeof loadVotingStatus === 'function') {
+      loadVotingStatus();
+    } else {
+      alert(data.published ? "Results published!" : "Results hidden!");
+      location.reload();
+    }
   } else {
-    alert(data.message || "Failed to publish results.");
+    alert(data.message || "Failed to update results status.");
   }
 }
 

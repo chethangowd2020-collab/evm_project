@@ -44,21 +44,35 @@
       </div>
     </div>
 
-    <!-- Voting Control -->
-    <div class="voting-control">
-      <div class="voting-status">
-        <div class="status-dot" id="statusDot"></div>
-        <div>
-          <div style="font-weight:700;font-size:1rem;" id="statusText">Checking...</div>
-          <div style="font-size:0.82rem;color:var(--text-soft);">Voting session status</div>
+    <!-- Controls Row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+      <!-- Voting Control -->
+      <div class="voting-control" style="margin-bottom: 0;">
+        <div class="voting-status">
+          <div class="status-dot" id="statusDot"></div>
+          <div>
+            <div style="font-weight:700;font-size:1rem;" id="statusText">Checking...</div>
+            <div style="font-size:0.82rem;color:var(--text-soft);">Voting session</div>
+          </div>
         </div>
+        <button class="btn btn-primary" id="toggleVotingBtn" onclick="toggleVoting()">
+          Loading...
+        </button>
       </div>
-      <button class="btn btn-primary" id="toggleVotingBtn" onclick="toggleVoting()">
-        Loading...
-      </button>
-      <button class="btn btn-success" onclick="publishResults()">
-        Publish Results
-      </button>
+
+      <!-- Results Control -->
+      <div class="voting-control" style="margin-bottom: 0;">
+        <div class="voting-status">
+          <div class="status-dot" id="resultsDot"></div>
+          <div>
+            <div style="font-weight:700;font-size:1rem;" id="resultsStatusText">Checking...</div>
+            <div style="font-size:0.82rem;color:var(--text-soft);">Results visibility</div>
+          </div>
+        </div>
+        <button class="btn btn-success" id="toggleResultsBtn" onclick="toggleResults()">
+          Loading...
+        </button>
+      </div>
     </div>
 
     <!-- Tabs -->
@@ -320,11 +334,20 @@
       try {
         const d = await apiGet('/api/admin/voting_status');
         if (!d.success) return;
+        
+        // Update Voting Status
         const enabled = d.enabled;
         document.getElementById('statusDot').className = 'status-dot' + (enabled ? ' active' : '');
         document.getElementById('statusText').textContent = enabled ? 'Voting is ACTIVE' : 'Voting is STOPPED';
         document.getElementById('toggleVotingBtn').textContent = enabled ? '⏹ Stop Voting' : '▶ Start Voting';
         document.getElementById('toggleVotingBtn').className = 'btn ' + (enabled ? 'btn-danger' : 'btn-success');
+
+        // Update Results Status
+        const published = d.results_published;
+        document.getElementById('resultsDot').className = 'status-dot' + (published ? ' active' : '');
+        document.getElementById('resultsStatusText').textContent = published ? 'Results PUBLISHED' : 'Results HIDDEN';
+        document.getElementById('toggleResultsBtn').textContent = published ? '👁 Hide Results' : '📢 Publish Results';
+        document.getElementById('toggleResultsBtn').className = 'btn ' + (published ? 'btn-danger' : 'btn-success');
       } catch (e) { console.error("Voting status error:", e); }
     }
 
