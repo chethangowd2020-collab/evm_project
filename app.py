@@ -158,6 +158,16 @@ def init_db():
         c.execute("INSERT INTO settings VALUES ('voting_enabled','0') ON CONFLICT DO NOTHING")
         c.execute("INSERT INTO settings VALUES ('results_published','0') ON CONFLICT DO NOTHING")
 
+    # Migration: Ensure columns exist if the table was created with an older schema
+    for col_name, col_type in [('email', 'TEXT'), ('phone', 'TEXT'), ('semester', 'TEXT')]:
+        try:
+            if USE_SQLITE:
+                c.execute(f"ALTER TABLE students ADD COLUMN {col_name} {col_type}")
+            else:
+                c.execute(f"ALTER TABLE students ADD COLUMN IF NOT EXISTS {col_name} {col_type}")
+        except Exception:
+            pass # Column already exists
+
     conn.commit()
     conn.close()
 
