@@ -68,6 +68,7 @@ async function publishResults() {
   const data = await apiFetch('/api/admin/publish_results', {});
   if (data.success) {
     alert(data.message || "Results published!");
+    location.reload(); // Refresh the page to show updated status
   } else {
     alert(data.message || "Failed to publish results.");
   }
