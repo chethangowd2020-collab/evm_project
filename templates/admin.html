@@ -255,8 +255,8 @@
       if (sortBy === 'usn_desc') return -usnCompare;
       if (sortBy === 'sem_asc') return (parseInt(a.semester) || 0) - (parseInt(b.semester) || 0) || usnCompare;
       if (sortBy === 'sem_desc') return (parseInt(b.semester) || 0) - (parseInt(a.semester) || 0) || usnCompare;
-      if (sortBy === 'voted_first') return Number(b.hasVoted) - Number(a.hasVoted) || usnCompare; // Fallback to USN if voted status is same
-      if (sortBy === 'not_voted_first') return Number(a.hasVoted) - Number(b.hasVoted) || usnCompare; // Fallback to USN if voted status is same
+      if (sortBy === 'voted_first') return Number(b.hasvoted) - Number(a.hasvoted) || usnCompare; // Fallback to USN if voted status is same
+      if (sortBy === 'not_voted_first') return Number(a.hasvoted) - Number(b.hasvoted) || usnCompare; // Fallback to USN if voted status is same
       return usnCompare;
     }
 
@@ -299,9 +299,9 @@
       let students = [...allStudents];
 
       if (voteFilter === 'voted') {
-        students = students.filter(student => student.hasVoted);
+        students = students.filter(student => student.hasvoted);
       } else if (voteFilter === 'not_voted') {
-        students = students.filter(student => !student.hasVoted);
+        students = students.filter(student => !student.hasvoted);
       }
 
       if (semFilter !== 'all') {
