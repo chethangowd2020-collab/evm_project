@@ -245,10 +245,24 @@ def register_candidate():
 @app.route('/api/candidates')
 def get_candidates():
     try:
+        if 'usn' not in session:
+            return jsonify({'success': False, 'message': 'Not logged in'})
+
         conn = get_db()
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
+        # Fetch the logged-in student's class and semester to filter candidates
+        cur.execute("SELECT class, semester FROM students WHERE usn=%s", (session['usn'],))
+        student = cur.fetchone()
+
+        if student:
+            # Display only candidates matching the student's specific class and semester
+            cur.execute("SELECT * FROM candidates WHERE class=%s AND semester=%s ORDER BY votes DESC", 
+                        (row_get(student, 'class'), row_get(student, 'semester')))
+        else:
+            # Fallback for admin users who might not have a student record
+            cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
+            
         data = cur.fetchall()
 
         # Fetch voting status using the existing cursor before closing connection
