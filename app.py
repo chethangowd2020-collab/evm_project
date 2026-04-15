@@ -98,6 +98,8 @@ def init_db():
     conn = get_db()
     c = conn.cursor()
 
+    id_type = "INTEGER PRIMARY KEY AUTOINCREMENT" if USE_SQLITE else "SERIAL PRIMARY KEY"
+
     c.execute('''CREATE TABLE IF NOT EXISTS students (
         usn TEXT PRIMARY KEY,
         name TEXT,
@@ -110,8 +112,8 @@ def init_db():
         hasVoted INTEGER DEFAULT 0
     )''')
 
-    c.execute('''CREATE TABLE IF NOT EXISTS candidates (
-    id SERIAL PRIMARY KEY,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS candidates (
+    id {id_type},
     usn TEXT UNIQUE,
     name TEXT,
     class TEXT,
@@ -124,8 +126,8 @@ def init_db():
 
     
 
-    c.execute('''CREATE TABLE IF NOT EXISTS votes (
-        id SERIAL PRIMARY KEY,
+    c.execute(f'''CREATE TABLE IF NOT EXISTS votes (
+        id {id_type},
         usn TEXT,
         class TEXT,
         male_candidate_id INTEGER,
@@ -243,10 +245,11 @@ def get_candidates():
 
         cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
         data = cur.fetchall()
+        conn.close()
 
         return jsonify({
             'success': True,
-            'data': [dict(i) for i in data]
+            'data': [dict(row) for row in data]
         })
 
     except Exception as e:
@@ -265,7 +268,7 @@ def admin_candidates():
         
         return jsonify({
             'success': True,
-            'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
+            'data': [dict(row) for row in data]
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
@@ -282,7 +285,7 @@ def admin_students():
         
         return jsonify({
             'success': True,
-            'data': [dict(row) if isinstance(row, dict) else dict(row.items()) for row in data]
+            'data': [dict(row) for row in data]
         })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
@@ -332,6 +335,7 @@ def student_info():
 
     cur.execute("SELECT * FROM candidates WHERE usn=%s", (session['usn'],))
     candidate = cur.fetchone()
+    conn.close()
 
     return jsonify({
         'success': True,
@@ -412,6 +416,7 @@ def admin_results():
 
         cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
         data = cur.fetchall()
+        conn.close()
 
         return jsonify({
             'success': True,
@@ -431,12 +436,14 @@ def results_public():
     s = cur.fetchone()
 
     if not s or s['value'] != '1':
+        conn.close()
         return jsonify({'success': False})
 
     cur.execute("SELECT * FROM candidates ORDER BY votes DESC")
     data = cur.fetchall()
+    conn.close()
 
-    return jsonify({'success': True, 'data': [dict(i) for i in data]})
+    return jsonify({'success': True, 'data': [dict(row) for row in data]})
 
 
 if __name__ == '__main__':
