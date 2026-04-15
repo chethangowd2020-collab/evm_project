@@ -237,7 +237,6 @@ def register_candidate():
         return jsonify({'success': False, 'message': str(e)})
     
 @app.route('/api/candidates')
-@admin_required
 def get_candidates():
     try:
         conn = get_db()
@@ -256,7 +255,7 @@ def get_candidates():
         print("ERROR:", str(e))
         return jsonify({'success': False, 'message': str(e)})
 
-@app.route('/api/admin/candidates')
+@app.route('/api/admin/candidates', methods=['GET', 'POST'])
 @admin_required
 def admin_candidates():
     try:
@@ -271,9 +270,10 @@ def admin_candidates():
             'data': [dict(row) for row in data]
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        print("Admin Candidates Error:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
     
-@app.route('/api/admin/students')
+@app.route('/api/admin/students', methods=['GET', 'POST'])
 @admin_required
 def admin_students():
     try:
@@ -288,9 +288,10 @@ def admin_students():
             'data': [dict(row) for row in data]
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        print("Admin Students Error:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
     
-@app.route('/api/admin/voting_status')
+@app.route('/api/admin/voting_status', methods=['GET', 'POST'])
 @admin_required
 def voting_status():
     try:
@@ -307,7 +308,8 @@ def voting_status():
             'enabled': enabled
         })
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+        print("Voting Status Error:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/vote')
 def vote():
