@@ -518,6 +518,24 @@ def toggle_results():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/admin/feedback')
+@admin_required
+def admin_feedback():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM feedback ORDER BY created_at DESC")
+        rows = cur.fetchall()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': [format_row(row) for row in rows]
+        })
+    except Exception as e:
+        print("Admin Feedback Error:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
+
 @app.route('/api/admin/results')
 @admin_required
 def admin_results():
