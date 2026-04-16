@@ -88,12 +88,14 @@
           const group = data.classes[cls];
           const maxMaleVotes = group.males.length ? Math.max(...group.males.map(m => m.votes), 1) : 1;
           const maxFemaleVotes = group.females.length ? Math.max(...group.females.map(f => f.votes), 1) : 1;
+          const totalClassVotes = [...group.males, ...group.females].reduce((s, c) => s + c.votes, 0);
 
           html += `
             <div class="results-class" style="margin-bottom:2.5rem;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);">
               <div class="results-class-header" style="background:var(--grad1);color:white;padding:1.2rem 1.8rem;display:flex;align-items:center;gap:10px;">
                 <span style="font-size:1.4rem;">🏛️</span>
                 <span style="font-weight:800;font-size:1.2rem;letter-spacing:-0.02em;">${cls} REPRESENTATIVES</span>
+                <span class="badge" style="margin-left:auto; background:rgba(255,255,255,0.2); color:white; font-size:0.75rem;">Total Votes: ${totalClassVotes}</span>
               </div>
               
               <div class="results-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1px;background:var(--border);">

@@ -488,7 +488,7 @@ def admin_results():
         conn = get_db()
         cur = conn.cursor()
 
-        cur.execute("SELECT * FROM candidates ORDER BY class, gender, votes DESC")
+        cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
         rows = cur.fetchall()
         
         # Calculate total votes
@@ -687,7 +687,7 @@ def results_public():
         conn.close()
         return jsonify({'success': False})
 
-    cur.execute("SELECT * FROM candidates ORDER BY class, gender, votes DESC")
+    cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
     rows = cur.fetchall()
     conn.close()
 
