@@ -432,12 +432,12 @@ def results():
 @app.route('/api/login', methods=['POST'])
 def api_login():
     data = request.get_json()
-    usn = data.get('usn', '').strip().upper()
+    identifier = data.get('usn', '').strip()
     password = data.get('password', '')
 
     # Admin login check
-    if usn == ADMIN_USN and password == ADMIN_PASSWORD:
-        session['usn'] = usn
+    if identifier.upper() == ADMIN_USN and password == ADMIN_PASSWORD:
+        session['usn'] = identifier.upper()
         session['role'] = 'admin'
         session.permanent = True
         session['admin'] = True
@@ -446,7 +446,7 @@ def api_login():
     # Student login check
     conn = get_db()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM students WHERE usn=%s", (usn,))
+    cur.execute("SELECT * FROM students WHERE usn=%s OR email=%s", (identifier.upper(), identifier.lower()))
     user = cur.fetchone()
     conn.close()
 
@@ -456,7 +456,7 @@ def api_login():
     if row_get(user, 'password') != hash_password(password):
         return jsonify({'success': False, 'message': 'Wrong password'})
 
-    session['usn'] = usn
+    session['usn'] = row_get(user, 'usn')
     session['role'] = 'student'
     session.permanent = True
     return jsonify({'success': True, 'role': 'student'})
