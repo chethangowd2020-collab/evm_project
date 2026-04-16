@@ -84,6 +84,7 @@
     <div class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('students')">👥 All Students</button>
       <button class="tab-btn" onclick="switchTab('candidates')">🏆 Candidates</button>
+      <button class="tab-btn" onclick="switchTab('feedback')">📝 Feedback</button>
     </div>
 
     <!-- Students Tab -->
@@ -214,6 +215,30 @@
         </div>
       </div>
     </div>
+
+    <!-- Feedback Tab -->
+    <div id="tab-feedback" style="display:none;">
+      <div class="card" style="padding:1.5rem;">
+        <div class="section-title">📝 Student Feedback</div>
+        <div class="table-wrap">
+          <table id="feedbackTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Student USN</th>
+                <th>CR Name</th>
+                <th>Feedback</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="feedbackBody">
+              <tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading feedback...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="/static/script.js?v=2"></script>
@@ -241,11 +266,12 @@
     }
 
     function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach((b, i) => {
-        b.classList.toggle('active', ['students','candidates'][i] === tab);
-      });
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
       document.getElementById('tab-students').style.display = tab === 'students' ? 'block' : 'none';
       document.getElementById('tab-candidates').style.display = tab === 'candidates' ? 'block' : 'none';
+      document.getElementById('tab-feedback').style.display = tab === 'feedback' ? 'block' : 'none';
+      if (tab === 'feedback') loadFeedback();
     }
 
     function getUsnSortValue(usn) {
@@ -520,6 +546,35 @@
         alert('A network error occurred while trying to delete the candidate.');
       } finally {
         setLoading(btn, false);
+      }
+    }
+
+    async function loadFeedback() {
+      try {
+        const d = await apiGet('/api/admin/feedback');
+        const tbody = document.getElementById('feedbackBody');
+        if (!d.success) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;padding:2rem;">Unable to load feedback. Please refresh or log in again.</td></tr>`;
+          return;
+        }
+
+        if (d.data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">No feedback submitted yet.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = d.data.map(f => `
+          <tr>
+            <td>${f.id}</td>
+            <td><strong>${f.student_usn}</strong></td>
+            <td>${f.cr_name}</td>
+            <td>${f.feedback_text}</td>
+            <td>${new Date(f.created_at).toLocaleString()}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error("Load feedback error:", e);
+        document.getElementById('feedbackBody').innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;padding:2rem;">Error loading feedback data. Check the server logs.</td></tr>`;
       }
     }
 
