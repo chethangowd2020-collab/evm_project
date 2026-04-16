@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CR Feedback | Uni-Vote</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    if (sessionStorage.getItem('evm_session_active') !== '1') {
+      window.location.href = '/login';
+    }
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img class="logo-icon" src="/static/logo.webp" alt="Uni-Vote logo">
+      <span>Uni-Vote</span>
+    </div>
+    <div class="navbar-links">
+      <a href="/dashboard" class="nav-link">← Dashboard</a>
+      <a href="/logout" class="btn-nav-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div style="width:100%;max-width:520px;margin:3rem auto;padding:0 1rem;">
+      <div class="auth-card">
+        <div class="auth-header" style="background:var(--grad1);">
+          <div class="auth-icon">📝</div>
+          <h1>CR Feedback</h1>
+          <p>Share your thoughts about your Class Representative</p>
+        </div>
+        <div class="auth-body">
+          <div id="feedbackForm">
+            <div class="form-group">
+              <label class="form-label">CR Name</label>
+              <input type="text" id="cr_name" class="form-control" placeholder="Enter CR's full name" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Your Feedback</label>
+              <textarea id="feedback_text" class="form-control" rows="5" placeholder="Write your feedback here..." style="resize: none;"></textarea>
+            </div>
+
+            <div class="alert" id="alertBox"></div>
+
+            <button class="btn btn-primary btn-full btn-lg" id="submitBtn" onclick="submitFeedback()">
+              🚀 Submit Feedback
+            </button>
+
+            <div class="auth-footer">
+              Want to go back? <a href="/dashboard">Back to dashboard</a>
+            </div>
+          </div>
+
+          <div id="successBox" style="display:none;text-align:center;padding:1rem 0;">
+            <div style="font-size:3rem;margin-bottom:0.8rem;">✨</div>
+            <h3 style="font-weight:700;margin-bottom:0.4rem;color:var(--success);">Feedback Received!</h3>
+            <p style="color:var(--text-soft);font-size:0.9rem;">Thank you for your valuable input. Your feedback has been submitted anonymously to the administration.</p>
+            <a href="/dashboard" class="btn btn-primary" style="margin-top:1.2rem;">Back to Dashboard</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js?v=2"></script>
+  <script>
+    async function submitFeedback() {
+      const cr_name = document.getElementById('cr_name').value.trim();
+      const feedback = document.getElementById('feedback_text').value.trim();
+      const alert = document.getElementById('alertBox');
+      const btn = document.getElementById('submitBtn');
+
+      if (!cr_name || !feedback) {
+        return showAlert(alert, 'Please fill in both the CR name and your feedback.');
+      }
+
+      setLoading(btn, true, 'Submitting...');
+      const data = await apiFetch('/api/submit_feedback', { cr_name, feedback });
+      setLoading(btn, false);
+
+      if (data.success) {
+        document.getElementById('feedbackForm').style.display = 'none';
+        document.getElementById('successBox').style.display = 'block';
+      } else {
+        showAlert(alert, data.message || 'Submission failed.');
+      }
+    }
+  </script>
+</body>
+</html>

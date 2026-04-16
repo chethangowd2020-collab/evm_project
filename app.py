@@ -158,6 +158,14 @@ def init_db():
         c.execute("INSERT INTO settings VALUES ('voting_enabled','0') ON CONFLICT DO NOTHING")
         c.execute("INSERT INTO settings VALUES ('results_published','0') ON CONFLICT DO NOTHING")
 
+    c.execute(f'''CREATE TABLE IF NOT EXISTS feedback (
+        id {id_type},
+        student_usn TEXT,
+        cr_name TEXT,
+        feedback_text TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''')
+
     # Migration: Ensure columns exist if the table was created with an older schema
     for col_name, col_type in [('email', 'TEXT'), ('phone', 'TEXT'), ('semester', 'TEXT')]:
         try:
@@ -209,6 +217,36 @@ def candidate_register():
     if 'usn' not in session:
         return redirect(url_for('login'))
     return render_template('candidate_register.html')
+
+@app.route('/cr-feedback')
+def cr_feedback():
+    if 'usn' not in session:
+        return redirect(url_for('login'))
+    return render_template('cr_feedback.html')
+
+@app.route('/api/submit_feedback', methods=['POST'])
+def submit_feedback():
+    if 'usn' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
+    try:
+        data = request.get_json()
+        cr_name = data.get('cr_name')
+        feedback_text = data.get('feedback')
+
+        if not cr_name or not feedback_text:
+            return jsonify({'success': False, 'message': 'Please fill in all fields'})
+
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO feedback (student_usn, cr_name, feedback_text)
+            VALUES (%s, %s, %s)
+        """, (session['usn'], cr_name, feedback_text))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Feedback submitted successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/register_candidate', methods=['POST'])
 def register_candidate():
