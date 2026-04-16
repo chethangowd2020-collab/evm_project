@@ -65,11 +65,18 @@ body::after {
   box-shadow: 0 2px 20px rgba(91,108,249,0.08);
 }
 
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .navbar-brand span {
   background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 700;
+  line-height: 1;
 }
 
 .navbar-brand .logo-icon {
