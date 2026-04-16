@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel | ClassRep EVM</title>
   <link rel="stylesheet" href="/static/style.css">
+  <script>
+    if (sessionStorage.getItem('evm_session_active') !== '1') {
+      window.location.href = '/login';
+    }
+  </script>
 </head>
 <body class="admin-page">
   <nav class="navbar">

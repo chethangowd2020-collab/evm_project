@@ -386,6 +386,9 @@
     const initialActiveTab = {{ active_tab|default('student')|tojson }};
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Clear tab-specific session state whenever the login page is loaded
+      sessionStorage.removeItem('evm_session_active');
+
       if (initialActiveTab === 'admin') {
         switchTab('admin');
       }

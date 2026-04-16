@@ -189,8 +189,7 @@ def admin_required(f):
 
 @app.route('/')
 def index():
-    if 'usn' in session:
-        return redirect(url_for('dashboard'))
+    # Always redirect to login on fresh entry to the root URL
     return redirect(url_for('login'))
 
 

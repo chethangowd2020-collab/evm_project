@@ -53,6 +53,9 @@
 
   <script src="/static/script.js?v=2"></script>
   <script>
+    // Clear tab-specific session state whenever the login page is loaded
+    sessionStorage.removeItem('evm_session_active');
+
     async function adminLogin() {
       const usn = document.getElementById('usn').value.trim().toUpperCase();
       const password = document.getElementById('password').value;
