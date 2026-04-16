@@ -66,7 +66,7 @@
     async function loadResults() {
       const d = await apiGet('/api/admin/results');
       if (!d.success) {
-        window.location.href = '/login';
+        // window.location.href = '/login'; // Admin results page might redirect to login if session expires
         return;
       }
 
@@ -85,27 +85,13 @@
       }
 
       container.innerHTML = classNames.map(cls => {
-        const data = d.classes[cls];
-        const males = data.males || [];
-        const females = data.females || [];
-        const maxMaleVotes = males.length ? Math.max(...males.map(c => c.votes), 1) : 1;
-        const maxFemaleVotes = females.length ? Math.max(...females.map(c => c.votes), 1) : 1;
-
-        const maleRows = males.length
-          ? males.map((c, i) => renderResultRow(c, i === 0, maxMaleVotes)).join('')
-          : '<div class="empty-state" style="padding:1rem;"><p>No male candidates</p></div>';
-
-        const femaleRows = females.length
-          ? females.map((c, i) => renderResultRow(c, i === 0, maxFemaleVotes)).join('')
-          : '<div class="empty-state" style="padding:1rem;"><p>No female candidates</p></div>';
-
-        const totalClassVotes = [...males, ...females].reduce((s, c) => s + c.votes, 0);
+        const classData = d.classes[cls];
+        const totalClassVotes = classData.total_class_votes; // Get total votes for the class
 
         return `
           <div class="results-class" style="border:none; box-shadow:var(--shadow-lg); margin-bottom:2.5rem;">
-            <div class="results-class-header" style="padding:1.2rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.1);">
+            <div class="results-class-header" style="padding:1.2rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center;">
               <span style="font-size:1.2rem;">🏫</span> <strong>${cls}</strong>
-              <span class="badge" style="margin-left:auto; background:rgba(255,255,255,0.2); color:white;">${totalClassVotes} votes cast</span>
             </div>
             <div class="results-grid">
               <div class="results-gender-col">
