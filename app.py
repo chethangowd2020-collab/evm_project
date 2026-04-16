@@ -524,7 +524,13 @@ def admin_feedback():
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM feedback ORDER BY created_at DESC")
+        cur.execute("""
+            SELECT f.*, 
+                   (SELECT class FROM candidates WHERE name = f.cr_name LIMIT 1) as cr_class,
+                   (SELECT semester FROM candidates WHERE name = f.cr_name LIMIT 1) as cr_semester
+            FROM feedback f
+            ORDER BY f.created_at DESC
+        """)
         rows = cur.fetchall()
         conn.close()
         

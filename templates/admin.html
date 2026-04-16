@@ -227,12 +227,13 @@
                 <th>ID</th>
                 <th>Student USN</th>
                 <th>CR Name</th>
+                <th>CR Class/Sem</th>
                 <th>Feedback</th>
                 <th>Date</th>
               </tr>
             </thead>
             <tbody id="feedbackBody">
-              <tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading feedback...</td></tr>
+              <tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading feedback...</td></tr>
             </tbody>
           </table>
         </div>
@@ -554,12 +555,12 @@
         const d = await apiGet('/api/admin/feedback');
         const tbody = document.getElementById('feedbackBody');
         if (!d.success) {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;padding:2rem;">Unable to load feedback. Please refresh or log in again.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;padding:2rem;">Unable to load feedback. Please refresh or log in again.</td></tr>`;
           return;
         }
 
         if (d.data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-soft);padding:2rem;">No feedback submitted yet.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">No feedback submitted yet.</td></tr>`;
           return;
         }
 
@@ -568,13 +569,14 @@
             <td>${f.id}</td>
             <td><strong>${f.student_usn}</strong></td>
             <td>${f.cr_name}</td>
+            <td><span class="badge badge-primary">${f.cr_class || '-'}</span> <strong>Sem ${f.cr_semester || '-'}</strong></td>
             <td>${f.feedback_text}</td>
             <td>${new Date(f.created_at).toLocaleString()}</td>
           </tr>
         `).join('');
       } catch (e) {
         console.error("Load feedback error:", e);
-        document.getElementById('feedbackBody').innerHTML = `<tr><td colspan="5" style="text-align:center;color:red;padding:2rem;">Error loading feedback data. Check the server logs.</td></tr>`;
+        document.getElementById('feedbackBody').innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;padding:2rem;">Error loading feedback data. Check the server logs.</td></tr>`;
       }
     }
 
