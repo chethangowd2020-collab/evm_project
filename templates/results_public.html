@@ -19,41 +19,43 @@
   </nav>
 
   <div class="page-content" style="max-width:1000px;margin:0 auto;padding:2rem 1rem;position:relative;z-index:1;">
-    <div style="margin-bottom:2.5rem;text-align:center;">
-      <div class="page-title" style="font-size:2.5rem;">Election Results</div>
-      <p class="page-subtitle">The people have spoken. Here are the final standings for the Class Representative positions.</p>
+    <div class="welcome-hero" style="margin-bottom:3rem;text-align:center;background:var(--grad1);">
+      <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
+      <h1 style="font-size:2.8rem;margin-bottom:0.5rem;text-shadow: 0 4px 12px rgba(0,0,0,0.1);">Election Results</h1>
+      <p style="font-size:1.1rem;opacity:0.9;max-width:600px;margin:0 auto;">The people have spoken. Here are the final standings for the Class Representative positions.</p>
     </div>
 
     <div id="resultBox">
       <div class="empty-state" style="padding:4rem;">
         <div class="empty-icon" style="font-size:3.5rem;">⏳</div>
-        <p style="font-size:1.1rem;">Fetching latest results...</p>
+        <p style="font-size:1.1rem;">Calculating final tallies...</p>
       </div>
     </div>
   </div>
 
   <script src="/static/script.js?v=2"></script>
   <script>
-    function renderCandidate(c, isWinner, maxVotes) {
+    function renderCandidate(c, isWinner, maxVotes, gender) {
       const pct = maxVotes > 0 ? Math.round((c.votes / maxVotes) * 100) : 0;
+      const barColor = gender === 'Male' ? 'var(--grad1)' : 'var(--grad2)';
       return `
-        <div class="result-row ${isWinner ? 'winner' : ''}" style="margin-bottom:12px;">
-          <span class="rank" style="font-size:1.2rem;">${isWinner ? '🥇' : '🥈'}</span>
+        <div class="result-row ${isWinner ? 'winner' : ''}" style="margin-bottom:16px; padding: 16px; border-radius: 16px; background: var(--surface2); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: transform 0.2s;">
+          <div class="rank" style="font-size:1.5rem; width: 40px; display: flex; justify-content: center;">${isWinner ? '🏆' : '🥈'}</div>
           <div class="vote-bar-wrap">
-            <div class="rname" style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-              <span style="font-weight:700;font-size:1rem;color:var(--text);">${c.name}</span>
+            <div class="rname" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-weight:800;font-size:1.05rem;color:var(--text);">${c.name} ${isWinner ? '<span class="badge badge-warning" style="margin-left:8px; font-size:0.65rem;">WINNER</span>' : ''}</span>
               <span style="font-size:0.8rem;color:var(--text-soft);">${c.usn}</span>
             </div>
-            <div class="vote-bar" style="height:8px;background:var(--border);border-radius:10px;overflow:hidden;">
-              <div class="vote-bar-fill" style="width:${pct}%;height:100%;background:${isWinner ? 'var(--grad2)' : 'var(--grad1)'};border-radius:10px;transition:width 1s ease-out;"></div>
+            <div class="vote-bar" style="height:10px;background:rgba(0,0,0,0.05);border-radius:10px;overflow:hidden;">
+              <div class="vote-bar-fill" style="width:${pct}%;height:100%;background:${isWinner ? 'linear-gradient(90deg, #F59E0B, #EC4899)' : barColor};border-radius:10px;transition:width 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);"></div>
             </div>
           </div>
-          <div class="rvotes" style="text-align:right;min-width:60px;">
-            <div style="font-size:1.1rem;font-weight:800;color:var(--primary);">${c.votes}</div>
-            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-soft);">Votes</div>
+          <div class="rvotes" style="text-align:right;min-width:70px; padding-left: 10px;">
+            <div style="font-size:1.3rem;font-weight:900;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${c.votes}</div>
+            <div style="font-size:0.65rem;text-transform:uppercase;font-weight:700;letter-spacing:0.05em;color:var(--text-soft);">Votes</div>
           </div>
         </div>
-      `;
+      `.replace(/\n/g, '');
     }
 
     async function loadPublicResults() {
@@ -90,7 +92,7 @@
           html += `
             <div class="results-class" style="margin-bottom:2.5rem;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);">
               <div class="results-class-header" style="background:var(--grad1);color:white;padding:1.2rem 1.8rem;display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.4rem;">🏫</span>
+                <span style="font-size:1.4rem;">🏛️</span>
                 <span style="font-weight:800;font-size:1.2rem;letter-spacing:-0.02em;">${cls} REPRESENTATIVES</span>
               </div>
               
@@ -103,7 +105,7 @@
                     <h4 style="margin:0;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;font-size:0.85rem;">Male Candidates</h4>
                   </div>
                   ${group.males.length ? 
-                    group.males.map((m, idx) => renderCandidate(m, idx === 0, maxMaleVotes)).join('') : 
+                    group.males.map((m, idx) => renderCandidate(m, idx === 0, maxMaleVotes, 'Male')).join('') : 
                     '<p style="color:var(--text-soft);font-size:0.9rem;font-style:italic;">No male candidates registered.</p>'}
                 </div>
 
@@ -114,7 +116,7 @@
                     <h4 style="margin:0;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;font-size:0.85rem;">Female Candidates</h4>
                   </div>
                   ${group.females.length ? 
-                    group.females.map((f, idx) => renderCandidate(f, idx === 0, maxFemaleVotes)).join('') : 
+                    group.females.map((f, idx) => renderCandidate(f, idx === 0, maxFemaleVotes, 'Female')).join('') : 
                     '<p style="color:var(--text-soft);font-size:0.9rem;font-style:italic;">No female candidates registered.</p>'}
                 </div>
 
