@@ -228,7 +228,7 @@
           <img src="/static/logo.webp" style="width:150px;height:auto;object-fit:contain;">
         </div>
         <h1>Welcome</h1>
-        <p>Login or register to access the voting system</p>
+        <p id="auth-header-desc">Join the voting system and make your voice count</p>
       </div>
 
       <div class="auth-body">
@@ -420,6 +420,13 @@
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
       document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
       document.getElementById(`${tab}-tab`).classList.add('active');
+
+      const desc = document.getElementById('auth-header-desc');
+      if (tab === 'admin') {
+        desc.textContent = "Login to control and monitor the voting system";
+      } else {
+        desc.textContent = "Join the voting system and make your voice count";
+      }
     }
 
     function switchForm(form) {
