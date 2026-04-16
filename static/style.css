@@ -715,7 +715,7 @@ tr:hover td { background: var(--bg); }
   position: relative;
   overflow: hidden;
   z-index: 1;
-  padding: 2.2rem 2rem 1rem 2rem;
+  padding: 3rem 2rem;
   border-bottom: 1px solid rgba(255,255,255,0.1);
   color: white;
 }
@@ -770,7 +770,7 @@ tr:hover td { background: var(--bg); }
   font-size: 1.8rem; margin-bottom: 0.3rem;
 }
 .auth-header p { opacity: 0.85; font-size: 0.95rem; }
-.auth-body { padding: 0.75rem 2.5rem 2.5rem 2.5rem; }
+.auth-body { padding: 2.5rem; }
 
 .auth-footer {
   text-align: center;
