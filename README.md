@@ -1,4 +1,4 @@
-# Class Representative Voting System (Smart EVM)
+# Uni-Vote: Class Representative Voting System
 
 A Flask-based voting system for class representative elections.
 
