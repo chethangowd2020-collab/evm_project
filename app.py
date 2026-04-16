@@ -205,6 +205,12 @@ def dashboard():
         return redirect(url_for('login'))
     return render_template('dashboard.html')
 
+@app.route('/candidate_register')
+def candidate_register():
+    if 'usn' not in session:
+        return redirect(url_for('login'))
+    return render_template('candidate_register.html')
+
 @app.route('/api/register_candidate', methods=['POST'])
 def register_candidate():
     try:
@@ -494,14 +500,14 @@ def admin_results():
         classes = {}
         for r in rows:
             row = format_row(r)
-            cls = row['class']
-            if cls not in classes:
-                classes[cls] = {'males': [], 'females': []}
+            cls_key = f"Sem {row['semester']} - {row['class']}"
+            if cls_key not in classes:
+                classes[cls_key] = {'males': [], 'females': []}
             
             if row['gender'] == 'Male':
-                classes[cls]['males'].append(row)
+                classes[cls_key]['males'].append(row)
             else:
-                classes[cls]['females'].append(row)
+                classes[cls_key]['females'].append(row)
 
         return jsonify({
             'success': True,
@@ -688,9 +694,9 @@ def results_public():
     classes = {}
     for r in rows:
         row = format_row(r)
-        cls = row['class']
-        if cls not in classes: classes[cls] = {'males': [], 'females': []}
-        classes[cls]['males' if row['gender'] == 'Male' else 'females'].append(row)
+        cls_key = f"Sem {row['semester']} - {row['class']}"
+        if cls_key not in classes: classes[cls_key] = {'males': [], 'females': []}
+        classes[cls_key]['males' if row['gender'] == 'Male' else 'females'].append(row)
 
     return jsonify({'success': True, 'classes': classes})
 

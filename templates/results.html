@@ -86,7 +86,20 @@
 
       container.innerHTML = classNames.map(cls => {
         const classData = d.classes[cls];
-        const totalClassVotes = classData.total_class_votes; // Get total votes for the class
+        const males = classData.males || [];
+        const females = classData.females || [];
+        const maxMaleVotes = males.length ? Math.max(...males.map(c => c.votes), 1) : 1;
+        const maxFemaleVotes = females.length ? Math.max(...females.map(c => c.votes), 1) : 1;
+
+        const maleRows = males.length
+          ? males.map((c, i) => renderResultRow(c, i === 0, maxMaleVotes, 'Male')).join('')
+          : '<div class="empty-state" style="padding:1rem;"><p>No male candidates</p></div>';
+
+        const femaleRows = females.length
+          ? females.map((c, i) => renderResultRow(c, i === 0, maxFemaleVotes, 'Female')).join('')
+          : '<div class="empty-state" style="padding:1rem;"><p>No female candidates</p></div>';
+
+        const totalClassVotes = [...males, ...females].reduce((s, c) => s + c.votes, 0);
 
         return `
           <div class="results-class" style="border:none; box-shadow:var(--shadow-lg); margin-bottom:2.5rem;">
