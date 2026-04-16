@@ -84,7 +84,7 @@
     <div class="tab-nav">
       <button class="tab-btn active" onclick="switchTab('students')">👥 All Students</button>
       <button class="tab-btn" onclick="switchTab('candidates')">🏆 Candidates</button>
-      <button class="tab-btn" onclick="switchTab('feedback')">📝 Feedback</button>
+      <button class="tab-btn" id="feedbackTabBtn" onclick="switchTab('feedback')" disabled title="Feedback is only available when voting is stopped.">📝 Feedback</button>
     </div>
 
     <!-- Students Tab -->
@@ -380,6 +380,20 @@
         document.getElementById('resultsStatusText').textContent = published ? 'Results PUBLISHED' : 'Results HIDDEN';
         document.getElementById('toggleResultsBtn').textContent = published ? '👁 Hide Results' : '📢 Publish Results';
         document.getElementById('toggleResultsBtn').className = 'btn ' + (published ? 'btn-danger' : 'btn-success');
+
+        // Control Feedback Tab based on voting status
+        const feedbackTabBtn = document.getElementById('feedbackTabBtn');
+        if (enabled) {
+          feedbackTabBtn.disabled = true;
+          feedbackTabBtn.title = "Feedback is only available when voting is stopped.";
+          // If feedback tab is currently active, switch to students tab
+          if (document.getElementById('tab-feedback').style.display === 'block') {
+            switchTab('students');
+          }
+        } else {
+          feedbackTabBtn.disabled = false;
+          feedbackTabBtn.title = ""; // Clear title when enabled
+        }
       } catch (e) { console.error("Voting status error:", e); }
     }
 
