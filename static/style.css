@@ -772,6 +772,8 @@ tr:hover td { background: var(--bg); }
 .auth-header p { opacity: 0.85; font-size: 0.95rem; }
 .auth-body { padding: 2.5rem; }
 
+.auth-body { padding: 1.5rem 2.5rem 2.5rem 2.5rem; } /* Adjusted top padding */
+
 .auth-footer {
   text-align: center;
   margin-top: 1.5rem;
