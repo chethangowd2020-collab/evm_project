@@ -18,7 +18,7 @@
       <span>Uni-Vote</span>
     </div>
     <div class="navbar-links">
-  <a href="{{ '/admin' if session.get('role') == 'admin' else '/dashboard' }}" class="nav-link">Dashboard</a>
+  <a href="{{ '/admin' if session.get('admin_usn') else '/dashboard' }}" class="nav-link">Dashboard</a>
   <a href="/logout" class="btn-nav-logout">Logout</a>
 </div>
   </nav>
