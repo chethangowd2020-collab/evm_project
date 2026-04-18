@@ -705,40 +705,6 @@ def submit_vote():
     conn.commit()
     conn.close()
     return jsonify({'success': True})
-@app.route('/api/admin/increment_semester', methods=['POST'])
-@admin_required
-def increment_semester():
-    try:
-        data = request.get_json()
-        usn = data.get('usn')
-        if not usn:
-            return jsonify({'success': False, 'message': 'Missing USN'})
-            
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute("SELECT semester FROM students WHERE usn=%s", (usn,))
-        row = cur.fetchone()
-        if not row:
-            conn.close()
-            return jsonify({'success': False, 'message': 'Student not found'})
-            
-        current_sem = row_get(row, 'semester')
-        try:
-            val = int(current_sem) if current_sem and str(current_sem).isdigit() else 0
-            if val >= 8:
-                return jsonify({'success': False, 'message': 'Student is already at the final semester (8)'})
-            next_sem = str(val + 1)
-        except (ValueError, TypeError):
-            next_sem = "1"
-
-        cur.execute("UPDATE students SET semester=%s WHERE usn=%s", (next_sem, usn))
-        cur.execute("UPDATE candidates SET semester=%s WHERE usn=%s", (next_sem, usn))
-        conn.commit()
-        conn.close()
-        return jsonify({'success': True, 'message': f'Student promoted to Semester {next_sem}'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-
 @app.route('/api/admin/toggle_voting', methods=['POST'])
 @admin_required
 def toggle_voting():
