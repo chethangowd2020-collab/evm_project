@@ -195,6 +195,14 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def get_auth_student_usn():
+    """Helper to retrieve the namespaced USN from headers and session."""
+    header_usn = request.headers.get('X-Student-USN')
+    if header_usn and session.get(f"auth_{header_usn.upper()}"):
+        return header_usn.upper()
+    # Fallback to the most recent login for standard page loads
+    return session.get('student_usn')
+
 
 @app.route('/')
 def index():
@@ -740,9 +748,14 @@ def reset_password():
 @app.route('/logout')
 def logout():
     role = request.args.get('role')
+    target_usn = request.args.get('usn')
     if role == 'admin':
         session.pop('admin_usn', None)
     elif role == 'student':
+        if target_usn:
+            session.pop(f"auth_{target_usn.upper()}", None)
+        if session.get('student_usn') == target_usn:
+            session.pop('student_usn', None)
         session.pop('student_usn', None)
     else:
         # Fallback for general logout
