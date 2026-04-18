@@ -618,10 +618,14 @@ def api_register():
         data = request.get_json()
         usn = data.get('usn', '').strip().upper()
         otp_entered = data.get('otp', '').strip()
+        gender = data.get('gender')
 
         conn = get_db()
         cur = conn.cursor()
         
+        if not gender:
+            return jsonify({'success': False, 'message': 'Gender is required'})
+
         # Verify Captcha
         cur.execute("SELECT otp FROM otps WHERE usn=%s", (usn,))
         record = cur.fetchone()
@@ -632,7 +636,7 @@ def api_register():
         cur.execute("""
             INSERT INTO students (usn, name, email, class, semester, gender, password)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """, (usn, data.get('name'), data.get('email'), data.get('class'), data.get('semester'), data.get('gender'), hash_password(data.get('password'))))
+        """, (usn, data.get('name'), data.get('email'), data.get('class'), data.get('semester'), gender, hash_password(data.get('password'))))
         
         conn.commit()
         conn.close()

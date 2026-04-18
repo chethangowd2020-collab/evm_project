@@ -355,7 +355,9 @@
           <td>${s.email}</td>
           <td><span class="badge badge-primary">${s.class}</span></td>
           <td><strong>Sem ${s.semester || '-'}</strong></td>
-          <td><span class="badge badge-${s.gender === 'Male' ? 'male' : 'female'}">${s.gender || '-'}</span></td>
+          <td><span class="badge ${s.gender === 'Male' ? 'badge-male' : (s.gender === 'Female' ? 'badge-female' : 'badge-warning')}">
+            ${s.gender || 'Not Specified'}
+          </span></td>
           <td>${(s.hasvoted || s.hasVoted) ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
           <td>
             <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(this, '${s.usn}')">Reset Password</button>
