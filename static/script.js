@@ -48,18 +48,27 @@ function enforceAuthOnProtectedPages() {
 enforceAuthOnProtectedPages();
 
 async function apiFetch(url, data) {
+  const headers = { 'Content-Type': 'application/json' };
+  const currentUsn = sessionStorage.getItem('student_usn');
+  if (currentUsn) headers['X-Student-USN'] = currentUsn;
+
   const res = await fetch(url, {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
+    headers: headers,
     body: JSON.stringify(data)
   });
   return res.json();
 }
 
 async function apiGet(url) {
+  const headers = {};
+  const currentUsn = sessionStorage.getItem('student_usn');
+  if (currentUsn) headers['X-Student-USN'] = currentUsn;
+
   const res = await fetch(url, {
-    credentials: 'include'
+    credentials: 'include',
+    headers: headers
   });
   return res.json();
 }
@@ -123,6 +132,10 @@ async function handleLogin() {
   if (data.success) {
     // ✅ mark session active (IMPORTANT)
     setAuthActive(true);
+    
+    if (data.role === 'student' && data.usn) {
+      sessionStorage.setItem('student_usn', data.usn);
+    }
 
     // ✅ redirect based on role
     if (data.role === 'admin') {
