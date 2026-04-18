@@ -97,7 +97,7 @@ body::after {
   border-radius: 8px;
   text-decoration: none;
   font-weight: 500;
-  font-size: 1.5rem;
+  font-size: 0.9rem;
   color: var(--text-soft);
   transition: all 0.2s;
 }
