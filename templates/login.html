@@ -248,7 +248,18 @@
       opacity: 0;
       visibility: hidden;
     }
+
+    /* Helper class to prevent flicker on refresh */
+    .no-splash #splash-screen {
+      display: none !important;
+    }
   </style>
+  <script>
+    // Immediate check to prevent flicker on refresh
+    if (sessionStorage.getItem('uni_vote_splash_shown')) {
+      document.documentElement.classList.add('no-splash');
+    }
+  </script>
 </head>
 <body class="login-page">
   <!-- Opening Animation Overlay -->
@@ -427,18 +438,14 @@
 
   <script src="/static/script.js?v=2"></script>
   <script>
-    // Splash Screen Logic: Only show on the first visit of the session
-    (function() {
-      const splash = document.getElementById('splash-screen');
-      if (!sessionStorage.getItem('uni_vote_splash_shown')) {
-        setTimeout(() => {
-          splash.classList.add('hidden');
-          sessionStorage.setItem('uni_vote_splash_shown', 'true');
-        }, 2200); // Display for 2.2 seconds
-      } else {
-        splash.style.display = 'none';
-      }
-    })();
+    // Splash Screen Logic: Only play animation if not shown yet
+    if (!sessionStorage.getItem('uni_vote_splash_shown')) {
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.classList.add('hidden');
+        sessionStorage.setItem('uni_vote_splash_shown', 'true');
+      }, 2200); // Display for 2.2 seconds
+    }
 
     const initialAlertMessage = {{ alert_message|default('')|tojson }};
     const initialActiveTab = {{ active_tab|default('student')|tojson }};
