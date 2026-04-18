@@ -236,7 +236,7 @@
       margin-bottom: 1.5rem;
       opacity: 0;
       transform: scale(0.8) translateY(20px);
-      animation: splashEntrance 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      animation: splashEntrance 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
       text-shadow: 0 10px 30px rgba(0,0,0,0.2);
     }
 
@@ -265,7 +265,7 @@
   <!-- Opening Animation Overlay -->
   <div id="splash-screen">
     <div class="splash-content">
-      <img src="/static/univote_logo.jpg" style="width:220px; height:auto; border-radius: 20px; margin-bottom:1.5rem; animation: splashEntrance 1.2s ease-out both; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));">
+      <img src="/static/univote_logo.jpg" style="width:220px; height:auto; border-radius: 20px; margin-bottom:1.5rem; animation: splashEntrance 1.8s ease-out both; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));">
       <div class="splash-logo-text">Uni-Vote</div>
     </div>
   </div>
@@ -454,7 +454,7 @@
         const splash = document.getElementById('splash-screen');
         if (splash) splash.classList.add('hidden');
         sessionStorage.setItem('uni_vote_splash_shown', 'true');
-      }, 2200); // Display for 2.2 seconds
+      }, 3500); // Increased display duration to 3.5 seconds
     }
 
     const initialAlertMessage = {{ alert_message|default('')|tojson }};
