@@ -446,6 +446,7 @@ def student_info():
         'name': row_get(student, 'name'),
         'class': row_get(student, 'class'),
         'semester': row_get(student, 'semester'),
+        'gender': row_get(student, 'gender'),
         'hasvoted': True if vote else False,
         'iscandidate': True if candidate else False,
         'voting_enabled': voting_enabled,
