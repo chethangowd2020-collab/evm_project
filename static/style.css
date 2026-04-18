@@ -179,6 +179,10 @@ body.dashboard-page .page-wrapper {
   margin-bottom: 0.3rem;
 }
 
+.admin-page .page-title {
+  font-family: 'Outfit', sans-serif;
+}
+
 .page-subtitle {
   color: var(--text-soft);
   font-size: 0.95rem;
