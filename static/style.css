@@ -139,7 +139,8 @@ body.dashboard-page .page-wrapper {
 
 .page-content {
   width: 100%;
-  max-width: 1400px !important;
+  max-width: 1800px !important;
+  margin: 0 auto;
   display: block;   /* ❌ remove flex centering */
 }
 .auth-header {
