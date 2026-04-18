@@ -752,7 +752,8 @@ def logout():
 
 @app.route('/api/results_public')
 def results_public():
-    if 'student_usn' not in session and 'admin_usn' not in session:
+    usn = get_auth_student_usn()
+    if not usn and 'admin_usn' not in session:
         return jsonify({'success': False, 'message': 'Not logged in'})
 
     conn = get_db()
