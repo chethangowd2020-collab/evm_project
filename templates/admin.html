@@ -355,13 +355,14 @@
           <td>${s.email}</td>
           <td><span class="badge badge-primary">${s.class}</span></td>
           <td><strong>Sem ${s.semester || '-'}</strong></td>
+          <td><span class="badge badge-${s.gender === 'Male' ? 'male' : 'female'}">${s.gender || '-'}</span></td>
           <td>${(s.hasvoted || s.hasVoted) ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
           <td>
             <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(this, '${s.usn}')">Reset Password</button>
             <button class="btn btn-danger btn-sm" onclick="deleteStudent(this, '${s.usn}')">Delete</button>
           </td>
         </tr>
-      `).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">No students match the selected filters.</td></tr>';
+      `).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-soft);padding:2rem;">No students match the selected filters.</td></tr>';
     }
 
     async function loadVotingStatus() {
