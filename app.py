@@ -739,16 +739,29 @@ def logout():
 
 @app.route('/api/results_public')
 def results_public():
+    if 'usn' not in session:
+        return jsonify({'success': False, 'message': 'Not logged in'})
+
     conn = get_db()
     cur = conn.cursor()
 
     cur.execute("SELECT value FROM settings WHERE key='results_published'")
     s = cur.fetchone()
-    if not s or s['value'] != '1':
+    if not s or row_get(s, 'value') != '1':
         conn.close()
         return jsonify({'success': False})
 
-    cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
+    # Filter by student's class and semester
+    cur.execute("SELECT class, semester FROM students WHERE usn=%s", (session['usn'],))
+    student = cur.fetchone()
+
+    if student:
+        cur.execute("SELECT * FROM candidates WHERE class=%s AND semester=%s ORDER BY gender, votes DESC", 
+                    (row_get(student, 'class'), row_get(student, 'semester')))
+    else:
+        # Admin or special users without a student record can see all results
+        cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
+
     rows = cur.fetchall()
     conn.close()
 
