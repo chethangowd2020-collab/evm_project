@@ -80,7 +80,7 @@ body::after {
 }
 
 .navbar-brand .logo-icon {
-  width: 36px; height: 36px;
+  width: 44px; height: 44px;
   border-radius: 10px;
   display: inline-block;
   object-fit: contain;
