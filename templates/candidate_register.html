@@ -84,11 +84,8 @@
 
             <div class="form-group">
               <label class="form-label">Gender</label>
-              <select id="gender" class="form-control">
-                <option value="">Select gender</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-              </select>
+              <input type="text" id="gender" class="form-control" readonly
+                style="background:#F0F4FF;color:var(--text-soft);" placeholder="Loading...">
             </div>
 
             <div class="alert" id="alertBox"></div>
@@ -135,7 +132,7 @@
       const alert = document.getElementById('alertBox');
 
       if (!document.getElementById('name').value.trim()) return showAlert(alert, 'Your name was not found. Please register again.');
-      if (!gender) return showAlert(alert, 'Please select your gender.');
+      if (!gender) return showAlert(alert, 'Gender information missing. Please update your student profile or contact admin.');
 
       const btn = document.getElementById('enrollBtn');
       setLoading(btn, true, 'Enrolling...');

@@ -256,7 +256,6 @@ def register_candidate():
             return jsonify({'success': False, 'message': 'Not logged in'})
 
         data = request.get_json()
-        gender = data.get('gender')
 
         conn = get_db()
         cur = conn.cursor()
@@ -296,7 +295,7 @@ def register_candidate():
             row_get(student, 'name'),
             row_get(student, 'class'),
             row_get(student, 'semester'),
-            gender
+            row_get(student, 'gender')
         ))
 
         conn.commit()
