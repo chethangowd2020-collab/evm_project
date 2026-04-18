@@ -355,6 +355,7 @@
           </td>
           <td>${(s.hasvoted || s.hasVoted) ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
           <td>
+            <button class="btn btn-primary btn-sm" onclick="incrementSemester(this, '${s.usn}')">Promote</button>
             <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(this, '${s.usn}')">Reset Password</button>
             <button class="btn btn-danger btn-sm" onclick="deleteStudent(this, '${s.usn}')">Delete</button>
           </td>
@@ -609,6 +610,23 @@
         await loadCandidates();
       } else {
         alert(data.message);
+      }
+    }
+
+    async function incrementSemester(btn, usn) {
+      if (!confirm(`Are you sure you want to promote student ${usn} to the next semester?`)) return;
+      setLoading(btn, true, 'Promoting...');
+      try {
+        const data = await apiFetch('/api/admin/increment_semester', { usn });
+        if (data.success) {
+          await loadStudents();
+        } else {
+          alert(data.message || 'Failed to update semester');
+        }
+      } catch (e) {
+        alert('A network error occurred.');
+      } finally {
+        setLoading(btn, false);
       }
     }
 
