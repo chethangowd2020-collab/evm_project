@@ -355,9 +355,12 @@
           <td>${s.email}</td>
           <td><span class="badge badge-primary">${s.class}</span></td>
           <td><strong>Sem ${s.semester || '-'}</strong></td>
-          <td><span class="badge ${s.gender === 'Male' ? 'badge-male' : (s.gender === 'Female' ? 'badge-female' : 'badge-warning')}">
-            ${s.gender || 'Not Specified'}
-          </span></td>
+          <td>
+            <span class="badge ${s.gender === 'Male' ? 'badge-male' : (s.gender === 'Female' ? 'badge-female' : 'badge-warning')}">
+              ${s.gender || 'Not Specified'}
+            </span>
+            ${!s.gender ? `<button class="btn btn-sm" style="padding:2px 5px; font-size:10px; margin-left:5px;" onclick="fixGender('${s.usn}')">Fix</button>` : ''}
+          </td>
           <td>${(s.hasvoted || s.hasVoted) ? '<span class="badge badge-success">Voted</span>' : '<span class="badge badge-warning">Pending</span>'}</td>
           <td>
             <button class="btn btn-warning btn-sm" onclick="resetStudentPassword(this, '${s.usn}')">Reset Password</button>
@@ -596,6 +599,24 @@
       } catch (e) {
         console.error("Load feedback error:", e);
         document.getElementById('feedbackBody').innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;padding:2rem;">Error loading feedback data. Check the server logs.</td></tr>`;
+      }
+    }
+
+    async function fixGender(usn) {
+      const gender = prompt(`Enter gender for ${usn} (Male/Female):`);
+      if (!gender) return;
+      const formattedGender = gender.charAt(0).toUpperCase() + gender.slice(1).toLowerCase();
+      if (!['Male', 'Female'].includes(formattedGender)) {
+        alert("Please enter exactly 'Male' or 'Female'");
+        return;
+      }
+      
+      const data = await apiFetch('/api/admin/update_gender', { usn, gender: formattedGender });
+      if (data.success) {
+        await loadStudents();
+        await loadCandidates();
+      } else {
+        alert(data.message);
       }
     }
 

@@ -592,6 +592,25 @@ def admin_results():
 
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+@app.route('/api/admin/update_gender', methods=['POST'])
+@admin_required
+def update_gender():
+    try:
+        data = request.get_json()
+        usn = data.get('usn')
+        new_gender = data.get('gender')
+        if not usn or new_gender not in ['Male', 'Female']:
+            return jsonify({'success': False, 'message': 'Invalid data'})
+            
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("UPDATE students SET gender=%s WHERE usn=%s", (new_gender, usn))
+        cur.execute("UPDATE candidates SET gender=%s WHERE usn=%s", (new_gender, usn))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Gender updated successfully'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/send_otp', methods=['POST'])
 def send_otp():
