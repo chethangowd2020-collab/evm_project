@@ -113,6 +113,7 @@ def init_db():
         phone TEXT,
         class TEXT,
         semester TEXT,
+        gender TEXT,
         password TEXT,
         isVerified INTEGER DEFAULT 1,
         hasVoted INTEGER DEFAULT 0
@@ -167,7 +168,7 @@ def init_db():
     )''')
 
     # Migration: Ensure columns exist if the table was created with an older schema
-    for col_name, col_type in [('email', 'TEXT'), ('phone', 'TEXT'), ('semester', 'TEXT')]:
+    for col_name, col_type in [('email', 'TEXT'), ('phone', 'TEXT'), ('semester', 'TEXT'), ('gender', 'TEXT')]:
         try:
             if USE_SQLITE:
                 c.execute(f"ALTER TABLE students ADD COLUMN {col_name} {col_type}")
@@ -613,9 +614,9 @@ def api_register():
 
         # Create student
         cur.execute("""
-            INSERT INTO students (usn, name, email, class, semester, password)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (usn, data.get('name'), data.get('email'), data.get('class'), data.get('semester'), hash_password(data.get('password'))))
+            INSERT INTO students (usn, name, email, class, semester, gender, password)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (usn, data.get('name'), data.get('email'), data.get('class'), data.get('semester'), data.get('gender'), hash_password(data.get('password'))))
         
         conn.commit()
         conn.close()
