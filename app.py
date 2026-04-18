@@ -17,7 +17,11 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
-app.secret_key = os.getenv('SECRET_KEY', 'evm_secret_key_2024')
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY and not app.debug:
+    raise ValueError("No SECRET_KEY set for production environment")
+app.secret_key = SECRET_KEY or 'dev_key_only'
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
@@ -748,18 +752,14 @@ def reset_password():
 @app.route('/logout')
 def logout():
     role = request.args.get('role')
-    target_usn = request.args.get('usn')
     if role == 'admin':
         session.pop('admin_usn', None)
     elif role == 'student':
+        target_usn = request.args.get('usn')
         if target_usn:
             session.pop(f"auth_{target_usn.upper()}", None)
-        if session.get('student_usn') == target_usn:
-            session.pop('student_usn', None)
-        session.pop('student_usn', None)
-    else:
-        # Fallback for general logout
-        session.clear()
+    
+    session.clear()  # Ensure all session data is wiped on logout
     return redirect(url_for('login'))
 
 
