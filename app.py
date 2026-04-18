@@ -730,7 +730,14 @@ def reset_password():
 
 @app.route('/logout')
 def logout():
-    session.clear()
+    role = request.args.get('role')
+    if role == 'admin':
+        session.pop('admin_usn', None)
+    elif role == 'student':
+        session.pop('student_usn', None)
+    else:
+        # Fallback for general logout
+        session.clear()
     return redirect(url_for('login'))
 
 
