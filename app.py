@@ -455,13 +455,10 @@ def student_info():
     results_published = row_get(cur.fetchone(), 'value') == '1'
     conn.close()
 
+    student_data = format_row(student)
     return jsonify({
         'success': True,
-        'usn': row_get(student, 'usn'),
-        'name': row_get(student, 'name'),
-        'class': row_get(student, 'class'),
-        'semester': row_get(student, 'semester'),
-        'gender': row_get(student, 'gender'),
+        **student_data,
         'hasvoted': True if vote else False,
         'iscandidate': True if candidate else False,
         'voting_enabled': voting_enabled,

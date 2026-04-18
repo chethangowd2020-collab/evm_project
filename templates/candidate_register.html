@@ -60,26 +60,26 @@
 
             <div class="form-group">
               <label class="form-label">Full Name</label>
-              <input type="text" id="name" class="form-control" value="{{ name }}" readonly
+              <input type="text" id="name" class="form-control" readonly
                 style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
             <div class="form-group">
               <label class="form-label">Class</label>
-              <input type="text" id="class" class="form-control" value="{{ cls }}" readonly
+              <input type="text" id="class" class="form-control" readonly
                 style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
             <div class="form-group">
               <label class="form-label">Semester</label>
-              <input type="text" id="semester" class="form-control" value="{{ sem }}" readonly
+              <input type="text" id="semester" class="form-control" readonly
                 style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
             <div class="form-group">
               <label class="form-label">Gender</label>
               <input type="text" id="gender" class="form-control" readonly
-                style="background:#F0F4FF;color:var(--text-soft);" placeholder="Loading...">
+                style="background:#F0F4FF;color:var(--text-soft);">
             </div>
 
             <div class="alert" id="alertBox"></div>
@@ -131,7 +131,7 @@
       document.getElementById('name').value = data.name || '';
       document.getElementById('class').value = data.class;
       document.getElementById('semester').value = data.semester || '—';
-      document.getElementById('gender').value = data.gender || '';
+      document.getElementById('gender').value = data.gender || 'Not Specified';
 
       if (data.iscandidate || data.isCandidate) {
         document.getElementById('alreadyCandidateBox').style.display = 'block';
