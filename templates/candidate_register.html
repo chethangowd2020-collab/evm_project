@@ -50,18 +50,8 @@
           </div>
 
           <!-- Enrollment Form -->
-          <div id="enrollForm">
-            <div class="section-title">📌 Candidate Rules</div>
-            <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem;">
-              <li style="display:flex;gap:10px;align-items:flex-start;font-size:0.9rem;">
-                <li><span>🎓</span><span>Eligibility is restricted to students of your class and semester</span></li>
-                <li><span>⭐</span><span>Candidates should be willing to take responsibility as CR</span></li>
-                <li><span>⏱️</span><span>Registration will automatically close before voting starts</span></li>
-                <li><span>🤝</span><span>Candidates are expected to uphold respectful and fair behavior</span></li>
-                <li><span>💬</span><span>Students feedback may be taken into consideration</span></li>
-              </li>
-            </ul>
-
+          <div id="enrollForm" style="display: none;">
+            <div class="section-title">📝 Enrollment Details</div>
             <div class="form-group">
               <label class="form-label">Your USN</label>
               <input type="text" id="usn" class="form-control" value="{{ session.get('usn', '') }}" readonly
@@ -107,6 +97,27 @@
     </div>
   </div>
 
+  <!-- Rules Modal -->
+  <div class="modal-overlay" id="rulesModal">
+    <div class="modal-box" style="max-width: 500px;">
+      <div class="modal-icon">📜</div>
+      <div class="modal-title">Candidate Rules & Guidelines</div>
+      <div class="modal-desc" style="text-align: left;">
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:12px; margin-top: 1rem;">
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>🎓</span><span>Eligibility is restricted to students of your class and semester.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>⭐</span><span>Candidates should be willing to take responsibility as CR.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>⏱️</span><span>Registration will automatically close before voting starts.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>🤝</span><span>Candidates are expected to uphold respectful and fair behavior.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>💬</span><span>Student feedback may be taken into consideration by administration.</span></li>
+        </ul>
+      </div>
+      <div class="modal-actions" style="margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">Decline</button>
+        <button class="btn btn-primary" onclick="acceptRules()">I Agree & Proceed</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/static/script.js?v=2"></script>
   <script>
     (async () => {
@@ -123,13 +134,19 @@
       document.getElementById('gender').value = data.gender || '';
 
       if (data.iscandidate || data.isCandidate) {
-        document.getElementById('enrollForm').style.display = 'none';
         document.getElementById('alreadyCandidateBox').style.display = 'block';
       } else if (data.voting_enabled) {
-        document.getElementById('enrollForm').style.display = 'none';
         document.getElementById('votingStartedBox').style.display = 'block';
+      } else {
+        // Show rules modal if eligible
+        document.getElementById('rulesModal').classList.add('show');
       }
     })();
+
+    function acceptRules() {
+      document.getElementById('rulesModal').classList.remove('show');
+      document.getElementById('enrollForm').style.display = 'block';
+    }
 
     async function enrollCandidate() {
       const gender = document.getElementById('gender').value;
