@@ -19,7 +19,7 @@
     </div>
     <div class="navbar-links">
       <a href="{{ '/admin' if session.get('role') == 'admin' else '/dashboard' }}" class="nav-link">← Dashboard</a>
-      <a href="/logout" class="btn-nav-logout">Logout</a>
+      <a href="/logout?role={{ 'admin' if session.get('admin_usn') else 'student' }}" class="btn-nav-logout">Logout</a>
     </div>
   </nav>
 
