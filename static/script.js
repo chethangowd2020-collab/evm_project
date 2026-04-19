@@ -161,13 +161,26 @@ document.addEventListener('DOMContentLoaded', () => {
   ['usn', 'login-usn'].forEach(id => {
     const el = document.getElementById(id);
     if (el) {
+      const alertEl = id === 'usn' ? document.getElementById('alertBox') : document.getElementById('login-alert');
+      const usnRegex = /^1JB\d{2}[A-Z]{2}\d{3}$/;
+
       if (!el.value) el.value = '1JB';
       el.maxLength = 10;
+
       el.addEventListener('input', function() {
         if (!this.value.toUpperCase().startsWith('1JB')) {
           this.value = '1JB';
         }
         this.value = this.value.toUpperCase();
+
+        // Instant validation when full length is reached
+        if (this.value.length === 10) {
+          if (!usnRegex.test(this.value)) {
+            if (alertEl) showAlert(alertEl, 'Invalid Format: 1JB + 2 Digits + 2 Letters + 3 Digits');
+          } else if (alertEl) {
+            hideAlert(alertEl);
+          }
+        }
       });
     }
   });
