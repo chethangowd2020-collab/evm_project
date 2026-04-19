@@ -794,7 +794,7 @@ tr:hover td { background: var(--bg); }
   font-size: 3rem; margin-bottom: 0.8rem;
 }
 .auth-header h1 {
-  font-family: 'DM Serif Display', serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 1.8rem; margin-bottom: 0.3rem;
 }
 .auth-header p { opacity: 0.85; font-size: 0.95rem; }
