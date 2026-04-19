@@ -66,8 +66,11 @@ body::after {
 }
 
 /* Center brand for login/register pages */
-.login-page .navbar, .register-page .navbar {
-  justify-content: center;
+.login-page .navbar-brand span,
+.register-page .navbar-brand span {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .register-page .navbar .navbar-links {
