@@ -147,3 +147,21 @@ async function handleLogin() {
     alert(data.message || "Login failed");
   }
 }
+
+// ─── USN Prefix Enforcement ───────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  // Targets 'usn' (Register) and 'login-usn' (Login student tab)
+  ['usn', 'login-usn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (!el.value) el.value = '1JB';
+      el.maxLength = 10;
+      el.addEventListener('input', function() {
+        if (!this.value.toUpperCase().startsWith('1JB')) {
+          this.value = '1JB';
+        }
+        this.value = this.value.toUpperCase();
+      });
+    }
+  });
+});

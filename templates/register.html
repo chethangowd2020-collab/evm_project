@@ -28,7 +28,7 @@
         <div class="auth-body">
           <div class="form-group">
             <label class="form-label">USN (University Seat Number)</label>
-            <input type="text" id="usn" class="form-control" placeholder="e.g. 1CS21CS001" autocomplete="off">
+            <input type="text" id="usn" class="form-control" value="1JB" maxlength="10" placeholder="e.g. 1JB21CS001" autocomplete="off">
           </div>
 
           <div class="form-group">
@@ -165,6 +165,8 @@
 
       if (!usn || !name || !email || !cls || !sem || !gender || !captcha || !password)
         return showAlert(alert, 'Please fill in all fields.');
+      if (usn.length !== 10)
+        return showAlert(alert, 'USN must be exactly 10 characters (1JB + 7 characters).');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert(alert, 'Enter a valid email address.');
       if (password.length < 6)
         return showAlert(alert, 'Password must be at least 6 characters.');
