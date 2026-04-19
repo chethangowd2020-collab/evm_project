@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Instant validation when full length is reached
         if (this.value.length === 10) {
           if (!usnRegex.test(this.value)) {
-            if (alertEl) showAlert(alertEl, 'Invalid Format: 1JB + 2 Digits + 2 Letters + 3 Digits');
+            if (alertEl) showAlert(alertEl, 'Invalid USN format.');
           } else if (alertEl) {
             hideAlert(alertEl);
           }
