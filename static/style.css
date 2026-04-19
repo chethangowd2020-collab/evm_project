@@ -65,6 +65,16 @@ body::after {
   box-shadow: 0 2px 20px rgba(91,108,249,0.08);
 }
 
+/* Center brand for login/register pages */
+.login-page .navbar, .register-page .navbar {
+  justify-content: center;
+}
+
+.register-page .navbar .navbar-links {
+  position: absolute;
+  right: 2rem;
+}
+
 .navbar-brand {
   display: flex;
   align-items: center;
