@@ -130,7 +130,7 @@ async function handleLogin() {
 
   // Validate format only for student login (not admin)
   if (usnInput.id === 'login-usn' && !usnRegex.test(usn)) {
-    alert("Invalid USN format. Pattern: 1JB + 2 digits + 2 letters + 3 digits (e.g. 1JB21CS001)");
+    alert("Invalid USN format.");
     return;
   }
 
