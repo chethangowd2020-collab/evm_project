@@ -121,9 +121,16 @@ async function handleLogin() {
 
   const usn = usnInput.value.trim().toUpperCase();
   const password = pwdInput.value;
+  const usnRegex = /^1JB\d{2}[A-Z]{2}\d{3}$/;
 
   if (!usn || !password) {
     alert("Please enter credentials");
+    return;
+  }
+
+  // Validate format only for student login (not admin)
+  if (usnInput.id === 'login-usn' && !usnRegex.test(usn)) {
+    alert("Invalid USN format. Pattern: 1JB + 2 digits + 2 letters + 3 digits (e.g. 1JB21CS001)");
     return;
   }
 

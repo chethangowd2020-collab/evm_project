@@ -165,8 +165,9 @@
 
       if (!usn || !name || !email || !cls || !sem || !gender || !captcha || !password)
         return showAlert(alert, 'Please fill in all fields.');
-      if (usn.length !== 10)
-        return showAlert(alert, 'USN must be exactly 10 characters (1JB + 7 characters).');
+      const usnRegex = /^1JB\d{2}[A-Z]{2}\d{3}$/;
+      if (!usnRegex.test(usn))
+        return showAlert(alert, 'Invalid USN. Format must be: 1JB + 2 digits + 2 letters + 3 digits (e.g. 1JB21CS001).');
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert(alert, 'Enter a valid email address.');
       if (password.length < 6)
         return showAlert(alert, 'Password must be at least 6 characters.');
