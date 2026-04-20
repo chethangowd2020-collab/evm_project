@@ -276,19 +276,19 @@ def login():
 
 @app.route('/dashboard')
 def dashboard():
-    if not get_auth_student_usn():
+    if not get_auth_student_usn() and 'admin_usn' not in session:
         return redirect(url_for('login'))
     return render_template('dashboard.html')
 
 @app.route('/candidate_register')
 def candidate_register():
-    if not get_auth_student_usn():
+    if not get_auth_student_usn() and 'admin_usn' not in session:
         return redirect(url_for('login'))
     return render_template('candidate_register.html')
 
 @app.route('/cr-feedback')
 def cr_feedback():
-    if not get_auth_student_usn():
+    if not get_auth_student_usn() and 'admin_usn' not in session:
         return redirect(url_for('login'))
     return render_template('cr_feedback.html')
 
@@ -482,7 +482,7 @@ def voting_status():
 
 @app.route('/vote')
 def vote():
-    if not get_auth_student_usn():
+    if not get_auth_student_usn() and 'admin_usn' not in session:
         return redirect(url_for('login'))
 
     return render_template('vote.html')
@@ -536,7 +536,7 @@ def admin():
 
 @app.route('/results')
 def results():
-    if not get_auth_student_usn():
+    if not get_auth_student_usn() and 'admin_usn' not in session:
         return redirect(url_for('login'))
 
     return render_template('results_public.html')
