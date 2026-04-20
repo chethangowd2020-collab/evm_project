@@ -101,6 +101,8 @@ body.login-page::after {
 .login-page .auth-header h1,
 .login-page .auth-header p,
 .login-page .form-label,
+.login-page .tab-btn,
+.login-page .form-toggle-btn,
 .login-page .auth-footer,
 .login-page .auth-footer a {
   color: #ffffff !important;
