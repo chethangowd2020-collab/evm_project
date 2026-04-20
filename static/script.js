@@ -130,30 +130,37 @@ async function loadAdminResults() {
 
     // Add sort controls at the top
     container.innerHTML = `
-      <div class="results-sort-controls" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 12px; padding: 0 5px;">
+      <div class="results-sort-controls" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 15px; padding: 12px 20px; background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow);">
         <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-soft);">Group by:</span>
-        <button class="btn btn-sm ${_resultsSortMode === 'sem' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('sem')">Semester</button>
-        <button class="btn btn-sm ${_resultsSortMode === 'class' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('class')">Class Section</button>
+        <button class="btn btn-sm ${_resultsSortMode === 'sem' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('sem')" style="min-width: 100px;">Semester</button>
+        <button class="btn btn-sm ${_resultsSortMode === 'class' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('class')" style="min-width: 100px;">Class Section</button>
       </div>
     `;
 
     let sortedKeys = Object.keys(data.classes);
 
     if (_resultsSortMode === 'class') {
-      // Sort primarily by Class Name (e.g., CSE A, CSE B) then by Semester
+      // Sort primarily by Section Letter (A, B, C...) then by Semester
       sortedKeys.sort((a, b) => {
         const partA = a.split(' - '); // ["Sem 1", "CSE A"]
         const partB = b.split(' - ');
+        const letterA = partA[1].slice(-1); // e.g. "A"
+        const letterB = partB[1].slice(-1);
         
-        // Compare the Class part (index 1)
-        if (partA[1] < partB[1]) return -1;
-        if (partA[1] > partB[1]) return 1;
+        if (letterA !== letterB) return letterA.localeCompare(letterB);
         // If same class, compare the Semester part (index 0)
         return partA[0].localeCompare(partB[0]);
       });
     } else {
-      // Default: Keys are already structured "Sem 1 - CSE A", alphabetical sort works
-      sortedKeys.sort();
+      // Default: Sort by Semester (1-8) then by Class Section Letter (A-O)
+      sortedKeys.sort((a, b) => {
+        const partA = a.split(' - ');
+        const partB = b.split(' - ');
+        // Compare semester first
+        if (partA[0] !== partB[0]) return partA[0].localeCompare(partB[0]);
+        // Then compare the section letter (A, B, C...)
+        return partA[1].slice(-1).localeCompare(partB[1].slice(-1));
+      });
     }
 
     for (const clsKey of sortedKeys) {

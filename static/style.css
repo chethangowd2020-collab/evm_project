@@ -833,6 +833,12 @@ tr:hover td { background: var(--bg); }
   margin-bottom: 8px;
   transition: all 0.2s;
 }
+.results-sort-controls button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.results-sort-controls button:hover {
+  transform: translateY(-1px);
+}
 .result-row.winner {
   border-color: #F59E0B;
   background: rgba(245,158,11,0.06);
