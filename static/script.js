@@ -112,6 +112,13 @@ function viewResults() {
   window.location.href = "/results";
 }
 
+let _resultsSortMode = 'sem'; // 'sem' or 'class'
+
+function setResultsSort(mode) {
+  _resultsSortMode = mode;
+  loadAdminResults();
+}
+
 async function loadAdminResults() {
   const container = document.getElementById('admin-results-container') || document.getElementById('public-results-container');
   if (!container) return;
@@ -121,9 +128,33 @@ async function loadAdminResults() {
     const data = await apiGet(endpoint);
     if (!data.success) return;
 
-    container.innerHTML = '';
-    // Remove .sort() to preserve the specific Semester/Class order sent by the server
-    const sortedKeys = Object.keys(data.classes);
+    // Add sort controls at the top
+    container.innerHTML = `
+      <div class="results-sort-controls" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 12px; padding: 0 5px;">
+        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-soft);">Group by:</span>
+        <button class="btn btn-sm ${_resultsSortMode === 'sem' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('sem')">Semester</button>
+        <button class="btn btn-sm ${_resultsSortMode === 'class' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('class')">Class Section</button>
+      </div>
+    `;
+
+    let sortedKeys = Object.keys(data.classes);
+
+    if (_resultsSortMode === 'class') {
+      // Sort primarily by Class Name (e.g., CSE A, CSE B) then by Semester
+      sortedKeys.sort((a, b) => {
+        const partA = a.split(' - '); // ["Sem 1", "CSE A"]
+        const partB = b.split(' - ');
+        
+        // Compare the Class part (index 1)
+        if (partA[1] < partB[1]) return -1;
+        if (partA[1] > partB[1]) return 1;
+        // If same class, compare the Semester part (index 0)
+        return partA[0].localeCompare(partB[0]);
+      });
+    } else {
+      // Default: Keys are already structured "Sem 1 - CSE A", alphabetical sort works
+      sortedKeys.sort();
+    }
 
     for (const clsKey of sortedKeys) {
       const candidates = data.classes[clsKey];

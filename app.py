@@ -653,9 +653,9 @@ def admin_results():
         classes = {}
         semesters = ['1', '2', '3', '4', '5', '6', '7', '8']
         class_names = [
-            'CSE A', 'CSE B', 'CSE C', 'CSE D', 'ISE E', 'ISE F', 
+            'CSE A', 'CSE B', 'CSE C', 'CSE D', 'ISE E', 'ISE F', 'ISE G',
             'AIML H', 'CSE(DS) I', 'ECE J', 'ECE K', 'ECE L', 
-            'EEE N', 'CIVIL M', 'MECH O'
+            'EEE M', 'CIVIL N', 'MECH O'
         ]
         
         for sem in semesters:
@@ -984,9 +984,9 @@ def results_public():
         # Admin View: Initialize all classes from student database to show empty ones
         semesters = ['1', '2', '3', '4', '5', '6', '7', '8']
         class_names = [
-            'CSE A', 'CSE B', 'CSE C', 'CSE D', 'ISE E', 'ISE F', 
+            'CSE A', 'CSE B', 'CSE C', 'CSE D', 'ISE E', 'ISE F', 'ISE G',
             'AIML H', 'CSE(DS) I', 'ECE J', 'ECE K', 'ECE L', 
-            'EEE N', 'CIVIL M', 'MECH O'
+            'EEE M', 'CIVIL N', 'MECH O'
         ]
         for sem in semesters:
             for cls in class_names:
