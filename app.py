@@ -501,7 +501,7 @@ def api_login():
     conn.close()
 
     if not user:
-        return jsonify({'success': False, 'message': 'User not found'})
+        return jsonify({'success': False, 'message': 'User not registered.Please register first'})
 
     if row_get(user, 'password') != hash_password(password):
         return jsonify({'success': False, 'message': 'Wrong password'})
