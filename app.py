@@ -266,7 +266,7 @@ def index():
 
 @app.route('/favicon.ico')
 def favicon():
-    return app.send_static_file('logo.webp')
+    return app.send_static_file('univote_logo.jpg')
 
 
 @app.route('/login')
