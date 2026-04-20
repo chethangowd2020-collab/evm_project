@@ -552,15 +552,21 @@
       hideAlert(alert);
       const btn = document.getElementById('sendOtpBtn');
       setLoading(btn, true, 'Generating...');
-      const data = await apiFetch('/api/send_otp', { usn: usn.toUpperCase(), email });
-      setLoading(btn, false);
+      try {
+        const data = await apiFetch('/api/send_otp', { usn: usn.toUpperCase(), email });
+        setLoading(btn, false);
 
-      if (data.success) {
-        document.getElementById('otpBadge').style.display = 'block';
-        btn.textContent = 'Resend OTP';
-        showAlert(alert, 'OTP sent to your email!', 'success');
-      } else {
-        showAlert(alert, data.message || 'Failed to send OTP.');
+        if (data.success) {
+          document.getElementById('otpBadge').style.display = 'block';
+          btn.textContent = 'Resend OTP';
+          showAlert(alert, 'OTP sent to your email!', 'success');
+        } else {
+          showAlert(alert, data.message || 'Failed to send OTP.');
+        }
+      } catch (err) {
+        setLoading(btn, false);
+        showAlert(alert, 'Network error or server down. Please try again.');
+        console.error(err);
       }
     }
 
@@ -586,17 +592,22 @@
 
       const btn = document.getElementById('registerBtn');
       setLoading(btn, true, 'Registering...');
-      const data = await apiFetch('/api/register', { usn, name, email, class: cls, semester: sem, gender, otp: otp, password });
-      setLoading(btn, false);
+      try {
+        const data = await apiFetch('/api/register', { usn, name, email, class: cls, semester: sem, gender, otp: otp, password });
+        setLoading(btn, false);
 
-      if (data.success) {
-        showAlert(alert, '🎉 Registration successful! You can now login.', 'success');
-        setTimeout(() => {
-          switchForm('login');
-          document.getElementById('login-usn').value = usn;
-        }, 1800);
-      } else {
-        showAlert(alert, data.message || 'Registration failed.');
+        if (data.success) {
+          showAlert(alert, '🎉 Registration successful! You can now login.', 'success');
+          setTimeout(() => {
+            switchForm('login');
+            document.getElementById('login-usn').value = usn;
+          }, 1800);
+        } else {
+          showAlert(alert, data.message || 'Registration failed.');
+        }
+      } catch (err) {
+        setLoading(btn, false);
+        showAlert(alert, 'Connection error. Registration failed.');
       }
     }
 

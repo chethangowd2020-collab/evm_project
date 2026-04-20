@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import psycopg2
-from datetime import timedelta
+from datetime import datetime, timedelta
 from psycopg2.extras import RealDictCursor
 import hashlib
 import random
@@ -117,10 +117,12 @@ def send_email(to_email, subject, content):
         msg['To'] = to_email
 
         if SMTP_PORT == 465:
+            print(f"DEBUG: Attempting SSL connection on port {SMTP_PORT}")
             with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
         else:
+            print(f"DEBUG: Attempting STARTTLS connection on port {SMTP_PORT}")
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
                 server.starttls()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
