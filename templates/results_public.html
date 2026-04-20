@@ -72,6 +72,34 @@
       `.replace(/\n/g, '');
     }
 
+    /**
+     * Sorts class list primarily by Semester (numeric) and secondarily by Class Name.
+     */
+    function sortBySemester(classList) {
+      return classList.sort((a, b) => {
+        const semA = parseInt(a.match(/Sem (\d+)/)?.[1] || 0);
+        const semB = parseInt(b.match(/Sem (\d+)/)?.[1] || 0);
+        const nameA = a.split(' - ')[1] || "";
+        const nameB = b.split(' - ')[1] || "";
+        if (semA !== semB) return semA - semB;
+        return nameA.localeCompare(nameB);
+      });
+    }
+
+    /**
+     * Sorts class list primarily by Class Name (alphabetic) and secondarily by Semester.
+     */
+    function sortByClass(classList) {
+      return classList.sort((a, b) => {
+        const nameA = a.split(' - ')[1] || "";
+        const nameB = b.split(' - ')[1] || "";
+        const semA = parseInt(a.match(/Sem (\d+)/)?.[1] || 0);
+        const semB = parseInt(b.match(/Sem (\d+)/)?.[1] || 0);
+        if (nameA !== nameB) return nameA.localeCompare(nameB);
+        return semA - semB;
+      });
+    }
+
     async function loadPublicResults() {
       try {
         const res = await fetch('/api/results_public');
@@ -100,22 +128,11 @@
 
         // Dynamic sorting based on dropdown selection
         const sortMode = document.getElementById('resultSort')?.value || 'sem';
-        classList.sort((a, b) => {
-          const semA = parseInt(a.match(/Sem (\d+)/)?.[1] || 0);
-          const semB = parseInt(b.match(/Sem (\d+)/)?.[1] || 0);
-          const nameA = a.split(' - ')[1] || "";
-          const nameB = b.split(' - ')[1] || "";
-
-          if (sortMode === 'sem') {
-            // Sort by Semester then Class Name
-            if (semA !== semB) return semA - semB;
-            return nameA.localeCompare(nameB);
-          } else {
-            // Sort by Class Name then Semester
-            if (nameA !== nameB) return nameA.localeCompare(nameB);
-            return semA - semB;
-          }
-        });
+        if (sortMode === 'sem') {
+          sortBySemester(classList);
+        } else {
+          sortByClass(classList);
+        }
 
         for (let cls of classList) {
           const group = data.classes[cls];
