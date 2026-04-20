@@ -136,11 +136,11 @@ async function loadAdminResults() {
         <div class="results-grid">
           <div class="results-gender-col">
             <h4>Male Candidates</h4>
-            ${hasMales ? renderResultRows(candidates.males) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidates have enrolled</p>'}
+            ${hasMales ? renderResultRows(candidates.males) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
           </div>
           <div class="results-gender-col">
             <h4>Female Candidates</h4>
-            ${hasFemales ? renderResultRows(candidates.females) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidates have enrolled</p>'}
+            ${hasFemales ? renderResultRows(candidates.females) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
           </div>
         </div>
       `;

@@ -650,15 +650,18 @@ def admin_results():
         conn = get_db()
         cur = conn.cursor()
 
-        # Step 1: Get all unique class-semester pairs from the student list to include empty classes
-        cur.execute("SELECT DISTINCT semester, class FROM students ORDER BY semester, class")
-        all_cls = cur.fetchall()
-        
         classes = {}
-        for r in all_cls:
-            row = format_row(r)
-            cls_key = f"Sem {row['semester']} - {row['class']}"
-            classes[cls_key] = {'males': [], 'females': []}
+        semesters = ['1', '2', '3', '4', '5', '6', '7', '8']
+        class_names = [
+            'CSE A', 'CSE B', 'CSE C', 'CSE D', 'ISE E', 'ISE F', 
+            'AIML H', 'CSE(DS) I', 'ECE J', 'ECE K', 'ECE L', 
+            'EEE N', 'CIVIL M', 'MECH O'
+        ]
+        
+        for sem in semesters:
+            for cls in class_names:
+                cls_key = f"Sem {sem} - {cls}"
+                classes[cls_key] = {'males': [], 'females': []}
 
         # Step 2: Fetch all candidates
         cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
@@ -944,12 +947,17 @@ def results_public():
     classes = {}
     if 'admin_usn' in session:
         # Admin View: Initialize all classes from student database to show empty ones
-        cur.execute("SELECT DISTINCT semester, class FROM students ORDER BY semester, class")
-        all_cls = cur.fetchall()
-        for r in all_cls:
-            row = format_row(r)
-            cls_key = f"Sem {row['semester']} - {row['class']}"
-            classes[cls_key] = {'males': [], 'females': []}
+        semesters = ['1', '2', '3', '4', '5', '6', '7', '8']
+        class_names = [
+            'CSE A', 'CSE B', 'CSE C', 'CSE D', 'ISE E', 'ISE F', 
+            'AIML H', 'CSE(DS) I', 'ECE J', 'ECE K', 'ECE L', 
+            'EEE N', 'CIVIL M', 'MECH O'
+        ]
+        for sem in semesters:
+            for cls in class_names:
+                cls_key = f"Sem {sem} - {cls}"
+                classes[cls_key] = {'males': [], 'females': []}
+
         cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
     else:
         # Student View: Determine specific class/semester
