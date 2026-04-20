@@ -645,6 +645,17 @@ def admin_results():
         conn = get_db()
         cur = conn.cursor()
 
+        # Step 1: Get all unique class-semester pairs from the student list to include empty classes
+        cur.execute("SELECT DISTINCT semester, class FROM students ORDER BY semester, class")
+        all_cls = cur.fetchall()
+        
+        classes = {}
+        for r in all_cls:
+            row = format_row(r)
+            cls_key = f"Sem {row['semester']} - {row['class']}"
+            classes[cls_key] = {'males': [], 'females': []}
+
+        # Step 2: Fetch all candidates
         cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
         rows = cur.fetchall()
         
@@ -653,8 +664,6 @@ def admin_results():
         total = cur.fetchone()
         conn.close()
 
-        # Structure the data as the frontend expects
-        classes = {}
         for r in rows:
             row = format_row(r)
             cls_key = f"Sem {row['semester']} - {row['class']}"

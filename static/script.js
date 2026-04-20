@@ -112,6 +112,52 @@ function viewResults() {
   window.location.href = "/results";
 }
 
+async function loadAdminResults() {
+  const container = document.getElementById('admin-results-container');
+  if (!container) return;
+
+  try {
+    const data = await apiGet('/api/admin/results');
+    if (!data.success) return;
+
+    container.innerHTML = '';
+    const sortedKeys = Object.keys(data.classes).sort();
+
+    for (const clsKey of sortedKeys) {
+      const candidates = data.classes[clsKey];
+      const hasMales = candidates.males && candidates.males.length > 0;
+      const hasFemales = candidates.females && candidates.females.length > 0;
+      
+      const classDiv = document.createElement('div');
+      classDiv.className = 'results-class';
+      classDiv.innerHTML = `
+        <div class="results-class-header">📍 ${clsKey}</div>
+        <div class="results-grid">
+          <div class="results-gender-col">
+            <h4>Male Candidates</h4>
+            ${hasMales ? renderResultRows(candidates.males) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidates have enrolled</p>'}
+          </div>
+          <div class="results-gender-col">
+            <h4>Female Candidates</h4>
+            ${hasFemales ? renderResultRows(candidates.females) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidates have enrolled</p>'}
+          </div>
+        </div>
+      `;
+      container.appendChild(classDiv);
+    }
+  } catch (e) { console.error("Admin Results Error:", e); }
+}
+
+function renderResultRows(list) {
+  return list.map((c, i) => `
+    <div class="result-row ${i === 0 && c.votes > 0 ? 'winner' : ''}">
+      <span class="rank">${i === 0 && c.votes > 0 ? '👑' : (i + 1)}</span>
+      <span class="rname">${c.name}</span>
+      <span class="rvotes">${c.votes} votes</span>
+    </div>
+  `).join('');
+}
+
 function exportResultsCSV() {
   window.location.href = '/api/admin/export_results';
 }
@@ -227,6 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
     nameInput.addEventListener('input', function() {
       this.value = this.value.toUpperCase();
     });
+  }
+
+  // Initialize admin results if on admin page
+  if (window.location.pathname.includes('admin')) {
+    loadAdminResults();
   }
 
   // Initialize dashboard widget if on dashboard page
