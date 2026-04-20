@@ -131,9 +131,10 @@ async function loadAdminResults() {
     // Add sort controls at the top
     container.innerHTML = `
       <div class="results-sort-controls" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 15px; padding: 12px 20px; background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow);">
-        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-soft);">Sort / Group by:</span>
+        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-soft);">Sort / Group:</span>
         <button class="btn btn-sm ${_resultsSortMode === 'sem' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('sem')" style="min-width: 100px;">Semester</button>
-        <button class="btn btn-sm ${_resultsSortMode === 'class' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('class')" style="min-width: 100px;">Class Section</button>
+        <button class="btn btn-sm ${_resultsSortMode === 'class' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('class')" style="min-width: 100px;">Section Letter</button>
+        <button class="btn btn-sm ${_resultsSortMode === 'votes' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('votes')" style="min-width: 100px;">Votes</button>
         <button class="btn btn-sm ${_resultsSortMode === 'name' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('name')" style="min-width: 100px;">Name</button>
         <button class="btn btn-sm ${_resultsSortMode === 'usn' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('usn')" style="min-width: 100px;">USN</button>
       </div>
@@ -176,6 +177,10 @@ async function loadAdminResults() {
       } else if (_resultsSortMode === 'usn') {
         males.sort((a, b) => a.usn.localeCompare(b.usn));
         females.sort((a, b) => a.usn.localeCompare(b.usn));
+      } else {
+        // Default or explicit votes sorting (Descending)
+        males.sort((a, b) => b.votes - a.votes);
+        females.sort((a, b) => b.votes - a.votes);
       }
       
       const classDiv = document.createElement('div');
