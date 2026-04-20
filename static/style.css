@@ -125,7 +125,7 @@ body.login-page::after {
 
 .login-page .tab-btn.active,
 .login-page .form-toggle-btn.active {
-  background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6) !important;
+  background: var(--grad2) !important;
 }
 
 .login-page .auth-footer a {
@@ -192,7 +192,7 @@ body.login-page::after {
 .register-page .btn-primary:hover {
   transform: scale(1.03);
   filter: brightness(1.1);
-  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
+  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4) !important;
 }
 
 /* Animations */
