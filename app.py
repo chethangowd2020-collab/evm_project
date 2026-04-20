@@ -104,6 +104,27 @@ def format_row(row):
     return {k.lower(): (v if v is not None and v != "" else "--") for k, v in dict(row).items()}
 
 
+def send_email(to_email, subject, content):
+    """Helper to send emails using SMTP settings"""
+    if not all([SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
+        print("SMTP settings are not fully configured in environment variables.")
+        return False
+    try:
+        msg = EmailMessage()
+        msg.set_content(content)
+        msg['Subject'] = subject
+        msg['From'] = EMAIL_FROM
+        msg['To'] = to_email
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"Failed to send email to {to_email}: {e}")
+        return False
+
 def init_db():
     conn = get_db()
     c = conn.cursor()
@@ -621,9 +642,13 @@ def update_gender():
 def send_otp():
     data = request.get_json()
     usn = data.get('usn', '').upper()
-    
-    # Alphanumeric Captcha Generator
-    q = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+    email = data.get('email', '').strip()
+
+    if not email:
+        return jsonify({'success': False, 'message': 'Email is required to send OTP'})
+
+    # Numeric 6-digit OTP
+    q = ''.join(random.choices(string.digits, k=6))
     
     conn = get_db()
     cur = conn.cursor()
@@ -633,8 +658,11 @@ def send_otp():
         cur.execute("INSERT INTO otps (usn, otp) VALUES (%s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp", (usn, q))
     conn.commit()
     conn.close()
-    
-    return jsonify({'success': True, 'captcha_question': f"Enter this code: {q}"})
+
+    if send_email(email, "Uni-Vote Verification Code", f"Your verification code for Uni-Vote registration is: {q}"):
+        return jsonify({'success': True, 'message': 'OTP sent to your email successfully'})
+    else:
+        return jsonify({'success': False, 'message': 'Failed to send email. Please check SMTP configuration.'})
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
