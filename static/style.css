@@ -168,6 +168,13 @@ body.login-page::after {
   transition: all 0.3s ease;
 }
 
+/* Fix for invisible text in dropdown menus */
+.login-page .form-control option,
+.register-page .form-control option {
+  background-color: #ffffff; /* Solid white background for the list */
+  color: #1e2340;            /* Dark text color for readability */
+}
+
 .login-page .form-control:focus {
   background: rgba(255, 255, 255, 0.15);
   border-color: var(--primary-light);
