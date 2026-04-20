@@ -215,6 +215,15 @@ def init_db():
         except Exception:
             pass # Column already exists
 
+    # Migration: Ensure expires_at exists in the otps table
+    try:
+        if USE_SQLITE:
+            c.execute("ALTER TABLE otps ADD COLUMN expires_at TIMESTAMP")
+        else:
+            c.execute("ALTER TABLE otps ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP")
+    except Exception:
+        pass # Column already exists
+
     conn.commit()
     conn.close()
 
@@ -657,10 +666,13 @@ def update_gender():
 def send_otp():
     try:
         data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+            
         usn = data.get('usn', '').upper()
         email = data.get('email', '').strip()
 
-        if not email:
+        if not email or not usn:
             return jsonify({'success': False, 'message': 'Email is required to send OTP'})
 
         # Numeric 6-digit OTP
@@ -707,8 +719,11 @@ def api_register():
             return jsonify({'success': False, 'message': 'Invalid OTP'})
         
         stored_expires_at_raw = row_get(record, 'expires_at')
-        # Convert to datetime object if it's a string (from SQLite or if stored as string in PG)
-        # If psycopg2 returns a datetime object directly, use it as is.
+        
+        if stored_expires_at_raw is None:
+            return jsonify({'success': False, 'message': 'OTP record is corrupted. Please resend.'})
+
+        # Convert to datetime object if it's a string (SQLite)
         if isinstance(stored_expires_at_raw, str):
             stored_expires_at = datetime.fromisoformat(stored_expires_at_raw)
         elif isinstance(stored_expires_at_raw, datetime):
