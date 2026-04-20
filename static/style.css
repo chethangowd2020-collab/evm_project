@@ -223,9 +223,12 @@ body.login-page::after {
 @media (max-width: 700px) {
   body.login-page::before {
     background: linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), 
-                url('/static/sjbit.jpg') no-repeat center center fixed;
-    filter: blur(6px); /* More blur on mobile for readability */
+                url('/static/sjbit.jpg') no-repeat center top fixed;
+    background-size: cover;
+    background-position: center top; /* 🔥 IMPORTANT FIX */
+    filter: blur(6px);
   }
+
   .login-page .auth-card {
     width: 95%;
     margin: 10px;
