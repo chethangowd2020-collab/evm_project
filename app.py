@@ -673,7 +673,7 @@ def send_otp():
         email = data.get('email', '').strip()
 
         if not email or not usn:
-            return jsonify({'success': False, 'message': 'Email is required to send OTP'})
+            return jsonify({'success': False, 'message': 'Email and USN are required to send OTP'})
 
         # Numeric 6-digit OTP
         q = ''.join(random.choices(string.digits, k=6))

@@ -167,7 +167,7 @@
       const confirm = document.getElementById('confirmPassword').value;
       const alert = document.getElementById('alertBox');
 
-      if (!usn || !name || !email || !cls || !sem || !gender || !captcha || !password)
+      if (!usn || !name || !email || !cls || !sem || !gender || !otp || !password)
         return showAlert(alert, 'Please fill in all fields.');
       const usnRegex = /^1JB\d{2}[A-Z]{2}\d{3}$/;
       if (!usnRegex.test(usn))
