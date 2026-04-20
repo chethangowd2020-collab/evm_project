@@ -941,28 +941,36 @@ def results_public():
         conn.close()
         return jsonify({'success': False})
 
-    # Only apply class/semester filtering if the user is NOT an admin
-    student = None
-    if 'admin_usn' not in session and usn:
+    classes = {}
+    if 'admin_usn' in session:
+        # Admin View: Initialize all classes from student database to show empty ones
+        cur.execute("SELECT DISTINCT semester, class FROM students ORDER BY semester, class")
+        all_cls = cur.fetchall()
+        for r in all_cls:
+            row = format_row(r)
+            cls_key = f"Sem {row['semester']} - {row['class']}"
+            classes[cls_key] = {'males': [], 'females': []}
+        cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
+    else:
+        # Student View: Determine specific class/semester
         cur.execute("SELECT class, semester FROM students WHERE usn=%s", (usn,))
         student = cur.fetchone()
-
-    if student:
-        cur.execute("SELECT * FROM candidates WHERE class=%s AND semester=%s ORDER BY gender, votes DESC", 
-                    (row_get(student, 'class'), row_get(student, 'semester')))
-    else:
-        # Admin or special users without a student record can see all results
-        cur.execute("SELECT * FROM candidates ORDER BY semester, class, gender, votes DESC")
+        if student:
+            row = format_row(student)
+            cls_key = f"Sem {row['semester']} - {row['class']}"
+            classes[cls_key] = {'males': [], 'females': []}
+            cur.execute("SELECT * FROM candidates WHERE class=%s AND semester=%s ORDER BY gender, votes DESC", 
+                        (row_get(student, 'class'), row_get(student, 'semester')))
+        else:
+            cur.execute("SELECT * FROM candidates WHERE usn='NONE'") # Empty set
 
     rows = cur.fetchall()
     conn.close()
-
-    classes = {}
     for r in rows:
         row = format_row(r)
         cls_key = f"Sem {row['semester']} - {row['class']}"
-        if cls_key not in classes: classes[cls_key] = {'males': [], 'females': []}
-        classes[cls_key]['males' if row['gender'] == 'Male' else 'females'].append(row)
+        if cls_key in classes:
+            classes[cls_key]['males' if row['gender'] == 'Male' else 'females'].append(row)
 
     return jsonify({'success': True, 'classes': classes})
 

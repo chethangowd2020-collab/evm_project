@@ -113,11 +113,12 @@ function viewResults() {
 }
 
 async function loadAdminResults() {
-  const container = document.getElementById('admin-results-container');
+  const container = document.getElementById('admin-results-container') || document.getElementById('public-results-container');
   if (!container) return;
 
   try {
-    const data = await apiGet('/api/admin/results');
+    const endpoint = window.location.pathname.includes('admin') ? '/api/admin/results' : '/api/results_public';
+    const data = await apiGet(endpoint);
     if (!data.success) return;
 
     container.innerHTML = '';
@@ -279,8 +280,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize admin results if on admin page
-  if (window.location.pathname.includes('admin')) {
+  // Initialize results if on admin or results page
+  if (window.location.pathname.includes('admin') || window.location.pathname.includes('results')) {
     loadAdminResults();
   }
 
