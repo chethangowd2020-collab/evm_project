@@ -31,13 +31,48 @@
     </div>
 
     <!-- Sorting Controls -->
-    <div class="sort-controls" style="margin-bottom: 2rem; display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 12px; background: rgba(255,255,255,0.4); border-radius: 12px; border: 1px solid var(--border); backdrop-filter: blur(10px);">
-      <label for="resultSort" style="font-weight: 800; font-size: 0.85rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.05em;">Sort Sections By:</label>
-      <select id="resultSort" class="form-control" style="width: auto; min-width: 180px; height: 40px; border-color: var(--primary);" onchange="setResultsSort(this.value)">
-        <option value="sem">Sort by Semester (1st → 8th)</option>
-        <option value="class">Sort by Class Name (A → O)</option>
-      </select>
-    </div>
+    <div class="sort-controls" style="margin-bottom: 1rem; display:flex; gap:10px; align-items:center;">
+
+  <!-- Sort -->
+  <select id="resultSort" onchange="loadPublicResults()">
+    <option value="sem">Sort by Semester</option>
+    <option value="class">Sort by Class</option>
+  </select>
+
+  <!-- Semester Filter -->
+  <select id="semesterFilter" onchange="loadPublicResults()">
+    <option value="all">All Semesters</option>
+    <option value="1">1st Semester</option>
+    <option value="2">2nd Semester</option>
+    <option value="3">3rd Semester</option>
+    <option value="4">4th Semester</option>
+    <option value="5">5th Semester</option>
+    <option value="6">6th Semester</option>
+    <option value="7">7th Semester</option>
+    <option value="8">8th Semester</option>
+  </select>
+
+  <!-- 🔥 Class Filter -->
+  <select id="classFilter" onchange="loadPublicResults()">
+    <option value="all">All Classes</option>
+    <option value="A">Class A</option>
+    <option value="B">Class B</option>
+    <option value="C">Class C</option>
+    <option value="D">Class D</option>
+    <option value="E">Class E</option>
+    <option value="F">Class F</option>
+    <option value="G">Class G</option>
+    <option value="H">Class H</option>
+    <option value="I">Class I</option>
+    <option value="J">Class J</option>
+    <option value="K">Class K</option>
+    <option value="L">Class L</option>
+    <option value="M">Class M</option>
+    <option value="N">Class N</option>
+    <option value="O">Class O</option>
+  </select>
+
+</div>
 
     <div id="resultBox">
       <div class="empty-state" style="padding:4rem;">
@@ -135,6 +170,23 @@
         }
 
         for (let cls of classList) {
+          // Extracting info for Filtering
+          const semMatch = cls.match(/Sem (\d+)/);
+          const semNumber = semMatch ? semMatch[1] : null;
+          const className = cls.split(' - ')[1] || '';
+          const classLetter = className.slice(-1); // Gets A, B, C...
+
+          const selectedSem = document.getElementById('semesterFilter')?.value || 'all';
+          const selectedClass = document.getElementById('classFilter')?.value || 'all';
+
+          // Apply Filters
+          if (selectedSem !== 'all' && semNumber !== selectedSem) {
+            continue;
+          }
+          if (selectedClass !== 'all' && classLetter !== selectedClass) {
+            continue;
+          }
+
           const group = data.classes[cls];
           const maxMaleVotes = group.males.length ? Math.max(...group.males.map(m => m.votes), 1) : 1;
           const maxFemaleVotes = group.females.length ? Math.max(...group.females.map(f => f.votes), 1) : 1;

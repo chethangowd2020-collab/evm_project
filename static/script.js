@@ -129,7 +129,7 @@ function applyFilters() {
 }
 
 async function loadAdminResults() {
-  const container = document.getElementById('admin-results-container') || document.getElementById('public-results-container');
+  const container = document.getElementById('admin-results-container');
   if (!container) return;
 
   try {
@@ -363,8 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize results if on admin or results page
-  if (window.location.pathname.includes('admin') || window.location.pathname.includes('results')) {
+  // Initialize admin results only on the admin dashboard
+  if (window.location.pathname.includes('admin')) {
     loadAdminResults();
   }
 
