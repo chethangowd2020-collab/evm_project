@@ -528,7 +528,7 @@ body.dashboard-page .page-wrapper {
 
 /* ─── DASHBOARD ───────────────────────────────────────── */
 .welcome-hero {
-  background: var(--grad1);
+  background: var(--grad2);
   border-radius: var(--radius);
   padding: 2.5rem;
   color: white;
