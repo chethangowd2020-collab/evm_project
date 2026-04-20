@@ -101,7 +101,7 @@ def format_row(row):
     """Helper to ensure consistent lowercase keys for JS compatibility across DBs"""
     if not row:
         return {}
-    return {k.lower(): (v if v is not None else "") for k, v in dict(row).items()}
+    return {k.lower(): (v if v is not None and v != "" else "--") for k, v in dict(row).items()}
 
 
 def init_db():
