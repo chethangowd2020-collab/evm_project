@@ -814,12 +814,14 @@ def logout():
     role = request.args.get('role')
     if role == 'admin':
         session.pop('admin_usn', None)
-    elif role == 'student':
-        target_usn = request.args.get('usn')
-        if target_usn:
-            session.pop(f"auth_{target_usn.upper()}", None)
+    else:
+        # Surgical logout for student: remove both the namespaced auth and the fallback usn
+        usn = session.get('student_usn')
+        if usn:
+            session.pop(f"auth_{usn.upper()}", None)
+        session.pop('student_usn', None)
     
-    session.clear()  # Ensure all session data is wiped on logout
+    # session.clear() removed to prevent cross-role/cross-tab logout
     return redirect(url_for('login'))
 
 
