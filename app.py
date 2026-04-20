@@ -832,6 +832,19 @@ def delete_candidate(id):
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/admin/delete_feedback/<int:id>', methods=['POST'])
+@admin_required
+def delete_feedback(id):
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM feedback WHERE id=%s", (id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Feedback deleted'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 @app.route('/api/admin/reset_password', methods=['POST'])
 @admin_required
 def reset_password():
