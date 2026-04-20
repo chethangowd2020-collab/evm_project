@@ -189,4 +189,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  // Auto-uppercase for Student Name field
+  const nameInput = document.getElementById('name');
+  if (nameInput) {
+    nameInput.addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+    });
+  }
 });

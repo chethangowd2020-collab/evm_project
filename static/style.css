@@ -182,6 +182,11 @@ body.login-page::after {
   transform: translateY(-1px);
 }
 
+/* Force uppercase display for USN and Name inputs */
+#usn, #login-usn, #name {
+  text-transform: uppercase;
+}
+
 .login-page .form-control::placeholder {
   color: rgba(255, 255, 255, 0.6);
 }
