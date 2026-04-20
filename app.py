@@ -41,7 +41,11 @@ if not DATABASE_URL:
     print("WARNING: DATABASE_URL not found. Using local SQLite database.")
 
 SMTP_HOST = os.getenv('SMTP_HOST')
-SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+try:
+    SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+except ValueError:
+    print("WARNING: SMTP_PORT environment variable is not a valid integer. Defaulting to 587.")
+    SMTP_PORT = 587
 SMTP_USERNAME = os.getenv('SMTP_USERNAME')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
 EMAIL_FROM = os.getenv('EMAIL_FROM')
@@ -651,30 +655,34 @@ def update_gender():
 
 @app.route('/api/send_otp', methods=['POST'])
 def send_otp():
-    data = request.get_json()
-    usn = data.get('usn', '').upper()
-    email = data.get('email', '').strip()
+    try:
+        data = request.get_json()
+        usn = data.get('usn', '').upper()
+        email = data.get('email', '').strip()
 
-    if not email:
-        return jsonify({'success': False, 'message': 'Email is required to send OTP'})
+        if not email:
+            return jsonify({'success': False, 'message': 'Email is required to send OTP'})
 
-    # Numeric 6-digit OTP
-    q = ''.join(random.choices(string.digits, k=6))
-    
-    expires_at = datetime.now() + timedelta(minutes=5) # OTP valid for 5 minutes
-    conn = get_db()
-    cur = conn.cursor()
-    if USE_SQLITE:
-        cur.execute("INSERT OR REPLACE INTO otps (usn, otp, expires_at) VALUES (?, ?, ?)", (usn, q, expires_at))
-    else:
-        cur.execute("INSERT INTO otps (usn, otp, expires_at) VALUES (%s, %s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp, expires_at=EXCLUDED.expires_at", (usn, q, expires_at))
-    conn.commit()
-    conn.close()
+        # Numeric 6-digit OTP
+        q = ''.join(random.choices(string.digits, k=6))
+        
+        expires_at = datetime.now() + timedelta(minutes=5) # OTP valid for 5 minutes
+        conn = get_db()
+        cur = conn.cursor()
+        if USE_SQLITE:
+            cur.execute("INSERT OR REPLACE INTO otps (usn, otp, expires_at) VALUES (?, ?, ?)", (usn, q, expires_at))
+        else:
+            cur.execute("INSERT INTO otps (usn, otp, expires_at) VALUES (%s, %s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp, expires_at=EXCLUDED.expires_at", (usn, q, expires_at))
+        conn.commit()
+        conn.close()
 
-    if send_email(email, "Uni-Vote Verification Code", f"Your verification code for Uni-Vote registration is: {q}"):
-        return jsonify({'success': True, 'message': 'OTP sent to your email successfully'})
-    else:
-        return jsonify({'success': False, 'message': 'Failed to send email. Please check SMTP configuration.'})
+        if send_email(email, "Uni-Vote Verification Code", f"Your verification code for Uni-Vote registration is: {q}"):
+            return jsonify({'success': True, 'message': 'OTP sent to your email successfully'})
+        else:
+            return jsonify({'success': False, 'message': 'Failed to send email. Please check SMTP configuration.'})
+    except Exception as e:
+        print(f"ERROR in /api/send_otp: {e}")
+        return jsonify({'success': False, 'message': 'An unexpected server error occurred while generating OTP.'}), 500
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
