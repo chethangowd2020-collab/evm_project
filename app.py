@@ -593,7 +593,7 @@ def admin_feedback():
                    (SELECT class FROM candidates WHERE name = f.cr_name LIMIT 1) as cr_class,
                    (SELECT semester FROM candidates WHERE name = f.cr_name LIMIT 1) as cr_semester
             FROM feedback f
-            ORDER BY f.created_at DESC
+            ORDER BY cr_semester ASC, cr_class ASC, f.created_at DESC
         """)
         rows = cur.fetchall()
         conn.close()

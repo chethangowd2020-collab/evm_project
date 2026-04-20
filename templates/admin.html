@@ -225,13 +225,15 @@
                 <th>ID</th>
                 <th>Student USN</th>
                 <th>CR Name</th>
-                <th>CR Sem/Class</th>
+                <th>CR Sem</th>
+                <th>CR Sem</th>
+                <th>CR Class</th>
                 <th>Feedback</th>
                 <th>Date</th>
               </tr>
             </thead>
             <tbody id="feedbackBody">
-              <tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading feedback...</td></tr>
+              <tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading feedback...</td></tr>
             </tbody>
           </table>
         </div>
@@ -578,12 +580,14 @@
           return;
         }
 
+        // The colspan for the "No feedback submitted yet." message should be 7, not 6.
         tbody.innerHTML = d.data.map(f => `
           <tr>
             <td>${f.id}</td>
             <td><strong>${f.student_usn}</strong></td>
             <td>${f.cr_name}</td>
-            <td><span class="badge badge-primary">${f.cr_class || '-'}</span> <strong>Sem ${f.cr_semester || '-'}</strong></td>
+            <td><strong>Sem ${f.cr_semester || '-'}</strong></td>
+            <td><span class="badge badge-primary">${f.cr_class || '-'}</span></td>
             <td>${f.feedback_text}</td>
             <td>${new Date(f.created_at).toLocaleString()}</td>
           </tr>
