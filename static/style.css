@@ -33,6 +33,11 @@ body {
   line-height: 1.6;
 }
 
+body.login-page {
+  background: linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)), url('/static/sjbit.jpg') no-repeat center center fixed;
+  background-size: cover;
+}
+
 /* Background decoration */
 body::before {
   content: '';
@@ -49,6 +54,10 @@ body::after {
   width: 500px; height: 500px;
   background: radial-gradient(circle, rgba(91,108,249,0.08) 0%, transparent 70%);
   pointer-events: none; z-index: 0;
+}
+
+body.login-page::before, body.login-page::after {
+  display: none;
 }
 
 /* ─── NAVBAR ─────────────────────────────────────────── */
