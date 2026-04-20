@@ -112,10 +112,19 @@ function viewResults() {
   window.location.href = "/results";
 }
 
-let _resultsSortMode = 'sem'; // 'sem' or 'class'
+let _resultsSortMode = 'sem';
+let _selectedSemester = 'all';
+let _selectedClass = 'all'; // 'sem' or 'class'
 
 function setResultsSort(mode) {
   _resultsSortMode = mode;
+  loadAdminResults();
+}
+
+function applyFilters() {
+  _selectedSemester = document.getElementById('semesterFilter')?.value || 'all';
+  _selectedClass = document.getElementById('classFilter')?.value || 'all';
+
   loadAdminResults();
 }
 
@@ -142,64 +151,70 @@ async function loadAdminResults() {
 
     let sortedKeys = Object.keys(data.classes);
 
-    if (_resultsSortMode === 'class') {
-      // Sort primarily by Section Letter (A, B, C...) then by Semester
-      sortedKeys.sort((a, b) => {
-        const partA = a.split(' - '); // ["Sem 1", "CSE A"]
-        const partB = b.split(' - ');
-        const letterA = partA[1].slice(-1); // e.g. "A"
-        const letterB = partB[1].slice(-1);
-        
-        if (letterA !== letterB) return letterA.localeCompare(letterB);
-        // If same class, compare the Semester part (index 0)
-        return partA[0].localeCompare(partB[0]);
-      });
+    sortedKeys.sort((a, b) => {
+      const partA = a.split(' - '); // ["Sem 3", "CSE A"]
+      const partB = b.split(' - ');
+
+      const semA = parseInt(partA[0].replace('Sem ', ''));
+      const semB = parseInt(partB[0].replace('Sem ', ''));
+
+      const classA = partA[1];
+      const classB = partB[1];
+
+      if (_resultsSortMode === 'class') {
+      // 🔵 Sort by Class → then Semester
+      if (classA !== classB) return classA.localeCompare(classB);
+      return semA - semB;
     } else {
-      // Default: Sort by Semester (1-8) then by Class Section Letter (A-O)
-      sortedKeys.sort((a, b) => {
-        const partA = a.split(' - ');
-        const partB = b.split(' - ');
-        // Compare semester first
-        if (partA[0] !== partB[0]) return partA[0].localeCompare(partB[0]);
-        // Then compare the section letter (A, B, C...)
-        return partA[1].slice(-1).localeCompare(partB[1].slice(-1));
-      });
+      // 🔵 Sort by Semester → then Class
+      if (semA !== semB) return semA - semB;
+      return classA.localeCompare(classB);
     }
+});
 
     for (const clsKey of sortedKeys) {
-      let males = [...(data.classes[clsKey].males || [])];
-      let females = [...(data.classes[clsKey].females || [])];
 
-      // Internal sorting of candidates based on selected mode
-      if (_resultsSortMode === 'name') {
-        males.sort((a, b) => a.name.localeCompare(b.name));
-        females.sort((a, b) => a.name.localeCompare(b.name));
-      } else if (_resultsSortMode === 'usn') {
-        males.sort((a, b) => a.usn.localeCompare(b.usn));
-        females.sort((a, b) => a.usn.localeCompare(b.usn));
-      } else {
-        // Default or explicit votes sorting (Descending)
-        males.sort((a, b) => b.votes - a.votes);
-        females.sort((a, b) => b.votes - a.votes);
-      }
-      
-      const classDiv = document.createElement('div');
-      classDiv.className = 'results-class';
-      classDiv.innerHTML = `
-        <div class="results-class-header">📍 ${clsKey}</div>
-        <div class="results-grid">
-          <div class="results-gender-col">
-            <h4>Male Candidates</h4>
-            ${males.length > 0 ? renderResultRows(males) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
-          </div>
-          <div class="results-gender-col">
-            <h4>Female Candidates</h4>
-            ${females.length > 0 ? renderResultRows(females) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
-          </div>
-        </div>
-      `;
-      container.appendChild(classDiv);
-    }
+  // 🔥 STEP 1: Extract semester + class
+  const parts = clsKey.split(' - ');
+  const sem = parts[0].replace('Sem ', '');
+  const cls = parts[1];
+
+  // 🔥 STEP 2: APPLY FILTERS (THIS IS THE MAIN ADDITION)
+  if (_selectedSemester !== 'all' && _selectedSemester !== sem) continue;
+  if (_selectedClass !== 'all' && _selectedClass !== cls) continue;
+
+  let males = [...(data.classes[clsKey].males || [])];
+  let females = [...(data.classes[clsKey].females || [])];
+
+  // Internal sorting of candidates
+  if (_resultsSortMode === 'name') {
+    males.sort((a, b) => a.name.localeCompare(b.name));
+    females.sort((a, b) => a.name.localeCompare(b.name));
+  } else if (_resultsSortMode === 'usn') {
+    males.sort((a, b) => a.usn.localeCompare(b.usn));
+    females.sort((a, b) => a.usn.localeCompare(b.usn));
+  } else {
+    males.sort((a, b) => b.votes - a.votes);
+    females.sort((a, b) => b.votes - a.votes);
+  }
+
+  const classDiv = document.createElement('div');
+  classDiv.className = 'results-class';
+  classDiv.innerHTML = `
+    <div class="results-class-header">📍 ${clsKey}</div>
+    <div class="results-grid">
+      <div class="results-gender-col">
+        <h4>Male Candidates</h4>
+        ${males.length > 0 ? renderResultRows(males) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
+      </div>
+      <div class="results-gender-col">
+        <h4>Female Candidates</h4>
+        ${females.length > 0 ? renderResultRows(females) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
+      </div>
+    </div>
+  `;
+  container.appendChild(classDiv);
+}
   } catch (e) { console.error("Admin Results Error:", e); }
 }
 
