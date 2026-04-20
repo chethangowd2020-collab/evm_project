@@ -229,10 +229,11 @@
                 <th>CR Class</th>
                 <th>Feedback</th>
                 <th>Date</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="feedbackBody">
-              <tr><td colspan="7" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading feedback...</td></tr>
+              <tr><td colspan="8" style="text-align:center;color:var(--text-soft);padding:2rem;">Loading feedback...</td></tr>
             </tbody>
           </table>
         </div>
@@ -570,16 +571,15 @@
         const d = await apiGet('/api/admin/feedback');
         const tbody = document.getElementById('feedbackBody');
         if (!d.success) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;padding:2rem;">Unable to load feedback. Please refresh or log in again.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:2rem;">Unable to load feedback. Please refresh or log in again.</td></tr>`;
           return;
         }
 
         if (d.data.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text-soft);padding:2rem;">No feedback submitted yet.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--text-soft);padding:2rem;">No feedback submitted yet.</td></tr>`;
           return;
         }
 
-        // The colspan for the "No feedback submitted yet." message should be 7, not 6.
         tbody.innerHTML = d.data.map(f => `
           <tr>
             <td>${f.id}</td>
@@ -589,11 +589,29 @@
             <td><span class="badge badge-primary">${f.cr_class || '-'}</span></td>
             <td>${f.feedback_text}</td>
             <td>${new Date(f.created_at).toLocaleString()}</td>
+            <td><button class="btn btn-danger btn-sm" onclick="deleteFeedback(this, ${f.id})">Delete</button></td>
           </tr>
         `).join('');
       } catch (e) {
         console.error("Load feedback error:", e);
-        document.getElementById('feedbackBody').innerHTML = `<tr><td colspan="6" style="text-align:center;color:red;padding:2rem;">Error loading feedback data. Check the server logs.</td></tr>`;
+        document.getElementById('feedbackBody').innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:2rem;">Error loading feedback data. Check the server logs.</td></tr>`;
+      }
+    }
+
+    async function deleteFeedback(btn, id) {
+      if (!confirm('Are you sure you want to delete this feedback?')) return;
+      setLoading(btn, true, 'Deleting...');
+      try {
+        const data = await apiFetch(`/api/admin/delete_feedback/${id}`, {});
+        if (data.success) {
+          await loadFeedback();
+        } else {
+          alert(data.message || 'Failed to delete feedback');
+        }
+      } catch (e) {
+        alert('A network error occurred.');
+      } finally {
+        setLoading(btn, false);
       }
     }
 
