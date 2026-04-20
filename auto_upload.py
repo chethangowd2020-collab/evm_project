@@ -12,26 +12,38 @@ def run_cmd(cmd):
 
 
 def has_changes():
-    status = run_cmd(['git', 'status', '--porcelain'])
-    return status != '', status
+    # Check for uncommitted file changes
+    porcelain_status = run_cmd(['git', 'status', '--porcelain'])
+    
+    # Check if there are local commits that haven't been pushed to origin/main yet
+    try:
+        ahead_count = run_cmd(['git', 'rev-list', '--count', 'origin/main..main'])
+    except Exception:
+        ahead_count = '0'
+        
+    # Return True if there are modified files OR unpushed commits
+    return (porcelain_status != '' or ahead_count != '0'), porcelain_status
 
 
 def commit_and_push(status):
-    print('\nDetected changes:')
-    print(status)
-    try:
-        run_cmd(['git', 'add', '--all'])
-        message = f'Auto commit: {datetime.now():%Y-%m-%d %H:%M:%S}'
-        run_cmd(['git', 'commit', '-m', message])
-    except subprocess.CalledProcessError as exc:
-        print('No commit created or commit failed:', exc)
-        return
+    # Only attempt to commit if there are actually modified files
+    if status != '':
+        print('\nDetected file changes to commit:')
+        print(status)
+        try:
+            run_cmd(['git', 'add', '--all'])
+            message = f'Auto commit: {datetime.now():%Y-%m-%d %H:%M:%S}'
+            run_cmd(['git', 'commit', '-m', message])
+        except subprocess.CalledProcessError as exc:
+            print('No commit created or commit failed:', exc)
+            return
 
     try:
+        print('Attempting to push commits to origin/main...')
         run_cmd(['git', 'push', 'origin', 'main'])
         print('Auto push completed. Waiting for next change...\n')
     except subprocess.CalledProcessError as exc:
-        print('Auto push failed:', exc)
+        print('Auto push failed. Check your internet connection or DNS settings:', exc)
 
 
 def main():
