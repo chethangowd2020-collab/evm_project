@@ -259,7 +259,7 @@ body.login-page::after {
 }
 
 .navbar-brand span {
-  background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6);
+  background: var(--grad2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 700;
