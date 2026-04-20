@@ -112,6 +112,33 @@ function viewResults() {
   window.location.href = "/results";
 }
 
+async function loadVoteStats() {
+  const container = document.getElementById('vote-stats-widget');
+  if (!container) return;
+
+  try {
+    const data = await apiGet('/api/vote_stats');
+    if (data.success) {
+      const pct = data.percentage;
+      container.innerHTML = `
+        <div class="card" style="padding: 1.5rem; margin-bottom: 2rem; animation: cardFadeIn 0.5s ease-out;">
+          <div class="section-title" style="margin-bottom: 0.5rem;">
+            <span>📊 Class Voting Participation</span>
+            <span style="margin-left: auto; color: var(--primary); font-weight: 800;">${pct}%</span>
+          </div>
+          <div class="vote-bar" style="height: 12px; margin: 12px 0; background: var(--bg);">
+            <div class="vote-bar-fill" style="width: ${pct}%; box-shadow: 0 0 10px rgba(91,108,249,0.3);"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-soft); font-weight: 500;">
+            <span>${data.voted} students voted</span>
+            <span>Class Size: ${data.total}</span>
+          </div>
+        </div>
+      `;
+    }
+  } catch (e) { console.error("Stats Error:", e); }
+}
+
 async function handleLogin() {
   // Note: login.html uses admin-usn and admin-password for admin tab
   const usnInput = document.getElementById('login-usn') || document.getElementById('admin-usn');
@@ -196,5 +223,11 @@ document.addEventListener('DOMContentLoaded', () => {
     nameInput.addEventListener('input', function() {
       this.value = this.value.toUpperCase();
     });
+  }
+
+  // Initialize dashboard widget if on dashboard page
+  if (window.location.pathname.includes('dashboard')) {
+    loadVoteStats();
+    setInterval(loadVoteStats, 15000); // Refresh every 15 seconds
   }
 });
