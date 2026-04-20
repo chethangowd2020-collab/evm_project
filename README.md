@@ -40,7 +40,7 @@ To ensure data is **never lost** during redeployments, this project uses an exte
 ## Student flow
 
 1. Register at `/register`
-   - Uses an Alphanumeric Captcha for verification.
+   - Uses Email OTP (One-Time Password) for verification.
 2. Login at `/login`.
 3. Optionally enroll as candidate at `/candidate_register`.
 4. Vote at `/vote` after admin enables voting.
