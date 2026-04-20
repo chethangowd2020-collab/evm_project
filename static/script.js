@@ -172,16 +172,26 @@ async function loadAdminResults() {
     }
 });
 
+const selectedSem = document.getElementById('semesterFilter')?.value || 'all';
+const selectedClass = document.getElementById('classFilter')?.value || 'all';
+
     for (const clsKey of sortedKeys) {
 
-  // 🔥 STEP 1: Extract semester + class
-  const parts = clsKey.split(' - ');
-  const sem = parts[0].replace('Sem ', '');
-  const cls = parts[1];
+      const semMatch = clsKey.match(/Sem (\d+)/);
+      const semNumber = semMatch ? semMatch[1] : null;
 
-  // 🔥 STEP 2: APPLY FILTERS (THIS IS THE MAIN ADDITION)
-  if (_selectedSemester !== 'all' && _selectedSemester !== sem) continue;
-  if (_selectedClass !== 'all' && _selectedClass !== cls) continue;
+      const className = clsKey.split(' - ')[1] || '';
+      const classLetter = className.slice(-1); // A, B, C...
+
+      // 🔴 Semester Filter
+      if (selectedSem !== 'all' && semNumber !== selectedSem) {
+        continue;
+      }
+
+      // 🔴 Class Filter
+      if (selectedClass !== 'all' && classLetter !== selectedClass) {
+        continue;
+      }
 
   let males = [...(data.classes[clsKey].males || [])];
   let females = [...(data.classes[clsKey].females || [])];
