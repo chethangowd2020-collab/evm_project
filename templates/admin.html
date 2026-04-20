@@ -633,9 +633,27 @@
       }
     }
 
+    async function refreshAdminStats() {
+      try {
+        const d = await apiGet('/api/admin/stats');
+        if (d.success) {
+          document.getElementById('totalStudents').textContent = d.students;
+          document.getElementById('totalCandidates').textContent = d.candidates;
+          document.getElementById('totalVoters').textContent = d.votes;
+          document.getElementById('turnoutPct').textContent = d.turnout + '%';
+        }
+      } catch (e) { console.error("Stats refresh error:", e); }
+    }
+
     loadVotingStatus();
     loadStudents();
     loadCandidates();
+
+    // Start Live Count: Update stats and status indicators every 10 seconds
+    setInterval(() => {
+      refreshAdminStats();
+      loadVotingStatus();
+    }, 10000);
   </script>
 </body>
 </html>

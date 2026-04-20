@@ -877,6 +877,41 @@ def delete_student(usn):
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
+@app.route('/api/admin/stats')
+@admin_required
+def admin_stats():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        # Get total students
+        cur.execute("SELECT COUNT(*) as total FROM students")
+        total_students = row_get(cur.fetchone(), 'total', 0)
+        
+        # Get total candidates
+        cur.execute("SELECT COUNT(*) as total FROM candidates")
+        total_candidates = row_get(cur.fetchone(), 'total', 0)
+        
+        # Get total votes cast
+        cur.execute("SELECT COUNT(*) as total FROM votes")
+        total_votes = row_get(cur.fetchone(), 'total', 0)
+        
+        conn.close()
+        
+        turnout = 0
+        if total_students > 0:
+            turnout = round((total_votes / total_students) * 100)
+            
+        return jsonify({
+            'success': True,
+            'students': total_students,
+            'candidates': total_candidates,
+            'votes': total_votes,
+            'turnout': turnout
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+
 @app.route('/api/admin/delete_candidate/<int:id>', methods=['POST'])
 @admin_required
 def delete_candidate(id):
