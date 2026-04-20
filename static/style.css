@@ -109,6 +109,20 @@ body.login-page::after {
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
+/* Visible border for unselected tab and toggle buttons */
+.login-page .tab-btn:not(.active),
+.login-page .form-toggle-btn:not(.active) {
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  background: rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.login-page .tab-btn:not(.active):hover,
+.login-page .form-toggle-btn:not(.active):hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
 .login-page .auth-footer a {
   text-decoration: underline;
   opacity: 0.9;
