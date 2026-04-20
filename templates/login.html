@@ -115,6 +115,97 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 30px rgba(0,0,0,0.3);
     }
+
+    /* Login Card Styles */
+    .container { margin-bottom: 1.5rem; }
+    .tab-buttons {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     gap: 10px;
+     margin-bottom: 1.8rem;
+    }
+    .tab-btn {
+  padding: 9px 18px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: var(--grad1); /* same login button style */
+  color: white;
+  box-shadow: 0 4px 12px rgba(91,108,249,0.25);
+}
+
+.tab-btn:hover {
+  background: rgba(91,108,249,0.08);
+  color: var(--primary);
+}
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .form-toggle { display: flex; margin-top: 1.2rem; margin-bottom: 1.5rem; gap: 0.8rem; }
+    .form-toggle-btn { 
+      flex: 1; padding: 0.7rem; background: transparent; 
+      border: none; cursor: pointer; font-weight: 600;
+      border-radius: 10px; transition: all 0.2s; color: var(--text-soft);
+    }
+    .form-toggle-btn.active {
+     background: var(--grad2);
+     color: white;
+     border-color: transparent;
+    }
+    .form-toggle-btn:hover { border-color: var(--primary); }
+    
+    /* Auth Card Enhancements */
+    .auth-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(91,108,249,0.15);
+      overflow: hidden;
+      border: 1px solid rgba(91,108,249,0.1);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    
+    .auth-header {
+      padding: 3rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      background: var(--grad1);
+      text-align: center;
+  color: white;
+}
+    
+    .auth-icon {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+    }
+    
+    .auth-header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem;
+      color: white;
+      margin-bottom: 0.4rem;
+    }
+    
+    .auth-header p {
+      color: rgba(255,255,255,0.95);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    
+    .auth-body {
+      padding: 2rem;
+    }
+
     /* Opening Splash Screen */
     #splash-screen {
       position: fixed;
