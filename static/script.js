@@ -122,7 +122,8 @@ async function loadAdminResults() {
     if (!data.success) return;
 
     container.innerHTML = '';
-    const sortedKeys = Object.keys(data.classes).sort();
+    // Remove .sort() to preserve the specific Semester/Class order sent by the server
+    const sortedKeys = Object.keys(data.classes);
 
     for (const clsKey of sortedKeys) {
       const candidates = data.classes[clsKey];
