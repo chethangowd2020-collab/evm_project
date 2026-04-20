@@ -131,9 +131,11 @@ async function loadAdminResults() {
     // Add sort controls at the top
     container.innerHTML = `
       <div class="results-sort-controls" style="margin-bottom: 2rem; display: flex; align-items: center; gap: 15px; padding: 12px 20px; background: var(--surface); border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow);">
-        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-soft);">Group by:</span>
+        <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-soft);">Sort / Group by:</span>
         <button class="btn btn-sm ${_resultsSortMode === 'sem' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('sem')" style="min-width: 100px;">Semester</button>
         <button class="btn btn-sm ${_resultsSortMode === 'class' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('class')" style="min-width: 100px;">Class Section</button>
+        <button class="btn btn-sm ${_resultsSortMode === 'name' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('name')" style="min-width: 100px;">Name</button>
+        <button class="btn btn-sm ${_resultsSortMode === 'usn' ? 'btn-primary' : 'btn-secondary'}" onclick="setResultsSort('usn')" style="min-width: 100px;">USN</button>
       </div>
     `;
 
@@ -164,9 +166,17 @@ async function loadAdminResults() {
     }
 
     for (const clsKey of sortedKeys) {
-      const candidates = data.classes[clsKey];
-      const hasMales = candidates.males && candidates.males.length > 0;
-      const hasFemales = candidates.females && candidates.females.length > 0;
+      let males = [...(data.classes[clsKey].males || [])];
+      let females = [...(data.classes[clsKey].females || [])];
+
+      // Internal sorting of candidates based on selected mode
+      if (_resultsSortMode === 'name') {
+        males.sort((a, b) => a.name.localeCompare(b.name));
+        females.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (_resultsSortMode === 'usn') {
+        males.sort((a, b) => a.usn.localeCompare(b.usn));
+        females.sort((a, b) => a.usn.localeCompare(b.usn));
+      }
       
       const classDiv = document.createElement('div');
       classDiv.className = 'results-class';
@@ -175,11 +185,11 @@ async function loadAdminResults() {
         <div class="results-grid">
           <div class="results-gender-col">
             <h4>Male Candidates</h4>
-            ${hasMales ? renderResultRows(candidates.males) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
+            ${males.length > 0 ? renderResultRows(males) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
           </div>
           <div class="results-gender-col">
             <h4>Female Candidates</h4>
-            ${hasFemales ? renderResultRows(candidates.females) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
+            ${females.length > 0 ? renderResultRows(females) : '<p style="color: var(--text-soft); font-size: 0.85rem; padding: 10px;">no candidate have been registered</p>'}
           </div>
         </div>
       `;
@@ -189,9 +199,13 @@ async function loadAdminResults() {
 }
 
 function renderResultRows(list) {
+  // Calculate the highest vote count to correctly identify the winner(s) 
+  // when the list is sorted by Name or USN instead of Votes.
+  const maxVotes = list.length > 0 ? Math.max(...list.map(c => c.votes)) : 0;
+
   return list.map((c, i) => `
-    <div class="result-row ${i === 0 && c.votes > 0 ? 'winner' : ''}">
-      <span class="rank">${i === 0 && c.votes > 0 ? '👑' : (i + 1)}</span>
+    <div class="result-row ${c.votes > 0 && c.votes === maxVotes ? 'winner' : ''}">
+      <span class="rank">${c.votes > 0 && c.votes === maxVotes ? '👑' : (i + 1)}</span>
       <span class="rname">${c.name}</span>
       <span class="rvotes">${c.votes} votes</span>
     </div>
