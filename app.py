@@ -215,6 +215,8 @@ def hash_password(p):
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # DEBUG: Print the admin_usn value from the session
+        print(f"DEBUG: admin_required check - admin_usn in session: {session.get('admin_usn')}")
         if not session.get('admin_usn'):
             return jsonify({'success': False, 'message': 'Admin access required'}), 403
         return f(*args, **kwargs)
