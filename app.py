@@ -9,6 +9,7 @@ import smtplib # type: ignore
 import tempfile
 from email.message import EmailMessage
 import string
+import re
 import sqlite3
 from functools import wraps
 
@@ -257,6 +258,10 @@ def get_auth_student_usn():
 def index():
     # Always redirect to login on fresh entry to the root URL
     return redirect(url_for('login'))
+
+@app.route('/favicon.ico')
+def favicon():
+    return app.send_static_file('logo.webp')
 
 
 @app.route('/login')
@@ -704,6 +709,13 @@ def api_register():
         usn = data.get('usn', '').strip().upper()
         otp_entered = data.get('otp', '').strip()
         gender = data.get('gender')
+        password = data.get('password', '')
+
+        # Server-side validation
+        if not re.match(r'^1JB\d{2}[A-Z]{2}\d{3}$', usn):
+            return jsonify({'success': False, 'message': 'Invalid USN format'})
+        if len(password) < 6:
+            return jsonify({'success': False, 'message': 'Password must be at least 6 characters'})
 
         conn = get_db()
         cur = conn.cursor()
@@ -811,11 +823,13 @@ def delete_student(usn):
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("DELETE FROM students WHERE usn=%s", (usn,))
+        cur.execute("DELETE FROM votes WHERE usn=%s", (usn,))
+        cur.execute("DELETE FROM feedback WHERE student_usn=%s", (usn,))
         cur.execute("DELETE FROM candidates WHERE usn=%s", (usn,))
+        cur.execute("DELETE FROM students WHERE usn=%s", (usn,))
         conn.commit()
         conn.close()
-        return jsonify({'success': True, 'message': 'Student deleted'})
+        return jsonify({'success': True, 'message': 'Student and related records deleted'})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
