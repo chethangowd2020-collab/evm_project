@@ -249,6 +249,9 @@ def admin_required(f):
 
 def get_auth_student_usn():
     """Helper to retrieve the namespaced USN from headers and session."""
+    # PERMANENT FIX: If an admin is active, this cannot be a student session
+    if session.get('admin_usn'):
+        return None
     header_usn = request.headers.get('X-Student-USN')
     if header_usn and session.get(f"auth_{header_usn.upper()}"):
         return header_usn.upper()
@@ -546,6 +549,7 @@ def api_login():
 
     # Admin login check
     if identifier.upper() == ADMIN_USN and password == ADMIN_PASSWORD:
+        session.clear() # Clear any existing student/admin data
         session['admin_usn'] = identifier.upper()
         session.permanent = True
         return jsonify({'success': True, 'role': 'admin'})
@@ -564,6 +568,7 @@ def api_login():
         return jsonify({'success': False, 'message': 'Wrong password'})
 
     usn = row_get(user, 'usn')
+    session.clear() # Clear any existing admin/stale student data
     # Create namespaced authentication entry
     session[f"auth_{usn}"] = True
     session['student_usn'] = usn  # Keep as fallback
@@ -916,17 +921,8 @@ def reset_password():
 
 @app.route('/logout')
 def logout():
-    role = request.args.get('role')
-    if role == 'admin':
-        session.pop('admin_usn', None)
-    else:
-        # Surgical logout for student: remove both the namespaced auth and the fallback usn
-        usn = session.get('student_usn')
-        if usn:
-            session.pop(f"auth_{usn.upper()}", None)
-        session.pop('student_usn', None)
-    
-    # session.clear() removed to prevent cross-role/cross-tab logout
+    # session.clear() is the only way to guarantee a clean slate
+    session.clear()
     return redirect(url_for('login'))
 
 

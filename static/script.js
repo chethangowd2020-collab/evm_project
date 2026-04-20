@@ -219,7 +219,11 @@ async function handleLogin() {
   const data = await apiFetch('/api/login', { usn, password });
 
   if (data.success) {
-    // ✅ mark session active (IMPORTANT)
+    // Permanent Fix: Clear client-side storage before setting new identity
+    const prevSplash = sessionStorage.getItem('uni_vote_splash_shown');
+    sessionStorage.clear();
+    if (prevSplash) sessionStorage.setItem('uni_vote_splash_shown', prevSplash);
+
     setAuthActive(true);
     
     if (data.role === 'student' && data.usn) {
