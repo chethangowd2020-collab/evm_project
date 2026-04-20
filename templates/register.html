@@ -90,14 +90,14 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Captcha Verification</label>
+            <label class="form-label">Email Verification</label>
             <div class="otp-row">
-              <input type="text" id="captcha" class="form-control" placeholder="Enter captcha answer" maxlength="10">
-              <button class="btn btn-secondary btn-sm" id="sendOtpBtn" onclick="sendCaptcha()" style="white-space:nowrap">
-                Generate Captcha
+              <input type="text" id="otp" class="form-control" placeholder="Enter 6-digit OTP" maxlength="6">
+              <button class="btn btn-secondary btn-sm" id="sendOtpBtn" onclick="sendOtp()" style="white-space:nowrap">
+                Send OTP
               </button>
             </div>
-            <div class="otp-badge" id="captchaBadge">Click "Generate Captcha" to get your question.</div>
+            <div class="otp-badge" id="otpBadge">Check your email for the verification code.</div>
           </div>
 
           <div class="form-row">
@@ -127,7 +127,7 @@
 
   <script src="/static/script.js?v=2"></script>
   <script>
-    async function sendCaptcha() {
+    async function sendOtp() {
       const usn = document.getElementById('usn').value.trim();
       const email = document.getElementById('email').value.trim();
       const alert = document.getElementById('alertBox');
@@ -142,12 +142,11 @@
       setLoading(btn, false);
 
       if (data.success) {
-        document.getElementById('captchaBadge').textContent = data.captcha_question;
-        document.getElementById('captchaBadge').style.display = 'block';
-        btn.textContent = 'Regenerate Captcha';
-        showAlert(alert, 'Captcha generated!', 'success');
+        document.getElementById('otpBadge').style.display = 'block';
+        btn.textContent = 'Resend OTP';
+        showAlert(alert, 'OTP sent to your email!', 'success');
       } else {
-        showAlert(alert, data.message || 'Failed to generate captcha.');
+        showAlert(alert, data.message || 'Failed to send OTP.');
       }
     }
 
@@ -158,7 +157,7 @@
       const cls = document.getElementById('class').value;
       const sem = document.getElementById('semester').value;
       const gender = document.getElementById('gender').value;
-      const captcha = document.getElementById('captcha').value.trim();
+      const otp = document.getElementById('otp').value.trim();
       const password = document.getElementById('password').value;
       const confirm = document.getElementById('confirmPassword').value;
       const alert = document.getElementById('alertBox');
@@ -176,7 +175,7 @@
 
       const btn = document.getElementById('registerBtn');
       setLoading(btn, true, 'Registering...');
-      const data = await apiFetch('/api/register', { usn, name, email, class: cls, semester: sem, gender, otp: captcha, password });
+      const data = await apiFetch('/api/register', { usn, name, email, class: cls, semester: sem, gender, otp: otp, password });
       setLoading(btn, false);
 
       if (data.success) {
