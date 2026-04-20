@@ -172,7 +172,7 @@ body.login-page::after {
 .login-page .form-control option,
 .register-page .form-control option {
   background-color: #ffffff; /* Solid white background for the list */
-  color: #1e2340;            /* Dark text color for readability */
+  color: var(--accent);            /* Dark text color for readability */
 }
 
 .login-page .form-control:focus {
