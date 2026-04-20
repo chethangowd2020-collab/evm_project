@@ -667,13 +667,13 @@ def send_otp():
         q = ''.join(random.choices(string.digits, k=6))
         
         expires_at_dt = datetime.now() + timedelta(minutes=5) # OTP valid for 5 minutes
-        expires_at_str = expires_at_dt.isoformat() # Store as ISO string for consistency
+        # Pass datetime object directly; database driver handles conversion
         conn = get_db()
         cur = conn.cursor()
         if USE_SQLITE:
-            cur.execute("INSERT OR REPLACE INTO otps (usn, otp, expires_at) VALUES (?, ?, ?)", (usn, q, expires_at_str))
+            cur.execute("INSERT OR REPLACE INTO otps (usn, otp, expires_at) VALUES (?, ?, ?)", (usn, q, expires_at_dt))
         else:
-            cur.execute("INSERT INTO otps (usn, otp, expires_at) VALUES (%s, %s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp, expires_at=EXCLUDED.expires_at", (usn, q, expires_at_str))
+            cur.execute("INSERT INTO otps (usn, otp, expires_at) VALUES (%s, %s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp, expires_at=EXCLUDED.expires_at", (usn, q, expires_at_dt))
         conn.commit()
         conn.close()
 
