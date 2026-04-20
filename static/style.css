@@ -123,6 +123,11 @@ body.login-page::after {
   border-color: rgba(255, 255, 255, 0.8) !important;
 }
 
+.login-page .tab-btn.active,
+.login-page .form-toggle-btn.active {
+  background: linear-gradient(135deg, #1e3a8a, #2563eb, #3b82f6) !important;
+}
+
 .login-page .auth-footer a {
   text-decoration: underline;
   opacity: 0.9;
