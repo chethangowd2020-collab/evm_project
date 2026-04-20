@@ -5,7 +5,7 @@ from psycopg2.extras import RealDictCursor
 import hashlib
 import random
 import os
-import smtplib
+import smtplib # type: ignore
 import tempfile
 from email.message import EmailMessage
 import string
@@ -169,7 +169,8 @@ def init_db():
     c.execute('''CREATE TABLE IF NOT EXISTS otps (
         usn TEXT PRIMARY KEY,
         otp TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP
     )''')
 
     c.execute('''CREATE TABLE IF NOT EXISTS settings (
@@ -652,12 +653,13 @@ def send_otp():
     # Numeric 6-digit OTP
     q = ''.join(random.choices(string.digits, k=6))
     
+    expires_at = datetime.now() + timedelta(minutes=5) # OTP valid for 5 minutes
     conn = get_db()
     cur = conn.cursor()
     if USE_SQLITE:
-        cur.execute("INSERT OR REPLACE INTO otps (usn, otp) VALUES (?, ?)", (usn, q))
+        cur.execute("INSERT OR REPLACE INTO otps (usn, otp, expires_at) VALUES (?, ?, ?)", (usn, q, expires_at))
     else:
-        cur.execute("INSERT INTO otps (usn, otp) VALUES (%s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp", (usn, q))
+        cur.execute("INSERT INTO otps (usn, otp, expires_at) VALUES (%s, %s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp, expires_at=EXCLUDED.expires_at", (usn, q, expires_at))
     conn.commit()
     conn.close()
 
@@ -680,11 +682,15 @@ def api_register():
         if not gender:
             return jsonify({'success': False, 'message': 'Gender is required'})
 
-        # Verify Captcha
-        cur.execute("SELECT otp FROM otps WHERE usn=%s", (usn,))
+        # Verify OTP and check for expiration
+        cur.execute("SELECT otp, expires_at FROM otps WHERE usn=%s", (usn,))
         record = cur.fetchone()
-        if not record or row_get(record, 'otp') != otp_entered:
-            return jsonify({'success': False, 'message': 'Invalid Captcha'})
+        
+        if not record or row_get(record, 'otp') != otp_entered: # OTP mismatch
+            return jsonify({'success': False, 'message': 'Invalid OTP'})
+        
+        if datetime.now() > datetime.fromisoformat(row_get(record, 'expires_at')): # OTP expired
+            return jsonify({'success': False, 'message': 'OTP expired. Please request a new one.'})
 
         # Create student
         cur.execute("""
