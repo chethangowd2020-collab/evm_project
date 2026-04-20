@@ -112,6 +112,33 @@ body.login-page::after {
   opacity: 0.9;
 }
 
+/* High-contrast Glass Alerts for Login */
+.login-page .alert {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff !important;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  margin-top: 1.5rem;
+  padding: 14px;
+  animation: alertPop 0.3s ease-out;
+}
+
+@keyframes alertPop {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-page .alert-error {
+  background: rgba(220, 38, 38, 0.5) !important; /* Richer red */
+}
+
+.login-page .alert-success {
+  background: rgba(5, 150, 105, 0.5) !important; /* Richer green */
+}
+
 /* Glass Input Fields */
 .login-page .form-control {
   background: rgba(255, 255, 255, 0.05);

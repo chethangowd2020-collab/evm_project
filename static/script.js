@@ -119,18 +119,23 @@ async function handleLogin() {
   
   if (!usnInput || !pwdInput) return;
 
+  // Determine which alert box to use based on the active tab
+  const alertEl = (usnInput.id === 'login-usn') 
+    ? document.getElementById('login-alert') 
+    : document.getElementById('admin-alert');
+
   const usn = usnInput.value.trim().toUpperCase();
   const password = pwdInput.value;
   const usnRegex = /^1JB\d{2}[A-Z]{2}\d{3}$/;
 
   if (!usn || !password) {
-    alert("Please enter credentials");
+    if (alertEl) showAlert(alertEl, "Please enter credentials"); else alert("Please enter credentials");
     return;
   }
 
   // Validate format only for student login (not admin)
   if (usnInput.id === 'login-usn' && !usnRegex.test(usn)) {
-    alert("Invalid USN format.");
+    if (alertEl) showAlert(alertEl, "Invalid USN format."); else alert("Invalid USN format.");
     return;
   }
 
@@ -151,7 +156,7 @@ async function handleLogin() {
       window.location.href = '/dashboard';
     }
   } else {
-    alert(data.message || "Login failed");
+    if (alertEl) showAlert(alertEl, data.message || "Login failed"); else alert(data.message || "Login failed");
   }
 }
 
