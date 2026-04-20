@@ -101,7 +101,7 @@ def format_row(row):
     """Helper to ensure consistent lowercase keys for JS compatibility across DBs"""
     if not row:
         return {}
-    return {k.lower(): v for k, v in dict(row).items()}
+    return {k.lower(): (v if v is not None else "") for k, v in dict(row).items()}
 
 
 def init_db():
@@ -369,7 +369,12 @@ def admin_candidates():
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM candidates")
+        # Join with students table to retrieve the candidate's email
+        cur.execute("""
+            SELECT c.*, s.email 
+            FROM candidates c 
+            LEFT JOIN students s ON c.usn = s.usn
+        """)
         data = cur.fetchall()
         conn.close()
         
