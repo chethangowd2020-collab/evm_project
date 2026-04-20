@@ -936,9 +936,11 @@ def results_public():
         conn.close()
         return jsonify({'success': False})
 
-    # Filter by student's class and semester
-    cur.execute("SELECT class, semester FROM students WHERE usn=%s", (usn,))
-    student = cur.fetchone()
+    # Only apply class/semester filtering if the user is NOT an admin
+    student = None
+    if 'admin_usn' not in session and usn:
+        cur.execute("SELECT class, semester FROM students WHERE usn=%s", (usn,))
+        student = cur.fetchone()
 
     if student:
         cur.execute("SELECT * FROM candidates WHERE class=%s AND semester=%s ORDER BY gender, votes DESC", 
