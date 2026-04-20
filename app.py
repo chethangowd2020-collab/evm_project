@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, make_response
 import psycopg2
 from datetime import datetime, timedelta
 from psycopg2.extras import RealDictCursor
@@ -11,6 +11,8 @@ from email.message import EmailMessage
 import string
 import re
 import sqlite3
+import csv
+import io
 from functools import wraps
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -609,6 +611,31 @@ def admin_feedback():
         })
     except Exception as e:
         print("Admin Feedback Error:", str(e))
+        return jsonify({'success': False, 'message': str(e)})
+
+@app.route('/api/admin/export_results')
+@admin_required
+def export_results():
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute("SELECT semester, class, gender, name, usn, votes FROM candidates ORDER BY semester, class, gender, votes DESC")
+        rows = cur.fetchall()
+        conn.close()
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['Semester', 'Class', 'Gender', 'Candidate Name', 'USN', 'Votes'])
+        
+        for row in rows:
+            r = format_row(row)
+            writer.writerow([r['semester'], r['class'], r['gender'], r['name'], r['usn'], r['votes']])
+
+        response = make_response(output.getvalue())
+        response.headers["Content-Disposition"] = "attachment; filename=election_results.csv"
+        response.headers["Content-type"] = "text/csv"
+        return response
+    except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/admin/results')

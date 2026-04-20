@@ -112,6 +112,10 @@ function viewResults() {
   window.location.href = "/results";
 }
 
+function exportResultsCSV() {
+  window.location.href = '/api/admin/export_results';
+}
+
 async function loadVoteStats() {
   const container = document.getElementById('vote-stats-widget');
   if (!container) return;
