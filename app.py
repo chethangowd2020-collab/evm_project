@@ -666,13 +666,14 @@ def send_otp():
         # Numeric 6-digit OTP
         q = ''.join(random.choices(string.digits, k=6))
         
-        expires_at = datetime.now() + timedelta(minutes=5) # OTP valid for 5 minutes
+        expires_at_dt = datetime.now() + timedelta(minutes=5) # OTP valid for 5 minutes
+        expires_at_str = expires_at_dt.isoformat() # Store as ISO string for consistency
         conn = get_db()
         cur = conn.cursor()
         if USE_SQLITE:
-            cur.execute("INSERT OR REPLACE INTO otps (usn, otp, expires_at) VALUES (?, ?, ?)", (usn, q, expires_at))
+            cur.execute("INSERT OR REPLACE INTO otps (usn, otp, expires_at) VALUES (?, ?, ?)", (usn, q, expires_at_str))
         else:
-            cur.execute("INSERT INTO otps (usn, otp, expires_at) VALUES (%s, %s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp, expires_at=EXCLUDED.expires_at", (usn, q, expires_at))
+            cur.execute("INSERT INTO otps (usn, otp, expires_at) VALUES (%s, %s, %s) ON CONFLICT (usn) DO UPDATE SET otp=EXCLUDED.otp, expires_at=EXCLUDED.expires_at", (usn, q, expires_at_str))
         conn.commit()
         conn.close()
 
@@ -705,7 +706,17 @@ def api_register():
         if not record or row_get(record, 'otp') != otp_entered: # OTP mismatch
             return jsonify({'success': False, 'message': 'Invalid OTP'})
         
-        if datetime.now() > datetime.fromisoformat(row_get(record, 'expires_at')): # OTP expired
+        stored_expires_at_raw = row_get(record, 'expires_at')
+        # Convert to datetime object if it's a string (from SQLite or if stored as string in PG)
+        # If psycopg2 returns a datetime object directly, use it as is.
+        if isinstance(stored_expires_at_raw, str):
+            stored_expires_at = datetime.fromisoformat(stored_expires_at_raw)
+        elif isinstance(stored_expires_at_raw, datetime):
+            stored_expires_at = stored_expires_at_raw
+        else:
+            return jsonify({'success': False, 'message': 'Internal error with OTP expiration.'})
+
+        if datetime.now() > stored_expires_at: # OTP expired
             return jsonify({'success': False, 'message': 'OTP expired. Please request a new one.'})
 
         # Create student
