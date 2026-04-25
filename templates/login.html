@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Uni-Vote</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Hero Section */
+    .hero-section {
+      background: linear-gradient(135deg, #7B8CFF 0%, #EC4899 50%, #A855F7 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 15s ease infinite;
+      color: white;
+      padding: 4rem 2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    
+    .hero-section::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -5%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    
+    .hero-content {
+      max-width: 700px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .hero-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+    
+    .hero-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      margin-bottom: 0.8rem;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      letter-spacing: -1px;
+    }
+    
+    .hero-subtitle {
+      font-size: 1.15rem;
+      margin-bottom: 2rem;
+      opacity: 0.95;
+      line-height: 1.6;
+    }
+    
+    .hero-features {
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+    }
+    
+    .hero-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .hero-feature-icon {
+      font-size: 1.3rem;
+    }
+    
+    .hero-cta {
+      display: inline-block;
+      padding: 14px 36px;
+      background: white;
+      color: #5B6CF9;
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: 50px;
+      text-decoration: none;
+      transition: all 0.3s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      border: none;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+    }
+    
+    .hero-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 30px rgba(0,0,0,0.3);
+    }
+
+    /* Login Card Styles */
+    .container { margin-bottom: 1.5rem; }
+    .tab-buttons {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     gap: 10px;
+     margin-bottom: 1.8rem;
+    }
+    .tab-btn {
+  padding: 9px 18px;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  background: var(--grad1); /* same login button style */
+  color: white;
+  box-shadow: 0 4px 12px rgba(91,108,249,0.25);
+}
+
+.tab-btn:hover {
+  background: rgba(91,108,249,0.08);
+  color: var(--primary);
+}
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    
+    .form-toggle { display: flex; margin-top: 1.2rem; margin-bottom: 1.5rem; gap: 0.8rem; }
+    .form-toggle-btn { 
+      flex: 1; padding: 0.7rem; background: transparent; 
+      border: none; cursor: pointer; font-weight: 600;
+      border-radius: 10px; transition: all 0.2s; color: var(--text-soft);
+    }
+    .form-toggle-btn.active {
+     background: var(--grad2);
+     color: white;
+     border-color: transparent;
+    }
+    .form-toggle-btn:hover { border-color: var(--primary); }
+    
+    /* Auth Card Enhancements */
+    .auth-card {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 8px 32px rgba(91,108,249,0.15);
+      overflow: hidden;
+      border: 1px solid rgba(91,108,249,0.1);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    
+    .auth-header {
+      padding: 3rem 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      background: var(--grad1);
+      text-align: center;
+  color: white;
+}
+    
+    .auth-icon {
+     display: flex;
+     justify-content: center;
+     align-items: center;
+    }
+    
+    .auth-header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem;
+      color: white;
+      margin-bottom: 0.4rem;
+    }
+    
+    .auth-header p {
+      color: rgba(255,255,255,0.95);
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    
+    .auth-body {
+      padding: 2rem;
+    }
+
+    /* Opening Splash Screen */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #7B8CFF 0%, #EC4899 50%, #A855F7 100%);
+      background-size: 400% 400%;
+      animation: gradientShift 10s ease infinite;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+    }
+
+    .splash-content {
+      text-align: center;
+      color: white;
+    }
+
+    .splash-logo-text {
+      font-family: 'DM Serif Display', serif;
+      font-size: 5.5rem;
+      font-weight: 700;
+      letter-spacing: -4px;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      transform: scale(0.8) translateY(20px);
+      animation: splashEntrance 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    @keyframes splashEntrance {
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    #splash-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Helper class to prevent flicker on refresh */
+    .no-splash #splash-screen {
+      display: none !important;
+    }
+  </style>
+  <script>
+    // Immediate check to prevent flicker on refresh
+    if (sessionStorage.getItem('uni_vote_splash_shown')) {
+      document.documentElement.classList.add('no-splash');
+    }
+  </script>
+</head>
+<body class="login-page">
+  <!-- Opening Animation Overlay -->
+  <div id="splash-screen">
+    <div class="splash-content">
+      <img src="/static/univote_logo.jpg" style="width:220px; height:auto; border-radius: 20px; margin-bottom:1.5rem; animation: splashEntrance 1.8s ease-out both; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));">
+      <div class="splash-logo-text">Uni-Vote</div>
+    </div>
+  </div>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img class="logo-icon" src="/static/univote_logo.jpg" alt="Uni-Vote logo" style="border-radius: 6px;">
+      <span>Uni-Vote</span>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  
+
+  <div class="page-wrapper">
+  <div style="width:100%;max-width:520px;margin:0 auto;padding:0 1rem;">
+
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-icon">
+          <img src="/static/logo.webp" style="width:140px;height:auto;object-fit:contain;border-radius:15px;box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        </div>
+        <h1>Welcome to Uni-Vote</h1>
+        <p id="auth-header-desc">Join the voting system and make your voice count</p>
+      </div>
+
+      <div class="auth-body">
+        <div class="tab-container">
+          <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('student')">Student</button>
+            <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
+          </div>
+        </div>
+
+          <!-- Student Tab -->
+          <div id="student-tab" class="tab-content active">
+            <div class="form-toggle">
+              <button class="form-toggle-btn active" onclick="switchForm('login')">Login</button>
+              <button class="form-toggle-btn" onclick="switchForm('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="form-section">
+              <div class="form-group">
+                <label class="form-label">USN / Email</label>
+                <input type="text" id="login-usn" class="form-control" placeholder="e.g. 1CS21CS001 or email" autocomplete="off">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="login-password" class="form-control" placeholder="Enter your password"
+                  onkeydown="if(event.key==='Enter') studentLogin()">
+              </div>
+
+              <div class="alert" id="login-alert"></div>
+
+              <button class="btn btn-pink btn-full btn-lg" id="loginBtn" onclick="studentLogin()">
+                Sign In
+              </button>
+            </div>
+
+            <!-- Register Form -->
+            <div id="register-form" class="form-section" style="display: none;">
+              <div class="form-group">
+                <label class="form-label">USN (University Seat Number)</label>
+                <input type="text" id="usn" class="form-control" placeholder="e.g. 1CS21CS001" autocomplete="off">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Student Name</label>
+                <input type="text" id="name" class="form-control" placeholder="Enter your full name" autocomplete="off">
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Email Address</label>
+                  <input type="email" id="email" class="form-control" placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Class</label>
+                  <select id="class" class="form-control">
+                    <option value="" selected disabled hidden>Choose Class</option>
+                    <option value="CSE A">CSE A</option>
+                    <option value="CSE B">CSE B</option>
+                    <option value="CSE C">CSE C</option>
+                    <option value="CSE D">CSE D</option>
+                    <option value="ISE E">ISE E</option>
+                    <option value="ISE F">ISE F</option>
+                    <option value="ISE G">ISE G</option>
+                    <option value="AIML H">AIML H</option>
+                    <option value="CSE(DS) I">CSE(DS) I</option>
+                    <option value="ECE J">ECE J</option>
+                    <option value="ECE K">ECE K</option>
+                    <option value="ECE L">ECE L</option>
+                    <option value="EEE M">EEE M</option>
+                    <option value="CIVIL N">CIVIL N</option>
+                    <option value="MECH O">MECH O</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">select sem</label>
+                  <select id="semester" class="form-control">
+                    <option value="" selected disabled hidden>Choose Semester</option>
+                    <option value="1">1st Semester</option>
+                    <option value="2">2nd Semester</option>
+                    <option value="3">3rd Semester</option>
+                    <option value="4">4th Semester</option>
+                    <option value="5">5th Semester</option>
+                    <option value="6">6th Semester</option>
+                    <option value="7">7th Semester</option>
+                    <option value="8">8th Semester</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Gender</label>
+                  <select id="gender" class="form-control">
+                    <option value="" selected disabled hidden>Choose Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email Verification</label>
+                <div class="otp-row">
+                  <input type="text" id="otp" class="form-control" placeholder="Enter 6-digit OTP" maxlength="6">
+                  <button class="btn btn-secondary btn-sm" id="sendOtpBtn" onclick="sendOtp()" style="white-space:nowrap">
+                    Send OTP
+                  </button>
+                </div>
+                <div class="otp-badge" id="otpBadge">Check your email for the verification code.</div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Password</label>
+                  <input type="password" id="password" class="form-control" placeholder="Min 6 characters">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Confirm Password</label>
+                  <input type="password" id="confirmPassword" class="form-control" placeholder="Re-enter password">
+                </div>
+              </div>
+
+              <div class="alert" id="register-alert"></div>
+
+              <button class="btn btn-pink btn-full btn-lg" id="registerBtn" onclick="register()">
+                Create Account
+              </button>
+            </div>
+          </div>
+
+          <!-- Admin Tab -->
+          <div id="admin-tab" class="tab-content">
+            <div class="form-group">
+              <label class="form-label">Admin ID</label>
+              <input type="text" id="admin-usn" class="form-control" placeholder="Enter admin ID" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Password</label>
+              <input type="password" id="admin-password" class="form-control" placeholder="Enter password"
+                onkeydown="if(event.key==='Enter') adminLogin()">
+            </div>
+
+            <div class="alert" id="admin-alert"></div>
+
+            <button class="btn btn-pink btn-full btn-lg" id="adminBtn" onclick="adminLogin()">
+              Login as Admin
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js?v=2"></script>
+  <script>
+    // Splash Screen Logic: Only play animation if not shown yet
+    if (!sessionStorage.getItem('uni_vote_splash_shown')) {
+      setTimeout(() => {
+        const splash = document.getElementById('splash-screen');
+        if (splash) splash.classList.add('hidden');
+        sessionStorage.setItem('uni_vote_splash_shown', 'true');
+      }, 3500); // Increased display duration to 3.5 seconds
+    }
+
+    const initialAlertMessage = {{ alert_message|default('')|tojson }};
+    const initialActiveTab = {{ active_tab|default('student')|tojson }};
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Clear tab-specific session state whenever the login page is loaded
+      sessionStorage.removeItem('evm_session_active');
+
+      if (initialActiveTab === 'admin') {
+        switchTab('admin');
+      }
+
+      if (initialAlertMessage) {
+        const alertEl = initialActiveTab === 'admin'
+          ? document.getElementById('admin-alert')
+          : document.getElementById('login-alert');
+        showAlert(alertEl, initialAlertMessage, 'info');
+      }
+    });
+
+    if (typeof apiGet === 'undefined') {
+      window.apiGet = async (url) => {
+        const res = await fetch(url, { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      };
+    }
+    if (typeof apiFetch === 'undefined') {
+      window.apiFetch = async (url, data) => {
+        const res = await fetch(url, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        return res.json();
+      };
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+      document.getElementById(`${tab}-tab`).classList.add('active');
+
+      const desc = document.getElementById('auth-header-desc');
+      if (tab === 'admin') {
+        desc.textContent = "Login to control and monitor the voting system";
+      } else {
+        desc.textContent = "Join the voting system and make your voice count";
+      }
+    }
+
+    function switchForm(form) {
+      document.querySelectorAll('.form-toggle-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.form-section').forEach(section => section.style.display = 'none');
+      document.querySelector(`[onclick="switchForm('${form}')"]`).classList.add('active');
+      document.getElementById(`${form}-form`).style.display = 'block';
+    }
+
+    async function studentLogin() {
+      const usn = document.getElementById('login-usn').value.trim();
+      const password = document.getElementById('login-password').value;
+      const alert = document.getElementById('login-alert');
+
+      if (!usn || !password)
+        return showAlert(alert, 'Please enter USN/Email and password.');
+
+      const btn = document.getElementById('loginBtn');
+      setLoading(btn, true, 'Signing in...');
+      const data = await apiFetch('/api/login', { usn, password });
+      setLoading(btn, false);
+
+      if (data.success) {
+        setAuthActive(true);
+        showAlert(alert, '✅ Login successful! Redirecting...', 'success');
+        setTimeout(() => {
+          // Redirect based on actual role to prevent "bounce-back" redirects
+          window.location.href = data.role === 'admin' ? '/admin' : '/dashboard';
+        }, 800);
+      } else {
+        showAlert(alert, data.message || 'Invalid credentials.');
+      }
+    }
+
+    async function sendOtp() {
+      const usn = document.getElementById('usn').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const alert = document.getElementById('register-alert');
+
+      if (!usn) return showAlert(alert, 'Please enter your USN first.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert(alert, 'Enter a valid email address.');
+
+      hideAlert(alert);
+      const btn = document.getElementById('sendOtpBtn');
+      setLoading(btn, true, 'Generating...');
+      try {
+        const data = await apiFetch('/api/send_otp', { usn: usn.toUpperCase(), email });
+        setLoading(btn, false);
+
+        if (data.success) {
+          document.getElementById('otpBadge').style.display = 'block';
+          btn.textContent = 'Resend OTP';
+          showAlert(alert, 'OTP sent to your email!', 'success');
+        } else {
+          showAlert(alert, data.message || 'Failed to send OTP.');
+        }
+      } catch (err) {
+        setLoading(btn, false);
+        showAlert(alert, 'Network error or server down. Please try again.');
+        console.error(err);
+      }
+    }
+
+    async function register() {
+      const usn = document.getElementById('usn').value.trim().toUpperCase();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const cls = document.getElementById('class').value;
+      const sem = document.getElementById('semester').value;
+      const gender = document.getElementById('gender').value;
+      const otp = document.getElementById('otp').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      const alert = document.getElementById('register-alert');
+
+      if (!usn || !name || !email || !cls || !sem || !gender || !otp || !password)
+        return showAlert(alert, 'Please fill in all fields.');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showAlert(alert, 'Enter a valid email address.');
+      if (password.length < 6)
+        return showAlert(alert, 'Password must be at least 6 characters.');
+      if (password !== confirm)
+        return showAlert(alert, 'Passwords do not match.');
+
+      const btn = document.getElementById('registerBtn');
+      setLoading(btn, true, 'Registering...');
+      try {
+        const data = await apiFetch('/api/register', { usn, name, email, class: cls, semester: sem, gender, otp: otp, password });
+        setLoading(btn, false);
+
+        if (data.success) {
+          showAlert(alert, '🎉 Registration successful! You can now login.', 'success');
+          setTimeout(() => {
+            switchForm('login');
+            document.getElementById('login-usn').value = usn;
+          }, 1800);
+        } else {
+          showAlert(alert, data.message || 'Registration failed.');
+        }
+      } catch (err) {
+        setLoading(btn, false);
+        showAlert(alert, 'Connection error. Registration failed.');
+      }
+    }
+
+    async function adminLogin() {
+      const usn = document.getElementById('admin-usn').value.trim().toUpperCase();
+      const password = document.getElementById('admin-password').value;
+      const alert = document.getElementById('admin-alert');
+
+      if (!usn || !password)
+        return showAlert(alert, 'Please enter admin ID and password.');
+
+      const btn = document.getElementById('adminBtn');
+      setLoading(btn, true, 'Logging in...');
+      const data = await apiFetch('/api/login', { usn, password });
+      setLoading(btn, false);
+
+      if (data.success) {
+        setAuthActive(true);
+        showAlert(alert, '✅ Admin login successful! Redirecting...', 'success');
+        setTimeout(() => {
+          // Redirect based on actual role to prevent "bounce-back" redirects
+          window.location.href = data.role === 'admin' ? '/admin' : '/dashboard';
+        }, 800);
+      } else {
+        showAlert(alert, data.message || 'Invalid admin credentials.');
+      }
+    }
+  </script>
+</body>
+</html>

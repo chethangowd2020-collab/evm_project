@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Election Results | Uni-Vote</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    if (sessionStorage.getItem('evm_session_active') !== '1') {
+      window.location.href = '/login';
+    }
+  </script>
+</head>
+<body class="results-page">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img class="logo-icon" src="/static/univote_logo.jpg" alt="Uni-Vote logo" style="border-radius: 6px;">
+      <span>Uni-Vote</span>
+    </div>
+    <div class="navbar-links">
+      <a href="{{ '/dashboard' if session.get('student_usn') else '/admin' }}" class="nav-link">🏠 Dashboard</a>
+      <a href="/logout?role={{ 'admin' if session.get('admin_usn') else 'student' }}" class="btn-nav-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-content" style="max-width:1500px;margin:0 auto;padding:2rem 1rem;position:relative;z-index:1;">
+    <div class="welcome-hero" style="margin-bottom:3rem;text-align:center;background:var(--grad1);">
+      <div style="font-size:3rem;margin-bottom:1rem;">🎉</div>
+      <h1 style="font-size:2.8rem;margin-bottom:0.5rem;text-shadow: 0 4px 12px rgba(0,0,0,0.1);">Election Results</h1>
+      <p style="font-size:1.1rem;opacity:0.9;max-width:600px;margin:0 auto;">The people have spoken. Here are the final standings for the Class Representative positions.</p>
+    </div>
+
+    <!-- Sorting Controls -->
+    <div class="sort-controls" style="margin-bottom: 1rem; display:flex; gap:10px; align-items:center;">
+
+  <!-- Sort -->
+  <select id="resultSort" onchange="loadPublicResults()">
+    <option value="sem">Sort by Semester</option>
+    <option value="class">Sort by Class</option>
+  </select>
+
+  <!-- Semester Filter -->
+  <select id="semesterFilter" onchange="loadPublicResults()">
+    <option value="all">All Semesters</option>
+    <option value="1">1st Semester</option>
+    <option value="2">2nd Semester</option>
+    <option value="3">3rd Semester</option>
+    <option value="4">4th Semester</option>
+    <option value="5">5th Semester</option>
+    <option value="6">6th Semester</option>
+    <option value="7">7th Semester</option>
+    <option value="8">8th Semester</option>
+  </select>
+
+  <!-- 🔥 Class Filter -->
+  <select id="classFilter" onchange="loadPublicResults()">
+    <option value="all">All Classes</option>
+    <option value="A">Class A</option>
+    <option value="B">Class B</option>
+    <option value="C">Class C</option>
+    <option value="D">Class D</option>
+    <option value="E">Class E</option>
+    <option value="F">Class F</option>
+    <option value="G">Class G</option>
+    <option value="H">Class H</option>
+    <option value="I">Class I</option>
+    <option value="J">Class J</option>
+    <option value="K">Class K</option>
+    <option value="L">Class L</option>
+    <option value="M">Class M</option>
+    <option value="N">Class N</option>
+    <option value="O">Class O</option>
+  </select>
+
+</div>
+
+    <div id="resultBox">
+      <div class="empty-state" style="padding:4rem;">
+        <div class="empty-icon" style="font-size:3.5rem;">⏳</div>
+        <p style="font-size:1.1rem;">Calculating final tallies...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js?v=2"></script>
+  <script>
+    function renderCandidate(c, isWinner, maxVotes, gender) {
+      const pct = maxVotes > 0 ? Math.round((c.votes / maxVotes) * 100) : 0;
+      const barColor = gender === 'Male' ? 'var(--grad1)' : 'var(--grad2)';
+      return `
+        <div class="result-row ${isWinner ? 'winner' : ''}" style="margin-bottom:16px; padding: 16px; border-radius: 16px; background: var(--surface2); border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition: transform 0.2s;">
+          <div class="rank" style="font-size:1.5rem; width: 40px; display: flex; justify-content: center;">${isWinner ? '🏆' : '🥈'}</div>
+          <div class="vote-bar-wrap">
+            <div class="rname" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-weight:800;font-size:1.05rem;color:var(--text);">${c.name} ${isWinner ? '<span class="badge badge-warning" style="margin-left:8px; font-size:0.65rem;">WINNER</span>' : ''}</span>
+              <span style="font-size:0.8rem;color:var(--text-soft);">${c.usn}</span>
+            </div>
+            <div class="vote-bar" style="height:10px;background:rgba(0,0,0,0.05);border-radius:10px;overflow:hidden;">
+              <div class="vote-bar-fill" style="width:${pct}%;height:100%;background:${isWinner ? 'linear-gradient(90deg, #F59E0B, #EC4899)' : barColor};border-radius:10px;transition:width 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67);"></div>
+            </div>
+          </div>
+          <div class="rvotes" style="text-align:right;min-width:70px; padding-left: 10px;">
+            <div style="font-size:1.3rem;font-weight:900;background:var(--grad1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${c.votes}</div>
+            <div style="font-size:0.65rem;text-transform:uppercase;font-weight:700;letter-spacing:0.05em;color:var(--text-soft);">Votes</div>
+          </div>
+        </div>
+      `.replace(/\n/g, '');
+    }
+
+    /**
+     * Sorts class list primarily by Semester (numeric) and secondarily by Class Name.
+     */
+    function sortBySemester(classList) {
+      return classList.sort((a, b) => {
+        const semA = parseInt(a.match(/Sem (\d+)/)?.[1] || 0);
+        const semB = parseInt(b.match(/Sem (\d+)/)?.[1] || 0);
+        const nameA = a.split(' - ')[1] || "";
+        const nameB = b.split(' - ')[1] || "";
+        if (semA !== semB) return semA - semB;
+        return nameA.localeCompare(nameB);
+      });
+    }
+
+    /**
+     * Sorts class list primarily by Class Name (alphabetic) and secondarily by Semester.
+     */
+    function sortByClass(classList) {
+      return classList.sort((a, b) => {
+        const nameA = a.split(' - ')[1] || "";
+        const nameB = b.split(' - ')[1] || "";
+        const semA = parseInt(a.match(/Sem (\d+)/)?.[1] || 0);
+        const semB = parseInt(b.match(/Sem (\d+)/)?.[1] || 0);
+        if (nameA !== nameB) return nameA.localeCompare(nameB);
+        return semA - semB;
+      });
+    }
+
+    async function loadPublicResults() {
+      try {
+        const res = await fetch('/api/results_public');
+        const data = await res.json();
+        const box = document.getElementById("resultBox");
+
+        if (!data.success) {
+          box.innerHTML = `
+            <div class="card" style="text-align:center;padding:4rem 2rem;">
+              <div style="font-size:4rem;margin-bottom:1.5rem;">📢</div>
+              <h2 style="font-family:'DM Serif Display',serif;font-size:1.8rem;margin-bottom:0.5rem;color:var(--text);">Results Pending</h2>
+              <p style="color:var(--text-soft);max-width:400px;margin:0 auto 1.5rem;">The election results have not been published by the administrator yet. Please check back later.</p>
+              <button class="btn btn-secondary" onclick="location.reload()">🔄 Check Again</button>
+            </div>
+          `;
+          return;
+        }
+
+        let html = "";
+        let classList = Object.keys(data.classes);
+
+        if (classList.length === 0) {
+           box.innerHTML = `<div class="empty-state"><p>No results found.</p></div>`;
+           return;
+        }
+
+        // Dynamic sorting based on dropdown selection
+        const sortMode = document.getElementById('resultSort')?.value || 'sem';
+        if (sortMode === 'sem') {
+          sortBySemester(classList);
+        } else {
+          sortByClass(classList);
+        }
+
+        for (let cls of classList) {
+          // Extracting info for Filtering
+          const semMatch = cls.match(/Sem (\d+)/);
+          const semNumber = semMatch ? semMatch[1] : null;
+          const className = cls.split(' - ')[1] || '';
+          const classLetter = className.slice(-1); // Gets A, B, C...
+
+          const selectedSem = document.getElementById('semesterFilter')?.value || 'all';
+          const selectedClass = document.getElementById('classFilter')?.value || 'all';
+
+          // Apply Filters
+          if (selectedSem !== 'all' && semNumber !== selectedSem) {
+            continue;
+          }
+          if (selectedClass !== 'all' && classLetter !== selectedClass) {
+            continue;
+          }
+
+          const group = data.classes[cls];
+          const maxMaleVotes = group.males.length ? Math.max(...group.males.map(m => m.votes), 1) : 1;
+          const maxFemaleVotes = group.females.length ? Math.max(...group.females.map(f => f.votes), 1) : 1;
+          const totalClassVotes = [...group.males, ...group.females].reduce((s, c) => s + c.votes, 0);
+
+          html += `
+            <div class="results-class" style="margin-bottom:2.5rem;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow);">
+              <div class="results-class-header" style="background:var(--grad1);color:white;padding:1.2rem 1.8rem;display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.4rem;">🏛️</span>
+                <span style="font-weight:800;font-size:1.2rem;letter-spacing:-0.02em;">${cls} REPRESENTATIVES</span>
+                <span class="badge" style="margin-left:auto; background:rgba(255,255,255,0.2); color:white; font-size:0.75rem;">Total Votes: ${totalClassVotes}</span>
+              </div>
+              
+              <div class="results-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));gap:1px;background:var(--border);">
+                
+                <!-- Male Section -->
+                <div style="background:white;padding:1.5rem;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:1.5rem;color:var(--primary);">
+                    <span style="font-size:1.2rem;">👨</span>
+                    <h4 style="margin:0;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;font-size:0.85rem;">Male Candidates</h4>
+                  </div>
+                  ${group.males.length ? 
+                    group.males.map((m, idx) => renderCandidate(m, idx === 0, maxMaleVotes, 'Male')).join('') : 
+                    '<p style="color:var(--text-soft);font-size:0.9rem;font-style:italic;">No male candidates registered.</p>'}
+                </div>
+
+                <!-- Female Section -->
+                <div style="background:white;padding:1.5rem;">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:1.5rem;color:var(--accent);">
+                    <span style="font-size:1.2rem;">👩</span>
+                    <h4 style="margin:0;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;font-size:0.85rem;">Female Candidates</h4>
+                  </div>
+                  ${group.females.length ? 
+                    group.females.map((f, idx) => renderCandidate(f, idx === 0, maxFemaleVotes, 'Female')).join('') : 
+                    '<p style="color:var(--text-soft);font-size:0.9rem;font-style:italic;">No female candidates registered.</p>'}
+                </div>
+
+              </div>
+            </div>
+          `;
+        }
+        box.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        document.getElementById("resultBox").innerHTML = `
+          <div class="card" style="text-align:center;padding:3rem;">
+            <p style="color:var(--danger);font-weight:600;">⚠️ Connection error. Please try again.</p>
+          </div>
+        `;
+      }
+    }
+
+    loadPublicResults();
+  </script>
+</body>
+</html>

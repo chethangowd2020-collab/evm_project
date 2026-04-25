@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Uni-Vote</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    if (sessionStorage.getItem('evm_session_active') !== '1') {
+      window.location.href = '/login';
+    }
+  </script>
+</head>
+<body class="dashboard-page">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img class="logo-icon" src="/static/univote_logo.jpg" alt="Uni-Vote logo" style="border-radius: 6px;">
+      <span>Uni-Vote</span>
+    </div>
+    <div class="navbar-links">
+  <a href="/dashboard" class="nav-link">🏠 Dashboard</a>
+  <a href="/logout?role=student" class="btn-nav-logout">Logout</a>
+</div>
+  </nav>
+
+  <div class="page-content" style="max-width:1800px;margin:0 auto;padding:2rem 2rem;position:relative;z-index:1;">
+    <div class="welcome-hero" id="welcomeHero" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <p style="opacity:0.7;font-size:0.85rem;margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.1em;">Student Dashboard</p>
+        <h1>HELLO <span id="welcomeNameHero">USER</span>! 👋</h1>
+        <p>Participate in your class representative election and make your voice count.</p>
+      </div>
+      <div class="class-badge" style="margin-top: 0; padding: 12px 20px; flex-direction: column; align-items: flex-start; border-radius: 12px; gap: 4px;">
+        <span>👤 Student Name: <strong id="welcomeNameBadge">--</strong></span>
+        <span>🆔 USN: <strong id="welcomeUSN">--</strong></span>
+        <span>🎓 Sem: <strong id="welcomeSem">--</strong></span>
+        <span>🏫 Class: <strong id="welcomeClass">--</strong></span>
+      </div>
+    </div>
+
+    <!-- Voted Banner -->
+    <div class="voted-banner" id="votedBanner" style="display:none;margin-bottom:1.5rem;">
+      <div class="checkmark">✅</div>
+      <h3 style="font-size:1.1rem;font-weight:700;color:#059669;">You have already voted!</h3>
+      <p style="font-size:0.9rem;margin-top:0.3rem;color:#6B7280;">Your vote has been recorded. Thank you for participating in the election.</p>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="action-grid" id="actionGrid">
+      <a href="/vote" class="action-card" id="voteCard">
+        <span class="icon">🗳️</span>
+        <h3>Vote Now</h3>
+        <p>Cast your vote for class representatives</p>
+      </a>
+      <a href="/candidate_register" class="action-card" id="candidateCard">
+        <span class="icon">🙋</span>
+        <h3>Stand for Election</h3>
+        <p>Register yourself as a candidate</p>
+      </a>
+      <a href="/results" class="action-card" id="resultsCard" style="display:none;">
+        <span class="icon">📊</span>
+        <h3>View Results</h3>
+        <p>See the final election outcomes</p>
+      </a>
+      <a href="/cr-feedback" class="action-card" id="feedbackCard">
+        <span class="icon">📝</span>
+        <h3>CR Feedback</h3>
+        <p>Share your feedback about your Class Representative</p>
+        
+      </a>
+    </div>
+
+  </div>
+
+  <script src="/static/script.js?v=2"></script>
+  <script>
+    (async () => {
+      const data = await apiGet('/api/student_info');
+      // Remove the hard redirect to /login here. 
+      // The Python route @app.route('/dashboard') already handles authentication.
+      if (!data.success) {
+        console.error("Dashboard API Error:", data.message);
+        return;
+      }
+
+      const displayName = (data.name || data.usn).toUpperCase();
+      document.getElementById('welcomeNameHero').textContent = displayName;
+      document.getElementById('welcomeNameBadge').textContent = displayName;
+      document.getElementById('welcomeUSN').textContent = data.usn;
+      document.getElementById('welcomeClass').textContent = data.class;
+      document.getElementById('welcomeSem').textContent = data.semester || '—';
+
+      const isVoted = data.hasvoted || data.hasVoted;
+      const isCandidate = data.iscandidate || data.isCandidate;
+
+      if (isVoted) {
+        document.getElementById('votedBanner').style.display = 'block';
+        const voteCard = document.getElementById('voteCard');
+        voteCard.style.opacity = '0.5';
+        voteCard.style.cursor = 'not-allowed';
+        voteCard.style.pointerEvents = 'none';
+        voteCard.querySelector('h3').textContent = 'Already Voted';
+        voteCard.querySelector('p').textContent = 'You have already cast your vote';
+      }
+
+      const cCard = document.getElementById('candidateCard');
+      if (isCandidate) {
+        cCard.style.borderColor = '#10B981';
+        cCard.querySelector('.icon').textContent = '🏆';
+        cCard.querySelector('h3').textContent = 'Enrolled as Candidate';
+        cCard.querySelector('p').textContent = 'You are already registered as a candidate';
+        cCard.style.pointerEvents = 'none';
+      } else if (isVoted || data.voting_enabled) {
+        cCard.style.opacity = '0.5';
+        cCard.style.cursor = 'not-allowed';
+        cCard.style.pointerEvents = 'none';
+        cCard.querySelector('p').textContent = isVoted ? 'Registration closed after voting' : 'Registration closed (Voting started)';
+      }
+
+      if (data.results_published) {
+        document.getElementById('resultsCard').style.display = 'block';
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Candidate Registration | Uni-Vote</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    if (sessionStorage.getItem('evm_session_active') !== '1') {
+      window.location.href = '/login';
+    }
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img class="logo-icon" src="/static/univote_logo.jpg" alt="Uni-Vote logo" style="border-radius: 6px;">
+      <span>Uni-Vote</span>
+    </div>
+    <div class="navbar-links">
+      <a href="/dashboard" class="nav-link">🏠 Dashboard</a>
+      <a href="/logout?role=student" class="btn-nav-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div style="width:100%;max-width:520px;margin:0 auto;padding:0 1rem;">
+      <div class="auth-card">
+        <div class="auth-header" style="background:linear-gradient(135deg,#EC4899,#A855F7);">
+          <div class="auth-icon">🏆</div>
+          <h1>Stand for Election</h1>
+          <p>Enroll yourself as a class representative candidate</p>
+        </div>
+        <div class="auth-body">
+
+          <!-- Already candidate -->
+          <div id="alreadyCandidateBox" style="display:none;text-align:center;padding:1rem 0;">
+            <div style="font-size:3rem;margin-bottom:0.8rem;">🏆</div>
+            <h3 style="font-weight:700;margin-bottom:0.4rem;color:#A855F7;">Already Enrolled!</h3>
+            <p style="color:var(--text-soft);font-size:0.9rem;">You are already registered as a candidate for your class election.</p>
+            <a href="/dashboard" class="btn btn-pink" style="margin-top:1.2rem;">Back to Dashboard</a>
+          </div>
+
+          <!-- Registration Closed (Voting Started) -->
+          <div id="votingStartedBox" style="display:none;text-align:center;padding:1rem 0;">
+            <div style="font-size:3rem;margin-bottom:0.8rem;">⏸️</div>
+            <h3 style="font-weight:700;margin-bottom:0.4rem;color:var(--danger);">Registration Closed</h3>
+            <p style="color:var(--text-soft);font-size:0.9rem;">Candidate registration is no longer available as the voting session has started.</p>
+            <a href="/dashboard" class="btn btn-secondary" style="margin-top:1.2rem;">Back to Dashboard</a>
+          </div>
+
+          <!-- Enrollment Form -->
+          <div id="enrollForm" style="display: none;">
+            <div class="section-title">📝 Enrollment Details</div>
+            <div class="form-group">
+              <label class="form-label">Your USN</label>
+              <input type="text" id="usn" class="form-control" value="{{ session.get('usn', '') }}" readonly
+                style="background:#F0F4FF;color:var(--text-soft);">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="name" class="form-control" readonly
+                style="background:#F0F4FF;color:var(--text-soft);">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Class</label>
+              <input type="text" id="class" class="form-control" readonly
+                style="background:#F0F4FF;color:var(--text-soft);">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Semester</label>
+              <input type="text" id="semester" class="form-control" readonly
+                style="background:#F0F4FF;color:var(--text-soft);">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Gender</label>
+              <input type="text" id="gender" class="form-control" readonly
+                style="background:#F0F4FF;color:var(--text-soft);">
+            </div>
+
+            <div class="alert" id="alertBox"></div>
+
+            <button class="btn btn-pink btn-full btn-lg" id="enrollBtn" onclick="enrollCandidate()">
+              🏆 Enroll as Candidate
+            </button>
+
+            <div class="auth-footer">
+              Changed your mind? <a href="/dashboard">Back to dashboard</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rules Modal -->
+  <div class="modal-overlay" id="rulesModal">
+    <div class="modal-box" style="max-width: 500px;">
+      <div class="modal-icon">📜</div>
+      <div class="modal-title">Candidate Rules & Guidelines</div>
+      <div class="modal-desc" style="text-align: left;">
+        <ul style="list-style:none; display:flex; flex-direction:column; gap:12px; margin-top: 1rem;">
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>🎓</span><span>Eligibility is restricted to students of your class and semester.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>⭐</span><span>Candidates should be willing to take responsibility as CR.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>⏱️</span><span>Registration will automatically close before voting starts.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>🤝</span><span>Candidates are expected to uphold respectful and fair behavior.</span></li>
+          <li style="display:flex; gap:10px; align-items:flex-start; font-size:0.95rem;"><span>💬</span><span>Students feedback may be taken into consideration by administration.</span></li>
+        </ul>
+      </div>
+      <div class="modal-actions" style="margin-top: 1.5rem;">
+        <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">Decline</button>
+        <button class="btn btn-primary" onclick="acceptRules()">I Agree & Proceed</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js?v=2"></script>
+  <script>
+    (async () => {
+      const data = await apiGet('/api/student_info');
+      if (!data.success) { 
+        console.error("Student info fetch failed:", data.message);
+        return; 
+      }
+
+      document.getElementById('usn').value = data.usn;
+      document.getElementById('name').value = data.name || '';
+      document.getElementById('class').value = data.class;
+      document.getElementById('semester').value = data.semester || '—';
+      document.getElementById('gender').value = data.gender || 'Not Specified';
+
+      if (data.iscandidate || data.isCandidate) {
+        document.getElementById('alreadyCandidateBox').style.display = 'block';
+      } else if (data.voting_enabled) {
+        document.getElementById('votingStartedBox').style.display = 'block';
+      } else {
+        // Show rules modal if eligible
+        document.getElementById('rulesModal').classList.add('show');
+      }
+    })();
+
+    function acceptRules() {
+      document.getElementById('rulesModal').classList.remove('show');
+      document.getElementById('enrollForm').style.display = 'block';
+    }
+
+    async function enrollCandidate() {
+      const gender = document.getElementById('gender').value;
+      const alert = document.getElementById('alertBox');
+
+      if (!document.getElementById('name').value.trim()) return showAlert(alert, 'Your name was not found. Please register again.');
+      if (!gender) return showAlert(alert, 'Gender information missing. Please update your student profile or contact admin.');
+
+      const btn = document.getElementById('enrollBtn');
+      setLoading(btn, true, 'Enrolling...');
+      const data = await apiFetch('/api/register_candidate', { gender });
+      setLoading(btn, false);
+
+      if (data.success) {
+        showAlert(alert, '🎉 ' + data.message, 'success');
+        setTimeout(() => {
+          document.getElementById('enrollForm').style.display = 'none';
+          document.getElementById('alreadyCandidateBox').style.display = 'block';
+        }, 1500);
+      } else {
+        showAlert(alert, data.message || 'Enrollment failed.');
+      }
+    }
+  </script>
+</body>
+</html>

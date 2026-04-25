@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results | Uni-Vote</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    if (sessionStorage.getItem('evm_session_active') !== '1') {
+      window.location.href = '/login';
+    }
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img class="logo-icon" src="/static/univote_logo.jpg" alt="Uni-Vote logo" style="border-radius: 6px;">
+      <span>Uni-Vote</span>
+    </div>
+    <div class="navbar-links">
+      <a href="/admin" class="nav-link">← Admin</a>
+      <a href="/logout?role=admin" class="btn-nav-logout">Logout</a>
+    </div>
+  </nav>
+
+  <div class="page-content" style="max-width:1500px;margin:0 auto;padding:2rem 1rem;position:relative;z-index:1;">
+    <div style="margin-bottom:2rem;">
+      <div class="page-title">Election Results</div>
+      <div class="page-subtitle">Live vote count by class — <span id="totalVotesLabel" class="badge badge-primary" style="font-size:0.9rem;padding:4px 12px;">Loading...</span></div>
+    </div>
+
+    <!-- Summary banner -->
+    <div class="card" id="summaryBanner" style="padding:1.2rem 1.5rem;margin-bottom:2rem;background:rgba(255,255,255,0.6);backdrop-filter:blur(10px);border:1px dashed var(--primary);">
+      <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:1rem;margin-bottom:0.2rem;">🏆 Admin-Only Results View</div>
+          <div style="font-size:0.85rem;color:var(--text-soft);">Winners are highlighted with a gold border. Vote counts update in real-time.</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="loadResults()">🔄 Refresh</button>
+      </div>
+    </div>
+
+    <div id="resultsContainer">
+      <div class="empty-state" style="padding:3rem;">
+        <div class="empty-icon" style="font-size:3rem;">⏳</div>
+        <p>Loading results...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/script.js?v=2"></script>
+  <script>
+    function renderResultRow(c, isWinner, maxVotes, gender) {
+      const pct = maxVotes > 0 ? Math.round(c.votes / maxVotes * 100) : 0;
+      const barColor = gender === 'Male' ? 'var(--grad1)' : 'var(--grad2)';
+      return `
+        <div class="result-row ${isWinner ? 'winner' : ''}" style="padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; background: white; border: 1px solid var(--border);">
+          <span class="rank">${isWinner ? '🥇' : '🥈'}</span>
+          <div class="vote-bar-wrap">
+            <div class="rname" style="font-size:1rem;font-weight:700;margin-bottom:4px;">${c.name} <small style="font-weight:500;font-size:0.8rem;color:var(--text-soft);">${c.usn}</small></div>
+            <div class="vote-bar" style="height:8px; border-radius:10px; background:var(--bg);">
+              <div class="vote-bar-fill" style="width:${pct}%; background:${isWinner ? 'linear-gradient(90deg, #F59E0B, #EF4444)' : barColor}; height:100%; border-radius:10px;"></div>
+            </div>
+          </div>
+          <div class="rvotes" style="min-width:50px; text-align:right;">
+            <div style="font-weight:800; font-size:1.1rem; color:var(--text);">${c.votes}</div>
+          </div>
+        </div>`;
+    }
+
+    async function loadResults() {
+      const d = await apiGet('/api/admin/results');
+      if (!d.success) {
+        // window.location.href = '/login'; // Admin results page might redirect to login if session expires
+        return;
+      }
+
+      document.getElementById('totalVotesLabel').textContent = `Total votes cast: ${d.total_votes}`;
+      const container = document.getElementById('resultsContainer');
+
+      const classNames = Object.keys(d.classes);
+      if (!classNames.length) {
+        container.innerHTML = `
+          <div class="card" style="text-align:center;padding:3rem;">
+            <div style="font-size:3rem;margin-bottom:1rem;">📭</div>
+            <h3 style="font-weight:700;margin-bottom:0.4rem;">No Results Yet</h3>
+            <p style="color:var(--text-soft);">No candidates have been enrolled or no votes have been cast yet.</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = classNames.map(cls => {
+        const classData = d.classes[cls];
+        const males = classData.males || [];
+        const females = classData.females || [];
+        const maxMaleVotes = males.length ? Math.max(...males.map(c => c.votes), 1) : 1;
+        const maxFemaleVotes = females.length ? Math.max(...females.map(c => c.votes), 1) : 1;
+
+        const maleRows = males.length
+          ? males.map((c, i) => renderResultRow(c, i === 0, maxMaleVotes, 'Male')).join('')
+          : '<div class="empty-state" style="padding:1rem;"><p>No male candidates</p></div>';
+
+        const femaleRows = females.length
+          ? females.map((c, i) => renderResultRow(c, i === 0, maxFemaleVotes, 'Female')).join('')
+          : '<div class="empty-state" style="padding:1rem;"><p>No female candidates</p></div>';
+
+        const totalClassVotes = [...males, ...females].reduce((s, c) => s + c.votes, 0);
+
+        return `
+          <div class="results-class" style="border:none; box-shadow:var(--shadow-lg); margin-bottom:2.5rem;">
+            <div class="results-class-header" style="padding:1.2rem 1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); display:flex; align-items:center;">
+              <span style="font-size:1.2rem;">🏫</span> <strong>${cls}</strong>
+              <span class="badge" style="margin-left:auto; background:rgba(255,255,255,0.2); color:white;">${totalClassVotes} votes cast</span>
+            </div>
+            <div class="results-grid">
+              <div class="results-gender-col">
+                <h4>👨 Male Candidates</h4>
+                ${maleRows}
+              </div>
+              <div class="results-gender-col">
+                <h4>👩 Female Candidates</h4>
+                ${femaleRows}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    loadResults();
+  </script>
+</body>
+</html>
