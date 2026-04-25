@@ -5,7 +5,6 @@ const ASSETS = [
   '/register',
   '/static/style.css',
   '/static/script.js',
-  '/static/sjbit.jpg',
   '/static/univote_logo.jpg',
   '/static/icon-192.png'
 ];

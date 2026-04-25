@@ -272,6 +272,10 @@ def favicon():
 def serve_sw():
     return send_from_directory(app.static_folder, 'sw.js')
 
+@app.route('/manifest.json')
+def serve_manifest():
+    return send_from_directory(app.static_folder, 'manifest.json')
+
 
 @app.route('/login')
 def login():
