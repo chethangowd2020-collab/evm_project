@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, make_response
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, make_response, send_from_directory
 import psycopg2
 from datetime import datetime, timedelta
 from psycopg2.extras import RealDictCursor
@@ -267,6 +267,10 @@ def index():
 @app.route('/favicon.ico')
 def favicon():
     return app.send_static_file('univote_logo.jpg')
+
+@app.route('/sw.js')
+def serve_sw():
+    return send_from_directory(app.static_folder, 'sw.js')
 
 
 @app.route('/login')

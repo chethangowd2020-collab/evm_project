@@ -1,7 +1,13 @@
-const CACHE_NAME = 'evm-v1';
+const CACHE_NAME = 'univote-v1';
 const ASSETS = [
   '/',
-  '/static/style.css'
+  '/login',
+  '/register',
+  '/static/style.css',
+  '/static/script.js',
+  '/static/sjbit.jpg',
+  '/static/univote_logo.jpg',
+  '/static/icon-192.png'
 ];
 
 self.addEventListener('install', (e) => {
@@ -9,5 +15,8 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
+  // Network first, fallback to cache for offline support
+  e.respondWith(
+    fetch(e.request).catch(() => caches.match(e.request) || caches.match('/'))
+  );
 });

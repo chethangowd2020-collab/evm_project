@@ -1,6 +1,6 @@
 {
-  "name": "Smart EVM Voting System",
-  "short_name": "SmartEVM",
+  "name": "Uni-Vote",
+  "short_name": "Uni-Vote",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F0F4FF",
