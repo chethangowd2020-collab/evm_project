@@ -49,11 +49,17 @@ def commit_and_push(status):
 
     try:
         branch = run_cmd(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+        
+        # Sync with remote first to avoid "rejected (fetch first)" errors
+        print(f'Syncing with origin/{branch}...')
+        run_cmd(['git', 'pull', '--rebase', 'origin', branch])
+        
         print(f'Attempting to push commits to origin/{branch}...')
         run_cmd(['git', 'push', 'origin', branch])
         print('Auto push completed. Waiting for next change...\n')
-    except subprocess.CalledProcessError as exc:
-        print('Auto push failed. Check your internet connection or DNS settings:', exc)
+    except Exception as exc:
+        print(f'\nAuto sync/push failed: {exc}')
+        print('If this was a merge conflict, please resolve it manually.\n')
 
 
 def main():
