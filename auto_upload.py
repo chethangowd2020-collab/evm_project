@@ -25,7 +25,8 @@ def has_changes():
     
     # Check if there are local commits that haven't been pushed to origin/main yet
     try:
-        ahead_count = run_cmd(['git', 'rev-list', '--count', 'origin/main..main'])
+        branch = run_cmd(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+        ahead_count = run_cmd(['git', 'rev-list', '--count', f'origin/{branch}..{branch}'])
     except Exception:
         ahead_count = '0'
         
@@ -47,8 +48,9 @@ def commit_and_push(status):
             return
 
     try:
-        print('Attempting to push commits to origin/main...')
-        run_cmd(['git', 'push', 'origin', 'main'])
+        branch = run_cmd(['git', 'rev-parse', '--abbrev-ref', 'HEAD'])
+        print(f'Attempting to push commits to origin/{branch}...')
+        run_cmd(['git', 'push', 'origin', branch])
         print('Auto push completed. Waiting for next change...\n')
     except subprocess.CalledProcessError as exc:
         print('Auto push failed. Check your internet connection or DNS settings:', exc)
@@ -56,7 +58,7 @@ def commit_and_push(status):
 
 def main():
     print('Starting auto-upload watcher for repository at:', ROOT)
-    print('This script will commit and push changes to origin/main when files change.')
+    print('This script will commit and push changes to the remote branch when files change.')
     print('Press Ctrl+C to stop.\n')
 
     # Initial check for git availability
