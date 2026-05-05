@@ -53,6 +53,14 @@ SMTP_USERNAME = os.getenv('SMTP_USERNAME')
 SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
 EMAIL_FROM = os.getenv('EMAIL_FROM')
 
+print("--- SMTP Configuration Diagnostic ---")
+print(f"HOST: {SMTP_HOST or 'MISSING'}")
+print(f"PORT: {SMTP_PORT}")
+print(f"USER: {SMTP_USERNAME or 'MISSING'}")
+print(f"FROM: {EMAIL_FROM or 'MISSING'}")
+print(f"PASS: {'SET (Hidden)' if SMTP_PASSWORD else 'MISSING'}")
+print("-------------------------------------")
+
 
 class SQLiteCursorWrapper:
     def __init__(self, cursor):
@@ -114,14 +122,10 @@ def format_row(row):
 def send_email(to_email, subject, content):
     """Helper to send emails using SMTP settings"""
     if not all([SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
-        missing_vars = []
-        if not SMTP_HOST: missing_vars.append('SMTP_HOST')
-        # SMTP_PORT is guaranteed to be an int due to the try-except block, so it's unlikely to be missing here
-        if not SMTP_USERNAME: missing_vars.append('SMTP_USERNAME')
-        if not SMTP_PASSWORD: missing_vars.append('SMTP_PASSWORD')
-        if not EMAIL_FROM: missing_vars.append('EMAIL_FROM')
-        print(f"ERROR: SMTP settings are not fully configured. Missing or empty: {', '.join(missing_vars)}")
-        return False
+        err = "SMTP settings are incomplete. Check your environment variables."
+        print(f"ERROR: {err}")
+        return False, err
+
     try:
         msg = EmailMessage()
         msg.set_content(content)
@@ -132,6 +136,7 @@ def send_email(to_email, subject, content):
         if SMTP_PORT == 465:
             print(f"DEBUG: Attempting SSL connection on port {SMTP_PORT}")
             with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.ehlo()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
         else:
@@ -142,11 +147,11 @@ def send_email(to_email, subject, content):
                 server.ehlo()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
-
-        return True
+        return True, "Success"
     except Exception as e:
-        print(f"Failed to send email to {to_email}: {e}")
-        return False
+        err_msg = str(e)
+        print(f"Failed to send email to {to_email}: {err_msg}")
+        return False, err_msg
 
 def init_db():
     conn = get_db()
@@ -754,10 +759,11 @@ def send_otp():
         conn.commit()
         conn.close()
 
-        if send_email(email, "Uni-Vote Verification Code", f"Your verification code for Uni-Vote registration is: {q}"):
+        success, email_err = send_email(email, "Uni-Vote Verification Code", f"Your verification code for Uni-Vote registration is: {q}")
+        if success:
             return jsonify({'success': True, 'message': 'OTP sent to your email successfully'})
         else:
-            return jsonify({'success': False, 'message': 'Failed to send email. Please check SMTP configuration.'})
+            return jsonify({'success': False, 'message': f'Email Error: {email_err}'})
     except Exception as e:
         print(f"ERROR in /api/send_otp: {e}")
         return jsonify({'success': False, 'message': 'An unexpected server error occurred while generating OTP.'}), 500
