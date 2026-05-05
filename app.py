@@ -134,14 +134,13 @@ def send_email(to_email, subject, content):
     if not all([SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD]):
         return False, "SMTP configuration missing (Host/User/Pass)."
 
-    # Global-safe shim to force IPv4 and prevent 'Network is unreachable' on cloud providers
-    orig_getaddrinfo = socket.getaddrinfo
-    def ipv4_only_getaddrinfo(*args, **kwargs):
-        res = orig_getaddrinfo(*args, **kwargs)
-        return [r for r in res if r[0] == socket.AF_INET]
-    
+    # Force IPv4 to prevent 'Network is unreachable' on cloud providers
+    _orig_getaddrinfo = socket.getaddrinfo
     try:
+        def ipv4_only_getaddrinfo(*args, **kwargs):
+            return [r for r in _orig_getaddrinfo(*args, **kwargs) if r[0] == socket.AF_INET]
         socket.getaddrinfo = ipv4_only_getaddrinfo
+
         msg = EmailMessage()
         msg.set_content(content)
         msg['Subject'] = subject
@@ -149,7 +148,7 @@ def send_email(to_email, subject, content):
         msg['From'] = EMAIL_FROM if EMAIL_FROM else SMTP_USERNAME
         msg['To'] = to_email
 
-        timeout = 25 # Must be less than Render's 30s limit
+        timeout = 25 
 
         if SMTP_PORT == 465:
             print(f"DEBUG: Attempting SSL connection to {SMTP_HOST}:{SMTP_PORT}")
@@ -167,11 +166,10 @@ def send_email(to_email, subject, content):
                 server.send_message(msg)
         return True, "Success"
     except Exception as e:
-        err_msg = str(e)
-        print(f"Email Error: {err_msg}")
-        return False, err_msg
+        print(f"Email Error: {e}")
+        return False, str(e)
     finally:
-        socket.getaddrinfo = orig_getaddrinfo
+        socket.getaddrinfo = _orig_getaddrinfo
 
 def init_db():
     conn = get_db()

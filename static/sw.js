@@ -1,4 +1,4 @@
-const CACHE_NAME = 'univote-v7';
+const CACHE_NAME = 'univote-v8';
 const ASSETS = [
   '/',
   '/login',
