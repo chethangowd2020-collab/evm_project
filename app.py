@@ -19,6 +19,15 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 
+# Manual .env loader to ensure environment variables are loaded even if not set in the shell
+if os.path.exists(os.path.join(BASE_DIR, '.env')):
+    with open(os.path.join(BASE_DIR, '.env')) as f:
+        for line in f:
+            line = line.strip()
+            if line and '=' in line and not line.startswith('#'):
+                key, value = line.split('=', 1)
+                os.environ[key.strip()] = value.strip().strip('"').strip("'")
+
 app = Flask(__name__, template_folder=TEMPLATES_DIR, static_folder=STATIC_DIR)
 
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -121,16 +130,21 @@ def format_row(row):
 
 def send_email(to_email, subject, content):
     """Helper to send emails using SMTP settings"""
-    if not all([SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
-        err = "SMTP settings are incomplete. Check your environment variables."
+    # Check for essential SMTP settings. EMAIL_FROM is optional and defaults to SMTP_USERNAME.
+    if not all([SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD]):
+        missing_vars = []
+        if not SMTP_HOST: missing_vars.append('SMTP_HOST')
+        if not SMTP_USERNAME: missing_vars.append('SMTP_USERNAME')
+        if not SMTP_PASSWORD: missing_vars.append('SMTP_PASSWORD')
+        err = f"SMTP settings are incomplete. Missing: {', '.join(missing_vars)}. Please check environment variables."
         print(f"ERROR: {err}")
-        return False, err
+        return False, err # Return False and the specific error message
 
     try:
         msg = EmailMessage()
         msg.set_content(content)
         msg['Subject'] = subject
-        msg['From'] = EMAIL_FROM
+        msg['From'] = EMAIL_FROM or SMTP_USERNAME
         msg['To'] = to_email
 
         if SMTP_PORT == 465:
