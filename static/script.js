@@ -61,7 +61,7 @@ async function apiFetch(url, data) {
     });
     if (!res.ok) {
       const text = await res.text();
-      return { success: False, message: `Server error (${res.status})` };
+      return { success: false, message: `Server error (${res.status})` };
     }
     return await res.json();
   } catch (err) {

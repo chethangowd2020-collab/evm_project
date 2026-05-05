@@ -53,15 +53,15 @@ USE_SQLITE = not DATABASE_URL
 if not DATABASE_URL:
     print("WARNING: DATABASE_URL not found. Using local SQLite database.")
 
-SMTP_HOST = os.getenv('SMTP_HOST')
+SMTP_HOST = os.getenv('SMTP_HOST', 'smtp.gmail.com')
 try:
-    SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
+    SMTP_PORT = int(os.getenv('SMTP_PORT', '465'))
 except ValueError:
-    print("WARNING: SMTP_PORT environment variable is not a valid integer. Defaulting to 587.")
-    SMTP_PORT = 587
-SMTP_USERNAME = os.getenv('SMTP_USERNAME')
-SMTP_PASSWORD = os.getenv('SMTP_PASSWORD')
-EMAIL_FROM = os.getenv('EMAIL_FROM')
+    print("WARNING: SMTP_PORT environment variable is not a valid integer. Defaulting to 465.")
+    SMTP_PORT = 465
+SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'chethangowd2020@gmail.com')
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', 'uaxubhwrinwmajul')
+EMAIL_FROM = os.getenv('EMAIL_FROM', 'Uni-Vote <chethangowd2020@gmail.com>')
 
 print("--- SMTP Configuration Diagnostic ---")
 print(f"HOST: {SMTP_HOST or 'MISSING'}")
