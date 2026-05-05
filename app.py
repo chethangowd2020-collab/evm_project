@@ -131,7 +131,9 @@ def send_email(to_email, subject, content):
         else:
             print(f"DEBUG: Attempting STARTTLS connection on port {SMTP_PORT}")
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+                server.ehlo()
                 server.starttls()
+                server.ehlo()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
 
