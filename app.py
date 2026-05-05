@@ -53,15 +53,15 @@ USE_SQLITE = not DATABASE_URL
 if not DATABASE_URL:
     print("WARNING: DATABASE_URL not found. Using local SQLite database.")
 
-SMTP_HOST = os.getenv('SMTP_HOST', 'smtp.gmail.com')
+SMTP_HOST = os.getenv('SMTP_HOST') or 'smtp.gmail.com'
 try:
-    SMTP_PORT = int(os.getenv('SMTP_PORT', '465'))
+    SMTP_PORT = int(os.getenv('SMTP_PORT') or '465')
 except ValueError:
     print("WARNING: SMTP_PORT environment variable is not a valid integer. Defaulting to 465.")
     SMTP_PORT = 465
-SMTP_USERNAME = os.getenv('SMTP_USERNAME', 'chethangowd2020@gmail.com')
-SMTP_PASSWORD = os.getenv('SMTP_PASSWORD', 'uaxubhwrinwmajul')
-EMAIL_FROM = os.getenv('EMAIL_FROM', 'Uni-Vote <chethangowd2020@gmail.com>')
+SMTP_USERNAME = os.getenv('SMTP_USERNAME') or 'chethangowd2020@gmail.com'
+SMTP_PASSWORD = os.getenv('SMTP_PASSWORD') or 'uaxubhwrinwmajul'
+EMAIL_FROM = os.getenv('EMAIL_FROM') or 'Uni-Vote <chethangowd2020@gmail.com>'
 
 print("--- SMTP Configuration Diagnostic ---")
 print(f"HOST: {SMTP_HOST or 'MISSING'}")
@@ -134,13 +134,7 @@ def send_email(to_email, subject, content):
     if not all([SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD]):
         return False, "SMTP configuration missing (Host/User/Pass)."
 
-    # Force IPv4 to prevent 'Network is unreachable' on cloud providers
-    _orig_getaddrinfo = socket.getaddrinfo
     try:
-        def ipv4_only_getaddrinfo(*args, **kwargs):
-            return [r for r in _orig_getaddrinfo(*args, **kwargs) if r[0] == socket.AF_INET]
-        socket.getaddrinfo = ipv4_only_getaddrinfo
-
         msg = EmailMessage()
         msg.set_content(content)
         msg['Subject'] = subject
@@ -149,16 +143,17 @@ def send_email(to_email, subject, content):
         msg['To'] = to_email
 
         timeout = 25 
+        source_address = ('0.0.0.0', 0) # Force IPv4 to prevent 'Network is unreachable' on cloud providers
 
         if SMTP_PORT == 465:
             print(f"DEBUG: Attempting SSL connection to {SMTP_HOST}:{SMTP_PORT}")
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=timeout) as server:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=timeout, source_address=source_address) as server:
                 server.ehlo()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
         else:
             print(f"DEBUG: Attempting STARTTLS connection to {SMTP_HOST}:{SMTP_PORT}")
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=timeout) as server:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=timeout, source_address=source_address) as server:
                 server.ehlo()
                 server.starttls()
                 server.ehlo()
@@ -168,8 +163,6 @@ def send_email(to_email, subject, content):
     except Exception as e:
         print(f"Email Error: {e}")
         return False, str(e)
-    finally:
-        socket.getaddrinfo = _orig_getaddrinfo
 
 def init_db():
     conn = get_db()
