@@ -131,42 +131,35 @@ def format_row(row):
 
 def send_email(to_email, subject, content):
     """Helper to send emails using SMTP settings"""
-    # Check for essential SMTP settings. EMAIL_FROM is optional and defaults to SMTP_USERNAME.
     if not all([SMTP_HOST, SMTP_USERNAME, SMTP_PASSWORD]):
-        missing_vars = []
-        if not SMTP_HOST: missing_vars.append('SMTP_HOST')
-        if not SMTP_USERNAME: missing_vars.append('SMTP_USERNAME')
-        if not SMTP_PASSWORD: missing_vars.append('SMTP_PASSWORD')
-        err = f"SMTP settings are incomplete. Missing: {', '.join(missing_vars)}. Please check environment variables."
-        print(f"ERROR: {err}")
-        return False, err # Return False and the specific error message
+        return False, "SMTP configuration missing (Host/User/Pass)."
 
-    # Force IPv4 resolution to fix 'Network is unreachable' errors on cloud providers
+    # Global-safe shim to force IPv4 and prevent 'Network is unreachable' on cloud providers
     orig_getaddrinfo = socket.getaddrinfo
     def ipv4_only_getaddrinfo(*args, **kwargs):
         res = orig_getaddrinfo(*args, **kwargs)
         return [r for r in res if r[0] == socket.AF_INET]
     
-    socket.getaddrinfo = ipv4_only_getaddrinfo
-
     try:
+        socket.getaddrinfo = ipv4_only_getaddrinfo
         msg = EmailMessage()
         msg.set_content(content)
         msg['Subject'] = subject
-        # Gmail often rejects custom 'From' strings if they don't match the account precisely.
-        # Using just the email address is safer for connectivity.
-        msg['From'] = SMTP_USERNAME if not EMAIL_FROM else EMAIL_FROM
+        # Use SMTP_USERNAME as sender to avoid authorization errors
+        msg['From'] = EMAIL_FROM if EMAIL_FROM else SMTP_USERNAME
         msg['To'] = to_email
 
+        timeout = 45 # High timeout for unreliable cloud networking
+
         if SMTP_PORT == 465:
-            print(f"DEBUG: Attempting SMTP_SSL connection to {SMTP_HOST}:{SMTP_PORT}")
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            print(f"DEBUG: Attempting SSL connection to {SMTP_HOST}:{SMTP_PORT}")
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=timeout) as server:
                 server.ehlo()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
                 server.send_message(msg)
         else:
-            print(f"DEBUG: Attempting STARTTLS connection on port {SMTP_PORT}")
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
+            print(f"DEBUG: Attempting STARTTLS connection to {SMTP_HOST}:{SMTP_PORT}")
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=timeout) as server:
                 server.ehlo()
                 server.starttls()
                 server.ehlo()
@@ -175,7 +168,7 @@ def send_email(to_email, subject, content):
         return True, "Success"
     except Exception as e:
         err_msg = str(e)
-        print(f"SMTP Error for {to_email}: {err_msg}")
+        print(f"Email Error: {err_msg}")
         return False, err_msg
     finally:
         socket.getaddrinfo = orig_getaddrinfo
