@@ -6,7 +6,8 @@ const ASSETS = [
   '/static/style.css',
   '/static/script.js',
   '/static/univote_logo.jpg',
-  '/static/icon-192.png'
+  '/static/icon-192.png',
+  '/static/sjbit.jpg'
 ];
 
 self.addEventListener('install', (e) => {
