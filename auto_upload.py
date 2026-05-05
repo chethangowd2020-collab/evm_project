@@ -14,7 +14,7 @@ def run_cmd(cmd):
         raise RuntimeError("Command not found. Please ensure 'git' is installed and in your PATH.")
     except subprocess.CalledProcessError as e:
         error_msg = e.output.strip() if e.output else "Unknown Git error"
-        if "not a git repository" in error_msg.lower():
+        if "not a git repository" in error_msg.lower() or "not a git repo" in error_msg.lower():
             raise RuntimeError(f"Directory is not a Git repository. Run 'git init' first.\nDetails: {error_msg}")
         raise RuntimeError(f"Git command failed (exit {e.returncode}):\n{error_msg}")
 
