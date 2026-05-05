@@ -13,6 +13,7 @@ import re
 import sqlite3
 import csv
 import io
+import socket
 from functools import wraps
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -140,6 +141,14 @@ def send_email(to_email, subject, content):
         print(f"ERROR: {err}")
         return False, err # Return False and the specific error message
 
+    # Force IPv4 resolution to fix 'Network is unreachable' errors on cloud providers
+    orig_getaddrinfo = socket.getaddrinfo
+    def ipv4_only_getaddrinfo(*args, **kwargs):
+        res = orig_getaddrinfo(*args, **kwargs)
+        return [r for r in res if r[0] == socket.AF_INET]
+    
+    socket.getaddrinfo = ipv4_only_getaddrinfo
+
     try:
         msg = EmailMessage()
         msg.set_content(content)
@@ -168,6 +177,8 @@ def send_email(to_email, subject, content):
         err_msg = str(e)
         print(f"SMTP Error for {to_email}: {err_msg}")
         return False, err_msg
+    finally:
+        socket.getaddrinfo = orig_getaddrinfo
 
 def init_db():
     conn = get_db()
