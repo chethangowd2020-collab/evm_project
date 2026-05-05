@@ -144,11 +144,13 @@ def send_email(to_email, subject, content):
         msg = EmailMessage()
         msg.set_content(content)
         msg['Subject'] = subject
-        msg['From'] = EMAIL_FROM or SMTP_USERNAME
+        # Gmail often rejects custom 'From' strings if they don't match the account precisely.
+        # Using just the email address is safer for connectivity.
+        msg['From'] = SMTP_USERNAME if not EMAIL_FROM else EMAIL_FROM
         msg['To'] = to_email
 
         if SMTP_PORT == 465:
-            print(f"DEBUG: Attempting SSL connection on port {SMTP_PORT}")
+            print(f"DEBUG: Attempting SMTP_SSL connection to {SMTP_HOST}:{SMTP_PORT}")
             with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=10) as server:
                 server.ehlo()
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
@@ -164,7 +166,7 @@ def send_email(to_email, subject, content):
         return True, "Success"
     except Exception as e:
         err_msg = str(e)
-        print(f"Failed to send email to {to_email}: {err_msg}")
+        print(f"SMTP Error for {to_email}: {err_msg}")
         return False, err_msg
 
 def init_db():
