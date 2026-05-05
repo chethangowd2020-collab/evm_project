@@ -14,7 +14,10 @@ import sqlite3
 import csv
 import io
 import socket
+import threading
 from functools import wraps
+
+smtp_lock = threading.Lock()
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
@@ -143,22 +146,31 @@ def send_email(to_email, subject, content):
         msg['To'] = to_email
 
         timeout = 25 
-        source_address = ('0.0.0.0', 0) # Force IPv4 to prevent 'Network is unreachable' on cloud providers
+        
+        with smtp_lock:
+            _orig_getaddrinfo = socket.getaddrinfo
+            try:
+                def ipv4_only_getaddrinfo(*args, **kwargs):
+                    return [r for r in _orig_getaddrinfo(*args, **kwargs) if r[0] == socket.AF_INET]
+                socket.getaddrinfo = ipv4_only_getaddrinfo
 
-        if SMTP_PORT == 465:
-            print(f"DEBUG: Attempting SSL connection to {SMTP_HOST}:{SMTP_PORT}")
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=timeout, source_address=source_address) as server:
-                server.ehlo()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
-        else:
-            print(f"DEBUG: Attempting STARTTLS connection to {SMTP_HOST}:{SMTP_PORT}")
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=timeout, source_address=source_address) as server:
-                server.ehlo()
-                server.starttls()
-                server.ehlo()
-                server.login(SMTP_USERNAME, SMTP_PASSWORD)
-                server.send_message(msg)
+                if SMTP_PORT == 465:
+                    print(f"DEBUG: Attempting SSL connection to {SMTP_HOST}:{SMTP_PORT}")
+                    server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, timeout=timeout)
+                    server.ehlo()
+                else:
+                    print(f"DEBUG: Attempting STARTTLS connection to {SMTP_HOST}:{SMTP_PORT}")
+                    server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=timeout)
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+            finally:
+                socket.getaddrinfo = _orig_getaddrinfo
+                
+        with server:
+            server.login(SMTP_USERNAME, SMTP_PASSWORD)
+            server.send_message(msg)
+            
         return True, "Success"
     except Exception as e:
         print(f"Email Error: {e}")
