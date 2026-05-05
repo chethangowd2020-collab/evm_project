@@ -114,7 +114,13 @@ def format_row(row):
 def send_email(to_email, subject, content):
     """Helper to send emails using SMTP settings"""
     if not all([SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, EMAIL_FROM]):
-        print("SMTP settings are not fully configured in environment variables.")
+        missing_vars = []
+        if not SMTP_HOST: missing_vars.append('SMTP_HOST')
+        # SMTP_PORT is guaranteed to be an int due to the try-except block, so it's unlikely to be missing here
+        if not SMTP_USERNAME: missing_vars.append('SMTP_USERNAME')
+        if not SMTP_PASSWORD: missing_vars.append('SMTP_PASSWORD')
+        if not EMAIL_FROM: missing_vars.append('EMAIL_FROM')
+        print(f"ERROR: SMTP settings are not fully configured. Missing or empty: {', '.join(missing_vars)}")
         return False
     try:
         msg = EmailMessage()
