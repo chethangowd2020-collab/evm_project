@@ -52,13 +52,21 @@ async function apiFetch(url, data) {
   const currentUsn = sessionStorage.getItem('student_usn');
   if (currentUsn) headers['X-Student-USN'] = currentUsn;
 
-  const res = await fetch(url, {
-    method: 'POST',
-    credentials: 'include',
-    headers: headers,
-    body: JSON.stringify(data)
-  });
-  return res.json();
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      credentials: 'include',
+      headers: headers,
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      return { success: False, message: `Server error (${res.status})` };
+    }
+    return await res.json();
+  } catch (err) {
+    return { success: false, message: "Network error or server down. Please try again." };
+  }
 }
 
 async function apiGet(url) {

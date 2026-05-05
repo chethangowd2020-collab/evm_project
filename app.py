@@ -149,7 +149,7 @@ def send_email(to_email, subject, content):
         msg['From'] = EMAIL_FROM if EMAIL_FROM else SMTP_USERNAME
         msg['To'] = to_email
 
-        timeout = 45 # High timeout for unreliable cloud networking
+        timeout = 25 # Must be less than Render's 30s limit
 
         if SMTP_PORT == 465:
             print(f"DEBUG: Attempting SSL connection to {SMTP_HOST}:{SMTP_PORT}")

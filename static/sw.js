@@ -1,5 +1,4 @@
-const CACHE_NAME = 'univote-v5';
-const ASSETS = [
+const CACHE_NAME = 'univote-v
   '/',
   '/login',
   '/register',
